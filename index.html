@@ -3,492 +3,413 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>再生数トラッカー</title>
+<title>新世界 再生数トラッカー</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=DM+Mono:wght@400;500&display=swap');
-
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-  :root {
-    --bg: #0d0d0f;
-    --surface: #17171a;
-    --surface2: #1f1f24;
-    --border: rgba(255,255,255,0.07);
-    --text: #f0f0ee;
-    --muted: #888884;
-    --hot: #ff5c35;
-    --rise: #4ec87a;
-    --steady: #666662;
-    --accent: #c8b8ff;
-  }
-
-  body {
-    font-family: 'Noto Sans JP', sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    min-height: 100vh;
-    padding: 0;
-  }
-
-  header {
-    padding: 2rem 2rem 1.5rem;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: baseline;
-    gap: 1rem;
-    flex-wrap: wrap;
-  }
-
-  header h1 {
-    font-family: 'DM Mono', monospace;
-    font-size: 1.1rem;
-    font-weight: 500;
-    color: var(--accent);
-    letter-spacing: 0.05em;
-  }
-
-  header p {
-    font-size: 0.78rem;
-    color: var(--muted);
-    font-family: 'DM Mono', monospace;
-  }
-
-  .tabs {
-    display: flex;
-    gap: 0;
-    padding: 0 2rem;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .tab {
-    font-size: 0.78rem;
-    font-family: 'DM Mono', monospace;
-    padding: 0.75rem 1.25rem;
-    background: transparent;
-    border: none;
-    color: var(--muted);
-    cursor: pointer;
-    border-bottom: 2px solid transparent;
-    transition: color 0.15s, border-color 0.15s;
-    letter-spacing: 0.03em;
-  }
-
-  .tab.active {
-    color: var(--text);
-    border-bottom-color: var(--accent);
-  }
-
-  .tab:hover:not(.active) { color: var(--text); }
-
-  .main { padding: 1.5rem 2rem 3rem; max-width: 1100px; margin: 0 auto; }
-
-  .section { display: none; }
-  .section.active { display: block; }
-
-  /* TOP10 */
-  .section-label {
-    font-size: 0.72rem;
-    font-family: 'DM Mono', monospace;
-    color: var(--muted);
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    margin-bottom: 1rem;
-  }
-
-  .card-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
-    gap: 8px;
-    margin-bottom: 2rem;
-  }
-
-  .card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 12px 14px;
-    transition: border-color 0.15s;
-  }
-
-  .card:hover { border-color: rgba(255,255,255,0.15); }
-
-  .card-name {
-    font-size: 0.72rem;
-    color: var(--muted);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    margin-bottom: 4px;
-  }
-
-  .card-val {
-    font-family: 'DM Mono', monospace;
-    font-size: 1.35rem;
-    font-weight: 500;
-    line-height: 1;
-    margin-bottom: 4px;
-  }
-
-  .card-sub {
-    font-size: 0.7rem;
-    color: var(--muted);
-    font-family: 'DM Mono', monospace;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-
-  .badge {
-    font-size: 0.62rem;
-    padding: 1px 6px;
-    border-radius: 3px;
-    font-family: 'DM Mono', monospace;
-    letter-spacing: 0.03em;
-  }
-
-  .badge-hot { background: rgba(255,92,53,0.15); color: var(--hot); border: 1px solid rgba(255,92,53,0.3); }
-  .badge-rise { background: rgba(78,200,122,0.12); color: var(--rise); border: 1px solid rgba(78,200,122,0.25); }
-  .badge-steady { background: rgba(102,102,98,0.15); color: var(--steady); border: 1px solid rgba(102,102,98,0.25); }
-
-  .chart-wrap { position: relative; width: 100%; }
-
-  /* Controls */
-  .controls {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-    align-items: center;
-    margin-bottom: 1.25rem;
-  }
-
-  select, input[type=text] {
-    font-size: 0.78rem;
-    font-family: 'DM Mono', monospace;
-    padding: 6px 10px;
-    border-radius: 6px;
-    border: 1px solid var(--border);
-    background: var(--surface2);
-    color: var(--text);
-    outline: none;
-    transition: border-color 0.15s;
-  }
-
-  select:focus, input[type=text]:focus { border-color: rgba(200,184,255,0.4); }
-
-  input[type=text]::placeholder { color: var(--muted); }
-
-  .ctrl-label {
-    font-size: 0.72rem;
-    font-family: 'DM Mono', monospace;
-    color: var(--muted);
-  }
-
-  /* Legend */
-  .legend {
-    display: flex;
-    gap: 1rem;
-    margin-bottom: 0.75rem;
-    flex-wrap: wrap;
-  }
-
-  .legend-item {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    font-size: 0.72rem;
-    font-family: 'DM Mono', monospace;
-    color: var(--muted);
-  }
-
-  .legend-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 2px;
-    flex-shrink: 0;
-  }
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{--bg:#0d0d0f;--surface:#17171a;--surface2:#1f1f24;--border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.13);--text:#f0f0ee;--muted:#888884;--hint:#555552;--hot:#ff5c35;--rise:#4ec87a;--steady:#555552;--accent:#c8b8ff;}
+body{font-family:'Hiragino Sans','Noto Sans JP',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+header{padding:1.5rem 1.5rem 1rem;border-bottom:1px solid var(--border);display:flex;align-items:baseline;gap:1rem;flex-wrap:wrap;}
+header h1{font-size:1rem;font-weight:500;color:var(--accent);letter-spacing:0.04em;font-family:monospace;}
+header p{font-size:0.75rem;color:var(--muted);font-family:monospace;}
+.tabs{display:flex;padding:0 1.5rem;border-bottom:1px solid var(--border);overflow-x:auto;}
+.tab{font-size:0.78rem;padding:0.65rem 1.1rem;background:transparent;border:none;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:color 0.15s,border-color 0.15s;font-family:inherit;white-space:nowrap;}
+.tab.active{color:var(--text);border-bottom-color:var(--accent);}
+.tab:hover:not(.active){color:var(--text);}
+.main{padding:1.25rem 1.5rem 3rem;max-width:1100px;margin:0 auto;}
+.section{display:none;}.section.active{display:block;}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:1rem;}
+.label{font-size:0.72rem;color:var(--muted);font-family:monospace;white-space:nowrap;}
+select,input[type=text]{font-size:0.78rem;padding:5px 9px;border-radius:6px;border:1px solid var(--border2);background:var(--surface2);color:var(--text);outline:none;font-family:inherit;}
+select:focus,input[type=text]:focus{border-color:rgba(200,184,255,0.4);}
+input[type=text]::placeholder{color:var(--hint);}
+.sub-label{font-size:0.7rem;color:var(--hint);font-family:monospace;margin-bottom:0.75rem;}
+.picker{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:5px;margin-bottom:1.25rem;max-height:260px;overflow-y:auto;padding:4px;}
+.pick-btn{font-size:0.72rem;padding:5px 8px;border-radius:5px;border:1px solid var(--border2);background:transparent;color:var(--muted);cursor:pointer;text-align:left;transition:all 0.12s;font-family:inherit;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.pick-btn.selected{background:rgba(200,184,255,0.12);border-color:rgba(200,184,255,0.4);color:var(--accent);}
+.pick-btn:hover:not(.selected){border-color:var(--border2);color:var(--text);}
+.pick-info{font-size:0.7rem;color:var(--muted);}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:7px;margin-bottom:1.25rem;}
+.card{background:var(--surface);border-radius:7px;padding:10px 12px;}
+.card-name{font-size:0.68rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px;}
+.card-val{font-size:1.2rem;font-weight:500;font-family:monospace;line-height:1;margin-bottom:3px;}
+.card-sub{font-size:0.68rem;color:var(--muted);font-family:monospace;display:flex;gap:6px;align-items:center;flex-wrap:wrap;}
+.badge{font-size:0.6rem;padding:1px 5px;border-radius:3px;font-family:monospace;}
+.badge-hot{background:rgba(255,92,53,0.15);color:var(--hot);border:1px solid rgba(255,92,53,0.3);}
+.badge-rise{background:rgba(78,200,122,0.12);color:var(--rise);border:1px solid rgba(78,200,122,0.25);}
+.badge-steady{background:rgba(85,85,82,0.2);color:#888884;border:1px solid rgba(85,85,82,0.3);}
+.chart-wrap{position:relative;width:100%;}
+.legend{display:flex;gap:1rem;margin-bottom:0.6rem;flex-wrap:wrap;}
+.leg{display:flex;align-items:center;gap:5px;font-size:0.7rem;color:var(--muted);}
+.leg-dot{width:8px;height:8px;border-radius:2px;flex-shrink:0;}
+.tbl-wrap{overflow-x:auto;margin-bottom:1.5rem;}
+table{width:100%;border-collapse:collapse;font-size:0.78rem;}
+th{font-size:0.68rem;color:var(--muted);font-weight:400;text-align:right;padding:6px 8px;border-bottom:1px solid var(--border);white-space:nowrap;font-family:monospace;}
+th:first-child,th:nth-child(2){text-align:left;}
+td{padding:6px 8px;border-bottom:1px solid var(--border);text-align:right;font-family:monospace;font-size:0.76rem;color:var(--muted);}
+td:first-child{text-align:left;color:var(--text);font-family:inherit;}
+td:nth-child(2){text-align:left;}
+tr:hover td{background:var(--surface);}
+.td-hot{color:var(--hot)!important;}
+.td-rise{color:var(--rise)!important;}
+.g-tabs{display:flex;gap:6px;margin-bottom:1rem;}
+.g-tab{font-size:0.75rem;padding:4px 14px;border-radius:5px;border:1px solid var(--border2);background:transparent;color:var(--muted);cursor:pointer;font-family:inherit;}
+.g-tab.active{background:rgba(200,184,255,0.12);border-color:rgba(200,184,255,0.4);color:var(--accent);}
 </style>
 </head>
 <body>
-
 <header>
-  <h1>PLAY COUNT TRACKER</h1>
-  <p>101 candidates · 5 weeks · updated 2025-04-04</p>
+  <h1>新世界 PLAY COUNT TRACKER</h1>
+  <p>101 candidates · updated 4/4</p>
 </header>
-
 <div class="tabs">
-  <button class="tab active" onclick="switchTab('top')">急上昇 TOP10</button>
-  <button class="tab" onclick="switchTab('all')">全員チャート</button>
-  <button class="tab" onclick="switchTab('search')">名前で検索</button>
+  <button class="tab active" onclick="switchTab('watch')">マイリスト</button>
+  <button class="tab" onclick="switchTab('all')">全員テーブル</button>
+  <button class="tab" onclick="switchTab('trend')">推移グラフ</button>
 </div>
-
 <div class="main">
 
-  <div id="tab-top" class="section active">
-    <p class="section-label">週間伸び率ランキング — 3/28 → 4/4</p>
-    <div class="card-grid" id="top-cards"></div>
-    <div class="legend">
-      <span class="legend-item"><span class="legend-dot" style="background:#555"></span>先週</span>
-      <span class="legend-item"><span class="legend-dot" style="background:var(--hot)"></span>急上昇 +40%↑</span>
-      <span class="legend-item"><span class="legend-dot" style="background:var(--rise)"></span>上昇中 +10%↑</span>
+  <div id="tab-watch" class="section active">
+    <div class="row">
+      <span class="label">練習生を選ぶ（最大12名）</span>
+      <span class="pick-info" id="pick-count">0 / 12 選択中</span>
     </div>
-    <div class="chart-wrap" style="height:320px"><canvas id="chartTop"></canvas></div>
+    <div class="row">
+      <input type="text" id="pick-search" placeholder="名前 or ABCで絞り込み..." oninput="filterPicker()" style="width:200px;">
+      <select id="pick-sort" onchange="filterPicker()">
+        <option value="abc">ABC順</option>
+        <option value="cur">再生数順</option>
+        <option value="growth">伸び率順</option>
+        <option value="rank">投票順位順</option>
+      </select>
+      <button onclick="clearSelection()" style="font-size:0.72rem;padding:5px 10px;border-radius:5px;border:1px solid var(--border2);background:transparent;color:var(--muted);cursor:pointer;font-family:inherit;">クリア</button>
+    </div>
+    <div class="picker" id="picker"></div>
+    <div id="watch-content"></div>
   </div>
 
   <div id="tab-all" class="section">
-    <div class="controls">
-      <span class="ctrl-label">並び替え</span>
-      <select id="sortAll" onchange="renderAll()">
-        <option value="growth">伸び率（高い順）</option>
-        <option value="total">再生数（多い順）</option>
-        <option value="name">名前順</option>
+    <div class="row">
+      <span class="label">並び替え:</span>
+      <select id="all-sort" onchange="renderAll()">
+        <option value="growth">週間伸び率</option>
+        <option value="growabs">週間伸び数</option>
+        <option value="cur">再生数（多い順）</option>
+        <option value="rank">投票順位</option>
+        <option value="abc">ABC順</option>
       </select>
-      <select id="filterAll" onchange="renderAll()">
+      <select id="all-filter" onchange="renderAll()">
         <option value="all">全員</option>
         <option value="hot">急上昇のみ</option>
         <option value="rise">上昇中以上</option>
       </select>
     </div>
-    <div class="legend">
-      <span class="legend-item"><span class="legend-dot" style="background:var(--hot)"></span>急上昇</span>
-      <span class="legend-item"><span class="legend-dot" style="background:var(--rise)"></span>上昇中</span>
-      <span class="legend-item"><span class="legend-dot" style="background:var(--steady)"></span>安定</span>
-    </div>
-    <div class="chart-wrap" id="allWrap"><canvas id="chartAll"></canvas></div>
+    <div class="tbl-wrap"><table id="all-table"></table></div>
   </div>
 
-  <div id="tab-search" class="section">
-    <div class="controls">
-      <input type="text" id="searchBox" placeholder="名前を入力..." oninput="renderSearch()">
+  <div id="tab-trend" class="section">
+    <p class="sub-label">マイリストで選んだ候補生の推移を表示します</p>
+    <div class="g-tabs">
+      <button class="g-tab active" onclick="switchGraph('play')">再生数推移</button>
+      <button class="g-tab" onclick="switchGraph('rank')">順位推移</button>
     </div>
-    <div class="chart-wrap" style="height:300px"><canvas id="chartSearch"></canvas></div>
+    <div class="chart-wrap" style="height:340px;"><canvas id="chartTrend"></canvas></div>
   </div>
 
 </div>
-
 <script>
-const raw = [
-  ["アダム・ナガイ",7.2,4.4,2.8,2.4,2.1],
-  ["中丸 晏寿",7.4,6.9,6.4,6,5.5],
-  ["本荘 晃",1.6,1.1,null,null,null],
-  ["オム・スアンカワーテン",2,1.8,1.7,1.5,1.3],
-  ["アーチャー・ウイ",6.7,5.4,4.6,4.1,3.4],
-  ["児島 歩夢",1,0.6,null,null,null],
-  ["篠ヶ谷 歩夢",5.6,5,4.5,4.2,3.7],
-  ["小林 千悟",19,17,16,14,12],
-  ["市川 大輝",2.4,0.8,null,null,null],
-  ["加藤 大樹",47,40,36,33,29],
-  ["カク・ドンミン",4.4,3.8,3.5,3.2,2.8],
-  ["末川 瑛太",4.6,4.2,3.8,3.4,3],
-  ["金田 栄都",2,1.7,1.5,1.4,1.2],
-  ["櫻井 楓真",4,3.6,3.3,3,2.6],
-  ["小笠原 ジュゼッペ 慧",5.4,4.2,3.4,3.3,2.9],
-  ["倉橋 吾槙",20,15,12,11,10],
-  ["村松 遼空",1,0.8,null,null,null],
-  ["髙城 暖人",1.5,1,null,null,null],
-  ["堀尾 聖",2.7,2.5,2.2,2,1.8],
-  ["平島 輝",4,3.1,null,null,null],
-  ["瑞慶覧 太都",2.9,2.6,2.4,2.1,1.8],
-  ["ユ・ヒョンスン",7.4,5.5,4.4,4,3.3],
-  ["岡田 彪吾",3.2,2.7,2.3,2.1,1.8],
-  ["イ・ヒョンジェ",3.9,2.3,null,null,null],
-  ["柳谷 伊冴",5.8,5,4.5,4,3.4],
-  ["ユン・ジェヨン",3.1,2.4,2.1,1.9,1.6],
-  ["ジュアン・ジェイ",5.6,5,4.5,4.2,3.8],
-  ["丸尾 尋一郎",2.9,2.6,2.3,2,1.7],
-  ["河邊 晟",1.6,1.4,1.2,1.1,1],
-  ["シン・ジョンウク",1.3,1.2,1.1,1,0.9],
-  ["金安 純正",3,2.6,2.2,2,1.7],
-  ["リュウ・カイチ",1.3,0.8,null,null,null],
-  ["宇野 海夢",5.1,4.6,4.1,3.7,3.1],
-  ["多比 奏聖",1.9,1.6,1.5,1.4,1.2],
-  ["横山 奏夢",26,22,19,17,14],
-  ["黒﨑 貫汰",1.7,1,null,null,null],
-  ["関 敬次郎",2.3,2.1,1.9,1.7,1.5],
-  ["黄 敬眞",0.9,0.5,null,null,null],
-  ["髙松 敬祐",2,1.7,1.5,1.4,1.2],
-  ["小野 慶人",28,25,23,22,20],
-  ["西山 賢人",2,1.8,1.6,1.5,1.3],
-  ["釼持 吉成",15,7,null,null,null],
-  ["河合 晃誠",1.7,1.5,1.3,1.2,1.1],
-  ["青沼 昂史朗",2.6,1.2,null,null,null],
-  ["照井 康祐",50,42,36,32,26],
-  ["浅香 孝太郎",5.3,4.5,3.9,3.6,3.1],
-  ["髙谷 京平",4,3.5,3.2,2.9,2.6],
-  ["田中 蒔",15,14,13,12,11],
-  ["森 明育",2,1.2,null,null,null],
-  ["山根 武蔵",2.5,2.3,2.1,1.9,1.7],
-  ["土田 央修",23,18,16,15,13],
-  ["小清水 蓮",11,10,9.8,9.4,8.7],
-  ["堀野 蓮",4,3.2,2.7,2.4,2.1],
-  ["小林 蓮翔",0.9,0.6,null,null,null],
-  ["チェン・リッキー",5.3,4.4,4,3.7,3.3],
-  ["神元 理丘",2.2,1.7,1.5,1.4,1.2],
-  ["今江 陸斗",6.5,5.7,4.9,4.6,4.1],
-  ["鳩場 陸人",1.9,1.6,1.4,1.3,1.2],
-  ["甲斐 陸也",3.3,2.9,2.6,2.4,2.2],
-  ["大瀬 凜和",6.6,5.8,5.2,4.8,4.2],
-  ["上野 琉偉",4.2,null,3.5,3.3,2.9],
-  ["水上 琉偉",1.3,0.8,null,null,null],
-  ["飯塚 亮賀",19,17,15,14,12],
-  ["石田 亮太",5.7,4.5,3.5,3.3,3],
-  ["岡戸 竜芽",2.2,1.9,1.7,1.5,1.3],
-  ["杉山 竜司",9.3,7.8,6.8,6.3,5.4],
-  ["香月 誠太",1.9,1.5,1.4,1.3,1.2],
-  ["澤井 星名",6.4,5.7,5,4.5,3.9],
-  ["オ・シンヘン",7,5,3.8,3.6,3.3],
-  ["岩城 慎二",6.5,5.7,5.1,4.6,3.9],
-  ["宮崎 真佑",2.7,2.2,1.9,1.7,1.5],
-  ["西﨑 柊",4.3,3.7,3.3,3,2.6],
-  ["山下 柊",5.7,4.9,4.3,3.8,3.3],
-  ["パク・シヨン",19,15,13,12,10],
-  ["松田 颯吾",0.8,0.5,null,null,null],
-  ["佐藤 碧空",2.6,2.3,2,1.9,1.7],
-  ["髙橋 空良",2,1.1,null,null,null],
-  ["西田 颯梓",2.6,1.7,null,null,null],
-  ["東野 蒼汰",2.3,1.9,1.7,1.5,1.4],
-  ["藤牧 大雅",22,18,16,14,12],
-  ["松田 太雅",5,4.4,3.8,3.4,2.8],
-  ["金倉 拓未",3.1,2.7,2.4,2.2,1.9],
-  ["岡本 拓士",3.3,2,null,null,null],
-  ["熊部 拓斗",9.1,6.2,4.7,4.2,3.5],
-  ["宮里 拓利",3,2.7,2.5,2.3,2.1],
-  ["南平 達矢",5.4,4.8,4.4,4.2,3.9],
-  ["森井 輝",2.5,2.1,1.9,1.7,1.5],
-  ["北林 天虎",2.1,1.9,1.7,1.5,1.4],
-  ["藤芳 辰弥",1.8,1.6,1.4,1.3,1.1],
-  ["増田 倫希",2.9,2.6,2.3,2.1,1.9],
-  ["濱田 永遠",9,6.8,5.7,5.2,4.5],
-  ["アギナルド・トリスタン・ジェームス",2.7,2.4,2.2,2,1.8],
-  ["リー・ウェイゼ",2,1.7,1.4,1.3,1.2],
-  ["ヨハン・エマニュエル",1.7,1.4,1.3,1.2,1.1],
-  ["矢田 佳暉",18,14,11,10,8],
-  ["後藤 結",22,20,18,17,16],
-  ["岡田 侑磨",7.2,6.4,5.6,5.2,4.5],
-  ["安部 結蘭",35,30,27,25,22],
-  ["大林 悠成",8.5,6.7,5.6,5.1,4.5],
-  ["佐野 由征",3.2,2.8,2.4,2.2,2],
-  ["板倉 悠太",5.8,4,3,2.8,2.5],
+const PLAY_DATES = ["3月6日","3月14日","3月21日","3月28日","4月4日"];
+const VOTE_DATES = ["4月2日"];
+const palette = ['#ff5c35','#4ec87a','#c8b8ff','#f0c040','#60c8e0','#e080c0','#80d060','#a0a8ff','#f09878','#98e0b0','#d8c0ff','#f8e080'];
+
+const rawPlay = [
+["アダム・ナガイ","ADAM",2.1,2.4,2.8,4.4,7.2],["中丸 晏寿","AJU",5.5,6,6.4,6.9,7.4],
+["本荘 晃","AKIRA",null,null,null,1.1,1.6],["オム・スアンカワーテン","AOM",1.3,1.5,1.7,1.8,2],
+["アーチャー・ウイ","ARCHER",3.4,4.1,4.6,5.4,6.7],["児島 歩夢","AYUMU.K",null,null,null,0.6,1],
+["篠ヶ谷 歩夢","AYUMU.S",3.7,4.2,4.5,5,5.6],["小林 千悟","CHISATO",12,14,16,17,19],
+["市川 大輝","DAIKI.I",null,null,null,0.8,2.4],["加藤 大樹","DAIKI.K",29,33,36,40,47],
+["カク・ドンミン","DONGMIN",2.8,3.2,3.5,3.8,4.4],["末川 瑛太","EITA",3,3.4,3.8,4.2,4.6],
+["金田 栄都","EITO",1.2,1.4,1.5,1.7,2],["櫻井 楓真","FUMA",2.6,3,3.3,3.6,4],
+["小笠原 ジュゼッペ 慧","GIUSEPPE",2.9,3.3,3.4,4.2,5.4],["倉橋 吾槙","GOTEN",10,11,12,15,20],
+["村松 遼空","HARUKU",null,null,null,0.8,1],["髙城 暖人","HARUTO",null,null,null,1,1.5],
+["堀尾 聖","HIJIRI",1.8,2,2.2,2.5,2.7],["平島 輝","HIKARU",null,null,null,3.1,4],
+["瑞慶覧 太都","HIROTO",1.8,2.1,2.4,2.6,2.9],["ユ・ヒョンスン","HYEONSEUNG",3.3,4,4.4,5.5,7.4],
+["岡田 彪吾","HYUGO",1.8,2.1,2.3,2.7,3.2],["イ・ヒョンジェ","HYUNJAE",null,null,null,2.3,3.9],
+["柳谷 伊冴","ISSA",3.4,4,4.5,5,5.8],["ユン・ジェヨン","JAEYONG",1.6,1.9,2.1,2.4,3.1],
+["ジュアン・ジェイ","JAY",3.8,4.2,4.5,5,5.6],["丸尾 尋一郎","JINICHIRO",1.7,2,2.3,2.6,2.9],
+["河邊 晟","JOE",1,1.1,1.2,1.4,1.6],["シン・ジョンウク","JUNGUK",0.9,1,1.1,1.2,1.3],
+["金安 純正","JUNSEI",1.7,2,2.2,2.6,3],["リュウ・カイチ","KAICHI",null,null,null,0.8,1.3],
+["宇野 海夢","KAIMU",3.1,3.7,4.1,4.6,5.1],["多比 奏聖","KANADE",1.2,1.4,1.5,1.6,1.9],
+["横山 奏夢","KANAME",14,17,19,22,26],["黒﨑 貫汰","KANTA",null,null,null,1,1.7],
+["関 敬次郎","KEIJIRO",1.5,1.7,1.9,2.1,2.3],["黄 敬眞","KEISHIN",null,null,null,0.5,0.9],
+["髙松 敬祐","KEISUKE",1.2,1.4,1.5,1.7,2],["小野 慶人","KEITO",20,22,23,25,28],
+["西山 賢人","KENTO",1.3,1.5,1.6,1.8,2],["釼持 吉成","KINARI",null,null,null,7,15],
+["河合 晃誠","KOSEI",1.1,1.2,1.3,1.5,1.7],["青沼 昂史朗","KOSHIRO",null,null,null,1.2,2.6],
+["照井 康祐","KOSUKE",26,32,36,42,50],["浅香 孝太郎","KOTARO",3.1,3.6,3.9,4.5,5.3],
+["髙谷 京平","KYOHEI",2.6,2.9,3.2,3.5,4],["田中 蒔","MAKI",11,12,13,14,15],
+["森 明育","MEI",null,null,null,1.2,2],["山根 武蔵","MUSASHI",1.7,1.9,2.1,2.3,2.5],
+["土田 央修","OSUKE",13,15,16,18,23],["小清水 蓮","REN.KO",8.7,9.4,9.8,10,11],
+["堀野 蓮","REN.H",2.1,2.4,2.7,3.2,4],["小林 蓮翔","RENTO",null,null,null,0.6,0.9],
+["チェン・リッキー","RICKEY",3.3,3.7,4,4.4,5.3],["神元 理丘","RIKU",1.2,1.4,1.5,1.7,2.2],
+["今江 陸斗","RIKUTO.I",4.1,4.6,4.9,5.7,6.5],["鳩場 陸人","RIKUTO.H",1.2,1.3,1.4,1.6,1.9],
+["甲斐 陸也","RIKUYA",2.2,2.4,2.6,2.9,3.3],["大瀬 凜和","RINTO",4.2,4.8,5.2,5.8,6.6],
+["上野 琉偉","RUI.U",2.9,3.3,3.5,null,4.2],["水上 琉偉","RUI.M",null,null,null,0.8,1.3],
+["飯塚 亮賀","RYOGA",12,14,15,17,19],["石田 亮太","RYOTA",3,3.3,3.5,4.5,5.7],
+["岡戸 竜芽","RYUGA",1.3,1.5,1.7,1.9,2.2],["杉山 竜司","RYUJI",5.4,6.3,6.8,7.8,9.3],
+["香月 誠太","SEITA",1.2,1.3,1.4,1.5,1.9],["澤井 星名","SENA",3.9,4.5,5,5.7,6.4],
+["オ・シンヘン","SHINHAENG",3.3,3.6,3.8,5,7],["岩城 慎二","SHINJI",3.9,4.6,5.1,5.7,6.5],
+["宮崎 真佑","SHINSUKE",1.5,1.7,1.9,2.2,2.7],["西﨑 柊","SHU.N",2.6,3,3.3,3.7,4.3],
+["山下 柊","SHU.Y",3.3,3.8,4.3,4.9,5.7],["パク・シヨン","SIYOUNG",10,12,13,15,19],
+["松田 颯吾","SOGO",null,null,null,0.5,0.8],["佐藤 碧空","SORA.S",1.7,1.9,2,2.3,2.6],
+["髙橋 空良","SORA.T",null,null,null,1.1,2],["西田 颯梓","SOSHI",null,null,null,1.7,2.6],
+["東野 蒼汰","SOTA",1.4,1.5,1.7,1.9,2.3],["藤牧 大雅","TAIGA.F",12,14,16,18,22],
+["松田 太雅","TAIGA.M",2.8,3.4,3.8,4.4,5],["金倉 拓未","TAKUMI",1.9,2.2,2.4,2.7,3.1],
+["岡本 拓士","TAKUTO.O",null,null,null,2,3.3],["熊部 拓斗","TAKUTO.K",3.5,4.2,4.7,6.2,9.1],
+["宮里 拓利","TAKUTO.M",2.1,2.3,2.5,2.7,3],["南平 達矢","TATSUYA",3.9,4.2,4.4,4.8,5.4],
+["森井 輝","TERU",1.5,1.7,1.9,2.1,2.5],["北林 天虎","TETORA",1.4,1.5,1.7,1.9,2.1],
+["藤芳 辰弥","TOKIYA",1.1,1.3,1.4,1.6,1.8],["増田 倫希","TOMOKI",1.9,2.1,2.3,2.6,2.9],
+["濱田 永遠","TOWA",4.5,5.2,5.7,6.8,9],["アギナルド・トリスタン・ジェームス","TRISTAN",1.8,2,2.2,2.4,2.7],
+["リー・ウェイゼ","WEIZE",1.2,1.3,1.4,1.7,2],["ヨハン・エマニュエル","YOHAN",1.1,1.2,1.3,1.4,1.7],
+["矢田 佳暉","YOSHIKI",8,10,11,14,18],["後藤 結","YUKI",16,17,18,20,22],
+["岡田 侑磨","YUMA",4.5,5.2,5.6,6.4,7.2],["安部 結蘭","YURA",22,25,27,30,35],
+["大林 悠成","YUSEI.O",4.5,5.1,5.6,6.7,8.5],["佐野 由征","YUSEI.S",2,2.2,2.4,2.8,3.2],
+["板倉 悠太","YUTA",2.5,2.8,3,4,5.8],
 ];
 
-const dates = ["4/4","3/28","3/21","3/14","3/6"];
+const rawVote = [
+["アダム・ナガイ","ADAM",7],["中丸 晏寿","AJU",54],["本荘 晃","AKIRA",51],
+["オム・スアンカワーテン","AOM",67],["アーチャー・ウイ","ARCHER",20],["児島 歩夢","AYUMU.K",75],
+["篠ヶ谷 歩夢","AYUMU.S",29],["小林 千悟","CHISATO",23],["市川 大輝","DAIKI.I",66],
+["加藤 大樹","DAIKI.K",3],["カク・ドンミン","DONGMIN",33],["末川 瑛太","EITA",83],
+["金田 栄都","EITO",52],["櫻井 楓真","FUMA",59],["小笠原 ジュゼッペ 慧","GIUSEPPE",18],
+["倉橋 吾槙","GOTEN",11],["村松 遼空","HARUKU",74],["髙城 暖人","HARUTO",58],
+["堀尾 聖","HIJIRI",63],["平島 輝","HIKARU",44],["瑞慶覧 太都","HIROTO",71],
+["ユ・ヒョンスン","HYEONSEUNG",15],["岡田 彪吾","HYUGO",93],["イ・ヒョンジェ","HYUNJAE",21],
+["柳谷 伊冴","ISSA",48],["ユン・ジェヨン","JAEYONG",32],["ジュアン・ジェイ","JAY",50],
+["丸尾 尋一郎","JINICHIRO",62],["河邊 晟","JOE",101],["シン・ジョンウク","JUNGUK",87],
+["金安 純正","JUNSEI",40],["リュウ・カイチ","KAICHI",68],["宇野 海夢","KAIMU",42],
+["多比 奏聖","KANADE",99],["横山 奏夢","KANAME",27],["黒﨑 貫汰","KANTA",57],
+["関 敬次郎","KEIJIRO",98],["黄 敬眞","KEISHIN",69],["髙松 敬祐","KEISUKE",90],
+["小野 慶人","KEITO",13],["西山 賢人","KENTO",96],["釼持 吉成","KINARI",2],
+["河合 晃誠","KOSEI",94],["青沼 昂史朗","KOSHIRO",32],["照井 康祐","KOSUKE",9],
+["浅香 孝太郎","KOTARO",26],["髙谷 京平","KYOHEI",86],["田中 蒔","MAKI",25],
+["森 明育","MEI",39],["山根 武蔵","MUSASHI",65],["土田 央修","OSUKE",14],
+["小清水 蓮","REN.KO",8],["堀野 蓮","REN.H",56],["小林 蓮翔","RENTO",55],
+["チェン・リッキー","RICKEY",38],["神元 理丘","RIKU",97],["今江 陸斗","RIKUTO.I",35],
+["鳩場 陸人","RIKUTO.H",84],["甲斐 陸也","RIKUYA",88],["大瀬 凜和","RINTO",46],
+["上野 琉偉","RUI.U",79],["水上 琉偉","RUI.M",61],["飯塚 亮賀","RYOGA",10],
+["石田 亮太","RYOTA",41],["岡戸 竜芽","RYUGA",95],["杉山 竜司","RYUJI",22],
+["香月 誠太","SEITA",91],["澤井 星名","SENA",36],["オ・シンヘン","SHINHAENG",6],
+["岩城 慎二","SHINJI",73],["宮崎 真佑","SHINSUKE",72],["西﨑 柊","SHU.N",45],
+["山下 柊","SHU.Y",28],["パク・シヨン","SIYOUNG",5],["松田 颯吾","SOGO",85],
+["佐藤 碧空","SORA.S",77],["髙橋 空良","SORA.T",37],["西田 颯梓","SOSHI",64],
+["東野 蒼汰","SOTA",82],["藤牧 大雅","TAIGA.F",34],["松田 太雅","TAIGA.M",30],
+["金倉 拓未","TAKUMI",81],["岡本 拓士","TAKUTO.O",49],["熊部 拓斗","TAKUTO.K",12],
+["宮里 拓利","TAKUTO.M",80],["南平 達矢","TATSUYA",43],["森井 輝","TERU",100],
+["北林 天虎","TETORA",89],["藤芳 辰弥","TOKIYA",92],["増田 倫希","TOMOKI",76],
+["濱田 永遠","TOWA",16],["アギナルド・トリスタン・ジェームス","TRISTAN",70],
+["リー・ウェイゼ","WEIZE",53],["ヨハン・エマニュエル","YOHAN",78],
+["矢田 佳暉","YOSHIKI",1],["後藤 結","YUKI",17],["岡田 侑磨","YUMA",47],
+["安部 結蘭","YURA",4],["大林 悠成","YUSEI.O",24],["佐野 由征","YUSEI.S",60],
+["板倉 悠太","YUTA",19],
+];
 
-const data = raw.map(r => {
-  const name = r[0];
-  const vals = r.slice(1);
-  const cur = vals[0];
-  const prev = vals[1];
-  const weekGrowth = (prev != null && prev > 0) ? ((cur - prev) / prev * 100) : null;
-  const tier = weekGrowth == null ? 'steady' : weekGrowth >= 40 ? 'hot' : weekGrowth >= 10 ? 'rise' : 'steady';
-  return { name, vals, cur, prev, weekGrowth, tier };
+const voteMap = {};
+rawVote.forEach(r => { voteMap[r[0]] = r.slice(2); });
+
+const dataRaw = rawPlay.map(r => {
+  const name=r[0], reading=r[1], vals=r.slice(2);
+  const cur=vals[4], prev=vals[3];
+  const growAbs = prev!=null ? +(cur-prev).toFixed(2) : null;
+  const growPct = (prev!=null&&prev>0) ? +((cur-prev)/prev*100).toFixed(1) : null;
+  const votes = voteMap[name]||[];
+  return {name,reading,vals,cur,prev,growAbs,growPct,tier:'steady',votes};
 });
 
-const C = { hot: '#ff5c35', rise: '#4ec87a', steady: '#444442' };
-const labels = { hot: '急上昇', rise: '上昇中', steady: '安定' };
-
-let cTop = null, cAll = null, cSearch = null;
-
-function switchTab(t) {
-  ['top','all','search'].forEach(id => {
-    document.getElementById('tab-'+id).classList.toggle('active', id===t);
+(function(){
+  const w=dataRaw.filter(d=>d.growPct!=null).sort((a,b)=>b.growPct-a.growPct);
+  const n=w.length, t15=Math.ceil(n*0.15), t30=Math.ceil(n*0.30);
+  w.forEach((d,i)=>{
+    if(i<t15&&d.growPct>=20) d.tier='hot';
+    else if(i<t30&&d.growPct>=10) d.tier='rise';
   });
-  document.querySelectorAll('.tab').forEach((el,i) => {
-    el.classList.toggle('active', ['top','all','search'][i]===t);
+})();
+
+const data=dataRaw;
+const tierLabel={hot:'急上昇',rise:'上昇中',steady:'安定'};
+const tierColor={hot:'#ff5c35',rise:'#4ec87a',steady:'#555552'};
+
+let selected=[], chartTrend=null, currentGraph='play';
+
+function switchTab(t){
+  ['watch','all','trend'].forEach((id,i)=>{
+    document.getElementById('tab-'+id).classList.toggle('active',id===t);
+    document.querySelectorAll('.tab')[i].classList.toggle('active',id===t);
   });
-  if (t==='top' && !cTop) renderTop();
-  if (t==='all') renderAll();
-  if (t==='search') renderSearch();
+  if(t==='all') renderAll();
+  if(t==='trend') renderTrend();
 }
 
-function renderTop() {
-  const top10 = [...data].filter(d=>d.weekGrowth!=null).sort((a,b)=>b.weekGrowth-a.weekGrowth).slice(0,10);
-  document.getElementById('top-cards').innerHTML = top10.map(d=>`
-    <div class="card">
-      <div class="card-name">${d.name}</div>
-      <div class="card-val" style="color:${C[d.tier]}">+${d.weekGrowth.toFixed(1)}%</div>
-      <div class="card-sub">${d.cur.toFixed(1)}万 <span class="badge badge-${d.tier}">${labels[d.tier]}</span></div>
-    </div>
-  `).join('');
+function switchGraph(type){
+  currentGraph=type;
+  document.querySelectorAll('.g-tab').forEach((el,i)=>el.classList.toggle('active',['play','rank'][i]===type));
+  renderTrend();
+}
 
-  if (cTop) cTop.destroy();
-  cTop = new Chart(document.getElementById('chartTop'), {
-    type: 'bar',
-    data: {
-      labels: top10.map(d=>d.name.length>7?d.name.slice(0,7)+'…':d.name),
-      datasets: [
-        { label:'先週', data: top10.map(d=>d.prev), backgroundColor:'#333330' },
-        { label:'今週', data: top10.map(d=>d.cur), backgroundColor: top10.map(d=>C[d.tier]) }
-      ]
-    },
-    options: {
-      responsive:true, maintainAspectRatio:false,
-      plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label: c=>` ${c.dataset.label}: ${c.parsed.y.toFixed(1)}万回` } } },
-      scales:{
-        x:{ ticks:{ color:'#888', font:{size:11}, autoSkip:false, maxRotation:35 }, grid:{color:'rgba(255,255,255,0.04)'} },
-        y:{ ticks:{ color:'#888', font:{size:11} }, grid:{color:'rgba(255,255,255,0.04)'} }
+function sortList(list,sort){
+  if(sort==='abc') list.sort((a,b)=>a.reading.localeCompare(b.reading));
+  else if(sort==='name') list.sort((a,b)=>a.name.localeCompare(b.name,'ja'));
+  else if(sort==='cur') list.sort((a,b)=>b.cur-a.cur);
+  else if(sort==='growth') list.sort((a,b)=>(b.growPct||0)-(a.growPct||0));
+  else if(sort==='growabs') list.sort((a,b)=>(b.growAbs||0)-(a.growAbs||0));
+  else if(sort==='rank') list.sort((a,b)=>(a.votes[0]||999)-(b.votes[0]||999));
+  return list;
+}
+
+function filterPicker(){
+  const q=document.getElementById('pick-search').value.toLowerCase();
+  const sort=document.getElementById('pick-sort').value;
+  let list=[...data];
+  if(q) list=list.filter(d=>d.name.includes(q)||d.reading.toLowerCase().includes(q));
+  sortList(list,sort);
+  document.getElementById('picker').innerHTML=list.map(d=>{
+    const sel=selected.includes(d.name);
+    return `<button class="pick-btn ${sel?'selected':''}" onclick="togglePick('${d.name}')" title="${d.name}（${d.reading}）">${d.name}</button>`;
+  }).join('');
+}
+
+function togglePick(name){
+  if(selected.includes(name)) selected=selected.filter(n=>n!==name);
+  else{ if(selected.length>=12) return; selected.push(name); }
+  document.getElementById('pick-count').textContent=selected.length+' / 12 選択中';
+  filterPicker(); renderWatch();
+  if(document.getElementById('tab-trend').classList.contains('active')) renderTrend();
+}
+
+function clearSelection(){
+  selected=[];
+  document.getElementById('pick-count').textContent='0 / 12 選択中';
+  filterPicker(); renderWatch();
+}
+
+function renderWatch(){
+  const el=document.getElementById('watch-content');
+  if(!selected.length){el.innerHTML='<p style="font-size:0.78rem;color:var(--muted);margin-top:0.5rem;">上のリストから練習生を選んでください</p>';return;}
+  const items=selected.map(n=>data.find(d=>d.name===n)).filter(Boolean);
+  const cards=items.map(d=>{
+    const gStr=d.growPct!=null?'+'+d.growPct+'%':'-';
+    const gAbsStr=d.growAbs!=null?'+'+d.growAbs+'万':'-';
+    const vStr=d.votes.length?VOTE_DATES[0]+': '+d.votes[0]+'位':'投票未発表';
+    return `<div class="card">
+      <div class="card-name">${d.name} <span style="font-size:0.6rem;color:var(--hint);font-family:monospace;">${d.reading}</span></div>
+      <div class="card-val" style="color:${tierColor[d.tier]}">${gStr}</div>
+      <div class="card-sub">${gAbsStr} &nbsp;${d.cur.toFixed(1)}万 <span class="badge badge-${d.tier}">${tierLabel[d.tier]}</span></div>
+      <div style="font-size:0.65rem;color:var(--hint);margin-top:3px;font-family:monospace;">${vStr}</div>
+    </div>`;
+  }).join('');
+  el.innerHTML=`<div class="legend">
+    <span class="leg"><span class="leg-dot" style="background:var(--hot)"></span>急上昇（上位15%かつ+20%↑）</span>
+    <span class="leg"><span class="leg-dot" style="background:var(--rise)"></span>上昇中（上位30%かつ+10%↑）</span>
+  </div><div class="cards">${cards}</div>`;
+}
+
+function renderAll(){
+  const sort=document.getElementById('all-sort').value;
+  const filter=document.getElementById('all-filter').value;
+  let list=[...data];
+  if(filter==='hot') list=list.filter(d=>d.tier==='hot');
+  if(filter==='rise') list=list.filter(d=>d.tier==='hot'||d.tier==='rise');
+  sortList(list,sort);
+  const vHeaders=VOTE_DATES.map(d=>`<th>${d}順位</th>`).join('');
+  let html=`<thead><tr><th style="text-align:left;">名前</th><th>reading</th><th>現在（万回）</th><th>週間+（万）</th><th>週間伸び率</th>${vHeaders}</tr></thead><tbody>`;
+  list.forEach(d=>{
+    const cls=d.tier==='hot'?'td-hot':d.tier==='rise'?'td-rise':'';
+    const gPct=d.growPct!=null?`<span class="${cls}">+${d.growPct}%</span>`:'-';
+    const gAbs=d.growAbs!=null?`<span class="${cls}">${d.growAbs>0?'+':''}${d.growAbs}</span>`:'-';
+    const votes=VOTE_DATES.map((_,i)=>`<td>${d.votes[i]!=null?d.votes[i]+'位':'-'}</td>`).join('');
+    html+=`<tr><td>${d.name}</td><td style="color:var(--hint);font-size:0.7rem;">${d.reading}</td><td>${d.cur.toFixed(1)}</td><td>${gAbs}</td><td>${gPct}</td>${votes}</tr>`;
+  });
+  html+='</tbody>';
+  document.getElementById('all-table').innerHTML=html;
+}
+
+function renderTrend(){
+  const ctx=document.getElementById('chartTrend');
+  if(chartTrend){chartTrend.destroy();chartTrend=null;}
+  if(!selected.length) return;
+  const items=selected.map(n=>data.find(d=>d.name===n)).filter(Boolean);
+
+  if(currentGraph==='play'){
+    chartTrend=new Chart(ctx,{
+      type:'line',
+      data:{
+        labels:PLAY_DATES,
+        datasets:items.map((d,i)=>({
+          label:d.name, data:d.vals,
+          borderColor:palette[i%palette.length], backgroundColor:'transparent',
+          tension:0.3, pointRadius:4, spanGaps:true,
+        }))
+      },
+      options:{
+        responsive:true, maintainAspectRatio:false,
+        plugins:{
+          legend:{display:true,position:'bottom',labels:{color:'#888',font:{size:11},boxWidth:10,padding:10}},
+          tooltip:{callbacks:{label:c=>` ${c.dataset.label}: ${c.parsed.y!=null?c.parsed.y.toFixed(1)+'万回':'-'}`}}
+        },
+        scales:{
+          x:{ticks:{color:'#888',font:{size:11}},grid:{color:'rgba(255,255,255,0.04)'}},
+          y:{ticks:{color:'#888',font:{size:11}},grid:{color:'rgba(255,255,255,0.04)'},title:{display:true,text:'万回',color:'#888',font:{size:11}}}
+        }
       }
-    }
-  });
-}
-
-function renderAll() {
-  const sort = document.getElementById('sortAll').value;
-  const filter = document.getElementById('filterAll').value;
-  let d2 = [...data];
-  if (filter==='hot') d2=d2.filter(d=>d.tier==='hot');
-  if (filter==='rise') d2=d2.filter(d=>d.tier==='hot'||d.tier==='rise');
-  if (sort==='growth') d2.sort((a,b)=>(b.weekGrowth||0)-(a.weekGrowth||0));
-  if (sort==='total') d2.sort((a,b)=>b.cur-a.cur);
-  if (sort==='name') d2.sort((a,b)=>a.name.localeCompare(b.name,'ja'));
-
-  document.getElementById('allWrap').style.height = Math.max(300, d2.length*26+60)+'px';
-
-  if (cAll) cAll.destroy();
-  cAll = new Chart(document.getElementById('chartAll'), {
-    type:'bar',
-    data:{
-      labels: d2.map(d=>d.name.length>8?d.name.slice(0,8)+'…':d.name),
-      datasets:[{ label:'再生数（万回）', data:d2.map(d=>d.cur), backgroundColor:d2.map(d=>C[d.tier]) }]
-    },
-    options:{
-      indexAxis:'y', responsive:true, maintainAspectRatio:false,
-      plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label: c=>{ const item=d2[c.dataIndex]; const g=item.weekGrowth!=null?` +${item.weekGrowth.toFixed(1)}%`:''; return ` ${c.parsed.x.toFixed(1)}万回${g}`; } } } },
-      scales:{
-        x:{ ticks:{color:'#888',font:{size:11}}, grid:{color:'rgba(255,255,255,0.04)'} },
-        y:{ ticks:{color:'#888',font:{size:10}}, grid:{color:'rgba(255,255,255,0.04)'} }
+    });
+  } else {
+    const withVote=items.filter(d=>d.votes.length>0);
+    if(!withVote.length) return;
+    chartTrend=new Chart(ctx,{
+      type:'line',
+      data:{
+        labels:VOTE_DATES,
+        datasets:withVote.map((d,i)=>({
+          label:d.name, data:d.votes,
+          borderColor:palette[i%palette.length], backgroundColor:'transparent',
+          tension:0.3, pointRadius:5, spanGaps:true,
+          datalabels:{display:false},
+        }))
+      },
+      options:{
+        responsive:true, maintainAspectRatio:false,
+        plugins:{
+          legend:{display:true,position:'bottom',labels:{color:'#888',font:{size:11},boxWidth:10,padding:10}},
+          tooltip:{callbacks:{label:c=>` ${c.dataset.label}: ${c.parsed.y}位`}},
+        },
+        scales:{
+          x:{ticks:{color:'#888',font:{size:11}},grid:{color:'rgba(255,255,255,0.04)'}},
+          y:{reverse:true,ticks:{color:'#888',font:{size:11},callback:v=>v+'位'},grid:{color:'rgba(255,255,255,0.04)'},title:{display:true,text:'順位（上が1位）',color:'#888',font:{size:11}}}
+        },
+        animation:{onComplete: function(){
+          const chart=this;
+          const ctx2=chart.ctx;
+          ctx2.save();
+          ctx2.font='bold 11px monospace';
+          ctx2.textAlign='center';
+          chart.data.datasets.forEach((ds,di)=>{
+            const meta=chart.getDatasetMeta(di);
+            meta.data.forEach((pt,pi)=>{
+              const val=ds.data[pi];
+              if(val==null) return;
+              ctx2.fillStyle=ds.borderColor;
+              ctx2.fillText(val+'位', pt.x, pt.y-10);
+            });
+          });
+          ctx2.restore();
+        }}
       }
-    }
-  });
+    });
+  }
 }
 
-function renderSearch() {
-  const q = document.getElementById('searchBox').value;
-  const matches = data.filter(d=>d.name.includes(q)).slice(0,8);
-  if (cSearch) cSearch.destroy();
-  if (!matches.length) return;
-  const palette = ['#ff5c35','#4ec87a','#c8b8ff','#f0c040','#60c8e0','#e080c0','#80d060','#a0a8ff'];
-  cSearch = new Chart(document.getElementById('chartSearch'),{
-    type:'line',
-    data:{
-      labels:[...dates].reverse(),
-      datasets: matches.map((d,i)=>({
-        label:d.name, data:[...d.vals].reverse(),
-        borderColor:palette[i%palette.length], backgroundColor:'transparent',
-        tension:0.3, pointRadius:4, spanGaps:true
-      }))
-    },
-    options:{
-      responsive:true, maintainAspectRatio:false,
-      plugins:{ legend:{ display:true, position:'bottom', labels:{ color:'#888', font:{size:11}, boxWidth:10, padding:10 } }, tooltip:{ callbacks:{ label:c=>` ${c.dataset.label}: ${c.parsed.y!=null?c.parsed.y.toFixed(1)+'万回':'-'}` } } },
-      scales:{
-        x:{ ticks:{color:'#888',font:{size:11}}, grid:{color:'rgba(255,255,255,0.04)'} },
-        y:{ ticks:{color:'#888',font:{size:11}}, grid:{color:'rgba(255,255,255,0.04)'} }
-      }
-    }
-  });
-}
-
-renderTop();
+filterPicker();
+renderWatch();
 </script>
 </body>
 </html>
