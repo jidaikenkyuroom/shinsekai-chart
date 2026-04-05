@@ -248,6 +248,17 @@ const tierColor={hot:'#ff5c35',rise:'#4ec87a',steady:'#555552'};
 
 let selected=[], chartTrend=null, currentGraph='play';
 
+function saveSelection(){
+  try{ localStorage.setItem('shinsekai_selected', JSON.stringify(selected)); }catch(e){}
+}
+
+function loadSelection(){
+  try{
+    const saved = localStorage.getItem('shinsekai_selected');
+    if(saved) selected = JSON.parse(saved).filter(n => data.find(d=>d.name===n));
+  }catch(e){}
+}
+
 function switchTab(t){
   ['watch','all','trend'].forEach((id,i)=>{
     document.getElementById('tab-'+id).classList.toggle('active',id===t);
@@ -288,6 +299,7 @@ function filterPicker(){
 function togglePick(name){
   if(selected.includes(name)) selected=selected.filter(n=>n!==name);
   else{ if(selected.length>=12) return; selected.push(name); }
+  saveSelection();
   document.getElementById('pick-count').textContent=selected.length+' / 12 選択中';
   filterPicker(); renderWatch();
   if(document.getElementById('tab-trend').classList.contains('active')) renderTrend();
@@ -295,6 +307,7 @@ function togglePick(name){
 
 function clearSelection(){
   selected=[];
+  saveSelection();
   document.getElementById('pick-count').textContent='0 / 12 選択中';
   filterPicker(); renderWatch();
 }
@@ -415,6 +428,8 @@ function renderTrend(){
   }
 }
 
+loadSelection();
+document.getElementById('pick-count').textContent=selected.length+' / 12 選択中';
 filterPicker();
 renderWatch();
 </script>
