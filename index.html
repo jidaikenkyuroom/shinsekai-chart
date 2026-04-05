@@ -115,7 +115,7 @@ tr:hover td{background:var(--surface);}
   </div>
 
   <div id="tab-trend" class="section">
-    <p class="sub-label">マイリストで選んだ候補生の推移を表示します</p>
+    <p class="sub-label">マイリストで選んだ練習生の推移を表示します</p>
     <div class="g-tabs">
       <button class="g-tab active" onclick="switchGraph('play')">再生数推移</button>
       <button class="g-tab" onclick="switchGraph('rank')">順位推移</button>
@@ -414,6 +414,7 @@ function renderTrend(){
           ctx2.textAlign='center';
           chart.data.datasets.forEach((ds,di)=>{
             const meta=chart.getDatasetMeta(di);
+            if(meta.hidden) return;
             meta.data.forEach((pt,pi)=>{
               const val=ds.data[pi];
               if(val==null) return;
