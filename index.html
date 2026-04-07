@@ -45,6 +45,20 @@ input[type=text]::placeholder{color:var(--hint);}
 .badge-hot{background:rgba(255,92,53,0.15);color:var(--hot);border:1px solid rgba(255,92,53,0.3);}
 .badge-rise{background:rgba(78,200,122,0.12);color:var(--rise);border:1px solid rgba(78,200,122,0.25);}
 .badge-steady{background:rgba(85,85,82,0.2);color:#888884;border:1px solid rgba(85,85,82,0.3);}
+.badge-cls-up{background:rgba(78,200,122,0.12);color:var(--cls-up);border:1px solid rgba(78,200,122,0.3);}
+.badge-cls-keep{background:rgba(136,136,132,0.15);color:var(--cls-keep);border:1px solid rgba(136,136,132,0.3);}
+.badge-cls-down{background:rgba(255,92,53,0.12);color:var(--cls-down);border:1px solid rgba(255,92,53,0.25);}
+.badge-cls-aa{background:rgba(240,192,64,0.15);color:var(--cls-aa);border:1px solid rgba(240,192,64,0.4);}
+.td-cls-aa{color:var(--cls-aa)!important;}
+.td-cls-up{color:var(--cls-up)!important;}
+.td-cls-keep{color:var(--cls-keep)!important;}
+.td-cls-down{color:var(--cls-down)!important;}
+.hm-group-label{font-size:0.65rem;color:var(--accent);font-family:monospace;padding:8px 0 3px 0;letter-spacing:0.05em;}
+/* 散布図 */
+.scatter-wrap{position:relative;width:100%;}
+.scatter-legend{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:0.75rem;font-size:0.7rem;color:var(--muted);}
+.scatter-leg{display:flex;align-items:center;gap:5px;}
+.scatter-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
 .chart-wrap{position:relative;width:100%;}
 .legend{display:flex;gap:1rem;margin-bottom:0.6rem;flex-wrap:wrap;}
 .leg{display:flex;align-items:center;gap:5px;font-size:0.7rem;color:var(--muted);}
@@ -59,18 +73,6 @@ td:nth-child(2){text-align:left;}
 tr:hover td{background:var(--surface);}
 .td-hot{color:var(--hot)!important;}
 .td-rise{color:var(--rise)!important;}
-.badge-cls-up{background:rgba(78,200,122,0.12);color:var(--cls-up);border:1px solid rgba(78,200,122,0.3);}
-.badge-cls-keep{background:rgba(136,136,132,0.15);color:var(--cls-keep);border:1px solid rgba(136,136,132,0.3);}
-.badge-cls-down{background:rgba(255,92,53,0.12);color:var(--cls-down);border:1px solid rgba(255,92,53,0.25);}
-.badge-cls-aa{background:rgba(240,192,64,0.15);color:var(--cls-aa);border:1px solid rgba(240,192,64,0.4);}
-.td-cls-up{color:var(--cls-up)!important;}
-.td-cls-keep{color:var(--cls-keep)!important;}
-.td-cls-down{color:var(--cls-down)!important;}
-.td-cls-aa{color:var(--cls-aa)!important;}
-.scatter-wrap{position:relative;width:100%;}
-.scatter-legend{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:0.75rem;font-size:0.7rem;color:var(--muted);}
-.scatter-leg{display:flex;align-items:center;gap:5px;}
-.scatter-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
 .g-tabs{display:flex;gap:6px;margin-bottom:1rem;}
 .g-tab{font-size:0.75rem;padding:4px 14px;border-radius:5px;border:1px solid var(--border2);background:transparent;color:var(--muted);cursor:pointer;font-family:inherit;}
 .g-tab.active{background:rgba(200,184,255,0.12);border-color:rgba(200,184,255,0.4);color:var(--accent);}
@@ -97,6 +99,9 @@ tr:hover td{background:var(--surface);}
 <div class="main">
 
   <div id="tab-watch" class="section active">
+    <blockquote style="border-left:3px solid var(--border2);background:var(--surface);padding:0.8rem 1.1rem;margin-bottom:1.25rem;border-radius:0 5px 5px 0;font-size:0.76rem;color:var(--text);opacity:0.75;line-height:1.8;">
+      気になる練習生を最大12名まで登録できます。週間伸び率・再生数・クラス変動をカードで一覧表示。スパークラインで推移も確認できます。選択状態はブラウザに自動保存されます。
+    </blockquote>
     <div class="row">
       <span class="label">練習生を選ぶ（最大12名）</span>
       <span class="pick-info" id="pick-count">0 / 12 選択中</span>
@@ -116,6 +121,9 @@ tr:hover td{background:var(--surface);}
   </div>
 
   <div id="tab-all" class="section">
+    <blockquote style="border-left:3px solid var(--border2);background:var(--surface);padding:0.8rem 1.1rem;margin-bottom:1.25rem;border-radius:0 5px 5px 0;font-size:0.76rem;color:var(--text);opacity:0.75;line-height:1.8;">
+      101名全員のデータを一覧で比較できます。週間伸び率・伸び数・再生数・投票順位で並び替えたり、「急上昇のみ」に絞り込んだりと、全体像を眺めたいときに。「知らなかったけど急伸してる人」を発見しやすいタブです。
+    </blockquote>
     <div class="row">
       <span class="label">並び替え:</span>
       <select id="all-sort" onchange="renderAll()">
@@ -129,12 +137,17 @@ tr:hover td{background:var(--surface);}
         <option value="all">全員</option>
         <option value="hot">急上昇のみ</option>
         <option value="rise">上昇中以上</option>
+        <option value="cls-up">クラスUPのみ</option>
+        <option value="cls-down">クラスDOWNのみ</option>
       </select>
     </div>
     <div class="tbl-wrap"><table id="all-table"></table></div>
   </div>
 
   <div id="tab-trend" class="section">
+    <blockquote style="border-left:3px solid var(--border2);background:var(--surface);padding:0.8rem 1.1rem;margin-bottom:1.25rem;border-radius:0 5px 5px 0;font-size:0.76rem;color:var(--text);opacity:0.75;line-height:1.8;">
+      マイリストに登録した練習生の数値推移を折れ線グラフで比較します。「再生数推移」では週ごとの注目度の伸びを、「順位推移」では投票順位の変動を、「伸び率推移」では各週の前週比伸び率の変化を確認できます。複数人を重ねて見ると差が際立ちます。
+    </blockquote>
     <p class="sub-label">マイリストで選んだ練習生の推移を表示します</p>
     <div class="g-tabs">
       <button class="g-tab active" onclick="switchGraph('play')">再生数推移</button>
@@ -145,10 +158,14 @@ tr:hover td{background:var(--surface);}
   </div>
 
   <div id="tab-heat" class="section">
+    <blockquote style="border-left:3px solid var(--border2);background:var(--surface);padding:0.8rem 1.1rem;margin-bottom:1.25rem;border-radius:0 5px 5px 0;font-size:0.76rem;color:var(--text);opacity:0.75;line-height:1.8;">
+      各週の再生数増加量を色の濃さで表示します。濃い緑ほどその週の伸びが大きい。「再評価クラス帯順」で並べると、スキルと注目度の関係が見えてきます。特定の週だけ突出して伸びた人の発見に。
+    </blockquote>
     <p class="sub-label">各週の増加数を色の濃さで表示。濃いほど増加大。</p>
     <div class="row">
       <span class="label">並び替え:</span>
       <select id="heat-sort" onchange="renderHeatmap()">
+        <option value="eval-class">再評価クラス帯順（A→F）</option>
         <option value="abc">ABC順</option>
         <option value="cur">再生数（多い順）</option>
         <option value="growth">週間伸び率順</option>
@@ -159,7 +176,10 @@ tr:hover td{background:var(--surface);}
   </div>
 
   <div id="tab-scatter" class="section">
-    <p class="sub-label">縦軸: 週間伸び率　横軸: 投票順位（左が1位・右が101位）　点の色: クラス変動</p>
+    <blockquote style="border-left:3px solid var(--border2);background:var(--surface);padding:0.8rem 1.1rem;margin-bottom:1.25rem;border-radius:0 5px 5px 0;font-size:0.76rem;color:var(--text);opacity:0.75;line-height:1.8;">
+      再生数の伸び率（注目度）と投票順位（人気）の関係を可視化します。左上＝再生も票も伸びている最注目ゾーン。右上＝注目されているのに票が入っていない「埋もれた逸材」ゾーン。点の色はクラス変動、金色はA→Aのトップ維持を示します。
+    </blockquote>
+    <p class="sub-label" style="margin-top:-0.4rem;">縦軸: 週間伸び率　横軸: 投票順位（左が1位・右が101位）　点の色: クラス変動</p>
     <div class="row">
       <span class="label">クラス絞り込み:</span>
       <select id="scatter-filter" onchange="renderScatter()">
@@ -296,13 +316,11 @@ const rawVote = [
 ["板倉 悠太","YUTA",19],
 ];
 
-const voteMap = {};
-rawVote.forEach(r => { voteMap[r[0]] = r.slice(2); });
-
+// ── クラスデータ ──
 const rawClass = [
-["アダム・ナガイ","ADAM","C","A"],["中丸 晏寿","AJU","C","D"],["本荘 晃","AKIRA","F","F"],
-["オム・スアンカワーテン","AOM","B","C"],["アーチャー・ウイ","ARCHER","B","B"],["児島 歩夢","AYUMU.K","F","F"],
-["篠ヶ谷 歩夢","AYUMU.S","B","C"],["小林 千悟","CHISATO","A","B"],["市川 大輝","DAIKI.I","F","D"],
+["アダム・ナガイ","ADAM","A","A"],["中丸 晏寿","AJU","D","B"],["本荘 晃","AKIRA","F","B"],
+["オム・スアンカワーテン","AOM","D","C"],["アーチャー・ウイ","ARCHER","B","B"],["児島 歩夢","AYUMU.K","F","B"],
+["篠ヶ谷 歩夢","AYUMU.S","C","B"],["小林 千悟","CHISATO","B","B"],["市川 大輝","DAIKI.I","F","D"],
 ["加藤 大樹","DAIKI.K","B","A"],["カク・ドンミン","DONGMIN","D","B"],["末川 瑛太","EITA","C","C"],
 ["金田 栄都","EITO","D","D"],["櫻井 楓真","FUMA","D","C"],["小笠原 ジュゼッペ 慧","GIUSEPPE","A","B"],
 ["倉橋 吾槙","GOTEN","B","F"],["村松 遼空","HARUKU","F","F"],["髙城 暖人","HARUTO","F","F"],
@@ -337,10 +355,14 @@ const rawClass = [
 ["板倉 悠太","YUTA","B","F"],
 ];
 
+const voteMap = {};
+rawVote.forEach(r => { voteMap[r[0]] = r.slice(2); });
 const classMap = {};
 rawClass.forEach(r => { classMap[r[0]] = {first:r[2], eval:r[3]}; });
 
-function getClassDiff(first, eval_){ return CLASS_ORDER[first] - CLASS_ORDER[eval_]; }
+function getClassDiff(first, eval_){
+  return CLASS_ORDER[first] - CLASS_ORDER[eval_];
+}
 function getClassLabel(diff, first, eval_){
   if(first==='A' && eval_==='A') return 'aa';
   if(diff > 0) return 'up';
@@ -357,8 +379,8 @@ const dataRaw = rawPlay.map(r => {
   const cls = classMap[name]||{first:'-',eval:'-'};
   const diff = cls.first!=='-' ? getClassDiff(cls.first, cls.eval) : null;
   const clsLabel = diff!==null ? getClassLabel(diff, cls.first, cls.eval) : 'keep';
-  return {name,reading,vals,cur,prev,growAbs,growPct,tier:'steady',votes,
-          classFirst:cls.first,classEval:cls.eval,classDiff:diff,clsLabel};
+  return {name, reading, vals, cur, prev, growAbs, growPct, tier:'steady', votes,
+          classFirst:cls.first, classEval:cls.eval, classDiff:diff, clsLabel};
 });
 
 (function(){
@@ -373,8 +395,9 @@ const dataRaw = rawPlay.map(r => {
 const data=dataRaw;
 const tierLabel={hot:'急上昇',rise:'上昇中',steady:'安定'};
 const tierColor={hot:'#ff5c35',rise:'#4ec87a',steady:'#555552'};
+const clsColor={up:'#4ec87a',keep:'#888884',down:'#ff5c35'};
 
-let selected=[], chartTrend=null, currentGraph='play';
+let selected=[], chartTrend=null, chartScatter=null, currentGraph='play';
 
 function saveSelection(){
   try{ localStorage.setItem('shinsekai_selected', JSON.stringify(selected)); }catch(e){}
@@ -411,7 +434,20 @@ function sortList(list,sort){
   else if(sort==='growth') list.sort((a,b)=>(b.growPct||0)-(a.growPct||0));
   else if(sort==='growabs') list.sort((a,b)=>(b.growAbs||0)-(a.growAbs||0));
   else if(sort==='rank') list.sort((a,b)=>(a.votes[0]||999)-(b.votes[0]||999));
+  else if(sort==='eval-class') list.sort((a,b)=>{
+    const ao=CLASS_ORDER[a.classEval]??5, bo=CLASS_ORDER[b.classEval]??5;
+    if(ao!==bo) return ao-bo;
+    return (CLASS_ORDER[a.classFirst]??5)-(CLASS_ORDER[b.classFirst]??5);
+  });
   return list;
+}
+
+function clsBadgeHtml(d){
+  if(d.classFirst==='-') return '';
+  if(d.clsLabel==='aa') return `<span class="badge badge-cls-aa">A★A</span>`;
+  const arrow = d.clsLabel==='up'?'↑':d.clsLabel==='down'?'↓':'→';
+  const bcls = 'badge badge-cls-'+d.clsLabel;
+  return `<span class="${bcls}">${d.classFirst}${arrow}${d.classEval}</span>`;
 }
 
 function filterPicker(){
@@ -422,7 +458,7 @@ function filterPicker(){
   sortList(list,sort);
   document.getElementById('picker').innerHTML=list.map(d=>{
     const sel=selected.includes(d.name);
-    return `<button class="pick-btn ${sel?'selected':''}" onclick="togglePick('${d.name}')" title="${d.name}（${d.reading}）">${d.name}</button>`;
+    return `<button class="pick-btn ${sel?'selected':''}" onclick="togglePick('${d.name}')" title="${d.name}（${d.reading}）">${d.name}<span style="display:block;font-size:0.58rem;color:var(--hint);font-family:monospace;">${d.reading}</span></button>`;
   }).join('');
 }
 
@@ -443,36 +479,32 @@ function clearSelection(){
 }
 
 function sparkline(vals, color){
-  // 週ごとの伸び率（%）を計算: [3/6→3/14, 3/14→3/21, 3/21→3/28, 3/28→4/4]
-  const diffLabels=["3/6\n→3/14","3/14\n→3/21","3/21\n→3/28","3/28\n→4/4"];
+  // 週ごとの伸び率を計算（前週比%）
   const rates=[];
   for(let i=1;i<vals.length;i++){
     const cur=vals[i], prev=vals[i-1];
-    if(cur!=null&&prev!=null&&prev>0) rates.push({v:+((cur-prev)/prev*100).toFixed(1),i:i-1});
-    else rates.push({v:null,i:i-1});
+    if(cur!=null&&prev!=null&&prev>0) rates.push(+((cur-prev)/prev*100).toFixed(1));
+    else rates.push(null);
   }
-  const validRates=rates.map(r=>r.v).filter(v=>v!=null);
-  if(!validRates.length) return '';
-  const maxR=Math.max(...validRates)||1;
-  const W=100, H=36, pad=4, barW=18, gap=4;
-  const totalBars=4;
-  const unitW=(W-pad*2)/totalBars;
+  const valid=rates.filter(x=>x!=null);
+  if(!valid.length) return '';
+  const W=100, H=32, padX=2, padY=3;
+  const maxR=Math.max(...valid,1);
+  const barW=Math.floor((W-padX*2)/rates.length)-2;
   let bars='';
-  rates.forEach((r,idx)=>{
-    const bx=pad+idx*unitW+unitW*0.15;
-    const bw=unitW*0.7;
-    if(r.v==null){
-      bars+=`<rect x="${bx}" y="${H-pad-2}" width="${bw}" height="2" rx="1" fill="rgba(128,128,128,0.2)"/>`;
-    } else {
-      const barH=Math.max(2, (r.v/maxR)*(H-pad*2-8));
-      const by=H-pad-barH;
-      // 最後の棒だけ少し明るくハイライト
-      const isLast=(idx===rates.length-1);
-      const alpha=isLast?1:0.55;
-      bars+=`<rect x="${bx}" y="${by}" width="${bw}" height="${barH}" rx="1" fill="${color}" opacity="${alpha}"/>`;
+  rates.forEach((r,i)=>{
+    if(r==null) return;
+    const bh=Math.max(2, (r/maxR)*(H-padY*2));
+    const x=padX+i*((W-padX*2)/rates.length)+1;
+    const y=H-padY-bh;
+    const alpha=0.4+0.6*(r/maxR);
+    bars+=`<rect x="${x}" y="${y}" width="${barW}" height="${bh}" rx="1" fill="${color}" opacity="${alpha}"/>`;
+    // 最後のバーにラベル
+    if(i===rates.length-1){
+      bars+=`<text x="${x+barW/2}" y="${y-2}" text-anchor="middle" font-size="7" font-family="monospace" fill="${color}">+${r}%</text>`;
     }
   });
-  return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:36px;display:block;margin-top:5px;" title="週間伸び率推移（左から古い順）">${bars}</svg>`;
+  return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:36px;display:block;margin-top:5px;">${bars}</svg>`;
 }
 
 function renderWatch(){
@@ -487,8 +519,7 @@ function renderWatch(){
     return `<div class="card">
       <div class="card-name">${d.name} <span style="font-size:0.6rem;color:var(--hint);font-family:monospace;">${d.reading}</span></div>
       <div class="card-val" style="color:${tierColor[d.tier]}">${gStr}</div>
-      <div class="card-sub">${gAbsStr} &nbsp;${d.cur.toFixed(1)}万 <span class="badge badge-${d.tier}">${tierLabel[d.tier]}</span></div>
-      <div style="font-size:0.58rem;color:var(--hint);margin-top:5px;font-family:monospace;">週間伸び率推移 →</div>
+      <div class="card-sub">${gAbsStr} &nbsp;${d.cur.toFixed(1)}万 <span class="badge badge-${d.tier}">${tierLabel[d.tier]}</span> ${clsBadgeHtml(d)}</div>
       ${spark}
       <div style="font-size:0.65rem;color:var(--hint);margin-top:3px;font-family:monospace;">${vStr}</div>
     </div>`;
@@ -496,6 +527,9 @@ function renderWatch(){
   el.innerHTML=`<div class="legend">
     <span class="leg"><span class="leg-dot" style="background:var(--hot)"></span>急上昇（上位15%かつ+20%↑）</span>
     <span class="leg"><span class="leg-dot" style="background:var(--rise)"></span>上昇中（上位30%かつ+10%↑）</span>
+    <span class="leg"><span class="leg-dot" style="background:var(--cls-aa)"></span>A★A（トップ維持）</span>
+    <span class="leg"><span class="leg-dot" style="background:var(--cls-up)"></span>クラスUP</span>
+    <span class="leg"><span class="leg-dot" style="background:var(--cls-down)"></span>クラスDOWN</span>
   </div><div class="cards">${cards}</div>`;
 }
 
@@ -518,23 +552,36 @@ function renderHeatmap(){
   diffLabels.forEach(l=>{ html+=`<div class="hm-head">${l}</div>`; });
   html+='</div>';
 
-  sorted.forEach(d=>{
-    html+=`<div class="hm-row"><div class="hm-name" title="${d.name}">${d.name}<span style="display:block;font-size:0.58rem;color:var(--hint);">${d.cur.toFixed(1)}万</span></div>`;
-    for(let i=1;i<d.vals.length;i++){
-      const cur=d.vals[i], prev=d.vals[i-1];
-      if(cur==null||prev==null){
-        html+=`<div class="hm-cell" style="background:rgba(128,128,128,0.06);color:var(--hint);">-</div>`;
-      } else {
-        const diff=+(cur-prev).toFixed(2);
-        const intensity=Math.min(diff/maxD,1);
-        const alpha=0.1+intensity*0.75;
-        html+=`<div class="hm-cell" style="background:rgba(78,200,122,${alpha});color:${intensity>0.45?'#085041':'#4ec87a'};">+${diff}</div>`;
-      }
-    }
-    html+='</div>';
-  });
+  if(sort==='eval-class'){
+    const groups=['A','B','C','D','F'];
+    groups.forEach(g=>{
+      const members=sorted.filter(d=>d.classEval===g);
+      if(!members.length) return;
+      html+=`<div class="hm-group-label">── 再評価${g}クラス（${members.length}名）──</div>`;
+      members.forEach(d=>{ html+=heatRow(d, maxD); });
+    });
+  } else {
+    sorted.forEach(d=>{ html+=heatRow(d, maxD); });
+  }
   html+='</div>';
   wrap.innerHTML=html;
+}
+
+function heatRow(d, maxD){
+  let html=`<div class="hm-row"><div class="hm-name" title="${d.name}">${d.name}<span style="display:block;font-size:0.58rem;color:var(--hint);">${d.cur.toFixed(1)}万 ${d.classFirst}→${d.classEval}</span></div>`;
+  for(let i=1;i<d.vals.length;i++){
+    const cur=d.vals[i], prev=d.vals[i-1];
+    if(cur==null||prev==null){
+      html+=`<div class="hm-cell" style="background:rgba(128,128,128,0.06);color:var(--hint);">-</div>`;
+    } else {
+      const diff=+(cur-prev).toFixed(2);
+      const intensity=Math.min(diff/maxD,1);
+      const alpha=0.1+intensity*0.75;
+      html+=`<div class="hm-cell" style="background:rgba(78,200,122,${alpha});color:${intensity>0.45?'#085041':'#4ec87a'};">+${diff}</div>`;
+    }
+  }
+  html+='</div>';
+  return html;
 }
 
 function renderAll(){
@@ -543,15 +590,25 @@ function renderAll(){
   let list=[...data];
   if(filter==='hot') list=list.filter(d=>d.tier==='hot');
   if(filter==='rise') list=list.filter(d=>d.tier==='hot'||d.tier==='rise');
+  if(filter==='cls-up') list=list.filter(d=>d.clsLabel==='up');
+  if(filter==='cls-down') list=list.filter(d=>d.clsLabel==='down');
   sortList(list,sort);
   const vHeaders=VOTE_DATES.map(d=>`<th>${d}順位</th>`).join('');
-  let html=`<thead><tr><th style="text-align:left;">名前</th><th>reading</th><th>現在（万回）</th><th>週間+（万）</th><th>週間伸び率</th>${vHeaders}</tr></thead><tbody>`;
+  let html=`<thead><tr><th style="text-align:left;">名前</th><th>reading</th><th>初回</th><th>再評価</th><th>現在（万回）</th><th>週間+（万）</th><th>週間伸び率</th>${vHeaders}</tr></thead><tbody>`;
   list.forEach(d=>{
-    const cls=d.tier==='hot'?'td-hot':d.tier==='rise'?'td-rise':'';
-    const gPct=d.growPct!=null?`<span class="${cls}">+${d.growPct}%</span>`:'-';
-    const gAbs=d.growAbs!=null?`<span class="${cls}">${d.growAbs>0?'+':''}${d.growAbs}</span>`:'-';
+    const tc=d.tier==='hot'?'td-hot':d.tier==='rise'?'td-rise':'';
+    const gPct=d.growPct!=null?`<span class="${tc}">+${d.growPct}%</span>`:'-';
+    const gAbs=d.growAbs!=null?`<span class="${tc}">${d.growAbs>0?'+':''}${d.growAbs}</span>`:'-';
     const votes=VOTE_DATES.map((_,i)=>`<td>${d.votes[i]!=null?d.votes[i]+'位':'-'}</td>`).join('');
-    html+=`<tr><td>${d.name}</td><td style="color:var(--hint);font-size:0.7rem;">${d.reading}</td><td>${d.cur.toFixed(1)}</td><td>${gAbs}</td><td>${gPct}</td>${votes}</tr>`;
+    const cc='td-cls-'+d.clsLabel;
+    const arrow=d.clsLabel==='aa'?'★':d.clsLabel==='up'?'↑':d.clsLabel==='down'?'↓':'→';
+    html+=`<tr>
+      <td>${d.name}</td>
+      <td style="color:var(--hint);font-size:0.7rem;">${d.reading}</td>
+      <td style="text-align:center;">${d.classFirst}</td>
+      <td style="text-align:center;" class="${cc}">${d.classEval}${arrow}</td>
+      <td>${d.cur.toFixed(1)}</td><td>${gAbs}</td><td>${gPct}</td>${votes}
+    </tr>`;
   });
   html+='</tbody>';
   document.getElementById('all-table').innerHTML=html;
@@ -587,23 +644,25 @@ function renderTrend(){
       }
     });
   } else if(currentGraph==='growth'){
-    // 週間伸び率（%）の折れ線グラフ
     const growthLabels=["3/6→3/14","3/14→3/21","3/21→3/28","3/28→4/4"];
-    const datasets=items.map((d,i)=>{
-      const rates=[];
-      for(let j=1;j<d.vals.length;j++){
-        const cur=d.vals[j], prev=d.vals[j-1];
-        rates.push((cur!=null&&prev!=null&&prev>0) ? +((cur-prev)/prev*100).toFixed(1) : null);
-      }
-      return {
-        label:d.name, data:rates,
-        borderColor:palette[i%palette.length], backgroundColor:'transparent',
-        tension:0.3, pointRadius:4, spanGaps:true,
-      };
-    });
     chartTrend=new Chart(ctx,{
       type:'line',
-      data:{labels:growthLabels, datasets},
+      data:{
+        labels:growthLabels,
+        datasets:items.map((d,i)=>{
+          const growthVals=[];
+          for(let j=1;j<d.vals.length;j++){
+            const cur=d.vals[j], prev=d.vals[j-1];
+            if(cur!=null&&prev!=null&&prev>0) growthVals.push(+((cur-prev)/prev*100).toFixed(1));
+            else growthVals.push(null);
+          }
+          return {
+            label:d.name, data:growthVals,
+            borderColor:palette[i%palette.length], backgroundColor:'transparent',
+            tension:0.3, pointRadius:4, spanGaps:true,
+          };
+        })
+      },
       options:{
         responsive:true, maintainAspectRatio:false,
         plugins:{
@@ -612,7 +671,7 @@ function renderTrend(){
         },
         scales:{
           x:{ticks:{color:'#888',font:{size:11}},grid:{color:'rgba(255,255,255,0.04)'}},
-          y:{ticks:{color:'#888',font:{size:11},callback:v=>v+'%'},grid:{color:'rgba(255,255,255,0.04)'},title:{display:true,text:'週間伸び率（%）',color:'#888',font:{size:11}}}
+          y:{ticks:{color:'#888',font:{size:11},callback:v=>(v>=0?'+':'')+v+'%'},grid:{color:'rgba(255,255,255,0.04)'},title:{display:true,text:'前週比伸び率',color:'#888',font:{size:11}}}
         }
       }
     });
@@ -680,7 +739,8 @@ function renderScatter(){
 
   const W=canvas.parentElement.clientWidth||800;
   const H=440;
-  canvas.width=W; canvas.height=H;
+  canvas.width=W;
+  canvas.height=H;
   const pad={top:20,right:30,bottom:50,left:60};
   const plotW=W-pad.left-pad.right;
   const plotH=H-pad.top-pad.bottom;
@@ -712,14 +772,23 @@ function renderScatter(){
   const cy0=toCanvasY(0);
   ctx.beginPath(); ctx.moveTo(pad.left,cy0); ctx.lineTo(W-pad.right,cy0); ctx.stroke();
 
-  ctx.fillStyle='#888884'; ctx.font='11px monospace'; ctx.textAlign='center';
-  [1,25,50,75,101].forEach(rank=>{ ctx.fillText(rank+'位', toCanvasX(rank), H-pad.bottom+16); });
+  ctx.fillStyle='#888884';
+  ctx.font='11px monospace';
+  ctx.textAlign='center';
+  [1,25,50,75,101].forEach(rank=>{
+    ctx.fillText(rank+'位', toCanvasX(rank), H-pad.bottom+16);
+  });
+
   ctx.textAlign='right';
   for(let y=yMin;y<=yMax;y+=10){
     ctx.fillText((y>=0?'+':'')+y+'%', pad.left-6, toCanvasY(y)+4);
   }
-  ctx.fillStyle='#888884'; ctx.font='11px monospace'; ctx.textAlign='center';
+
+  ctx.fillStyle='#888884';
+  ctx.font='11px monospace';
+  ctx.textAlign='center';
   ctx.fillText('投票順位（左が1位・右が101位）', pad.left+plotW/2, H-4);
+
   ctx.save();
   ctx.translate(14, pad.top+plotH/2);
   ctx.rotate(-Math.PI/2);
@@ -731,15 +800,20 @@ function renderScatter(){
     const cx=toCanvasX(d.votes[0]);
     const cy=toCanvasY(d.growPct);
     const color=clsColors[d.clsLabel]||'#888884';
-    ctx.beginPath(); ctx.arc(cx,cy,6,0,Math.PI*2);
-    ctx.fillStyle=color+'cc'; ctx.fill();
-    ctx.strokeStyle=color; ctx.lineWidth=1; ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(cx,cy,6,0,Math.PI*2);
+    ctx.fillStyle=color+'cc';
+    ctx.fill();
+    ctx.strokeStyle=color;
+    ctx.lineWidth=1;
+    ctx.stroke();
     points.push({cx,cy,d});
   });
 
   canvas.onmousemove=function(e){
     const rect=canvas.getBoundingClientRect();
-    const mx=e.clientX-rect.left, my=e.clientY-rect.top;
+    const mx=e.clientX-rect.left;
+    const my=e.clientY-rect.top;
     let hit=null;
     for(const p of points){
       const dx=p.cx-mx, dy=p.cy-my;
@@ -757,8 +831,11 @@ function renderScatter(){
       let tx=hit.cx+12, ty=hit.cy-10;
       if(tx+160>W) tx=hit.cx-170;
       if(ty+100>H) ty=H-110;
-      tooltip.style.left=tx+'px'; tooltip.style.top=ty+'px';
-    } else { tooltip.style.display='none'; }
+      tooltip.style.left=tx+'px';
+      tooltip.style.top=ty+'px';
+    } else {
+      tooltip.style.display='none';
+    }
   };
   canvas.onmouseleave=function(){ tooltip.style.display='none'; };
 }
