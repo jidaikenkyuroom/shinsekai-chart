@@ -100,7 +100,7 @@ tr:hover td{background:var(--surface);}
 
   <div id="tab-watch" class="section active">
     <blockquote style="border-left:3px solid var(--border2);background:var(--surface);padding:0.8rem 1.1rem;margin-bottom:1.25rem;border-radius:0 5px 5px 0;font-size:0.76rem;color:var(--text);opacity:0.75;line-height:1.8;">
-      気になる練習生を最大12名まで登録できます。週間伸び率・再生数・クラス変動をカードで一覧表示。スパークラインで推移も確認できます。選択状態はブラウザに自動保存されます。
+      気になる練習生を最大12名まで登録できます。各カードには週間伸び率・再生数・クラス変動バッジを表示。棒グラフで週ごとの伸び率の変化も一目で確認できます。名前・再生数・伸び率・投票順位で絞り込んで選べます。選択状態はブラウザに自動保存されます。
     </blockquote>
     <div class="row">
       <span class="label">練習生を選ぶ（最大12名）</span>
@@ -122,7 +122,7 @@ tr:hover td{background:var(--surface);}
 
   <div id="tab-all" class="section">
     <blockquote style="border-left:3px solid var(--border2);background:var(--surface);padding:0.8rem 1.1rem;margin-bottom:1.25rem;border-radius:0 5px 5px 0;font-size:0.76rem;color:var(--text);opacity:0.75;line-height:1.8;">
-      101名全員のデータを一覧で比較できます。週間伸び率・伸び数・再生数・投票順位で並び替えたり、「急上昇のみ」に絞り込んだりと、全体像を眺めたいときに。「知らなかったけど急伸してる人」を発見しやすいタブです。
+      101名全員のデータを一覧で比較できます。初回・再評価クラス、週間伸び率・伸び数・再生数・投票順位を横断的に確認。「クラスUPのみ」「急上昇のみ」などで絞り込むと、注目すべき練習生が見つかりやすくなります。
     </blockquote>
     <div class="row">
       <span class="label">並び替え:</span>
@@ -146,7 +146,7 @@ tr:hover td{background:var(--surface);}
 
   <div id="tab-trend" class="section">
     <blockquote style="border-left:3px solid var(--border2);background:var(--surface);padding:0.8rem 1.1rem;margin-bottom:1.25rem;border-radius:0 5px 5px 0;font-size:0.76rem;color:var(--text);opacity:0.75;line-height:1.8;">
-      マイリストに登録した練習生の数値推移を折れ線グラフで比較します。「再生数推移」では週ごとの注目度の伸びを、「順位推移」では投票順位の変動を、「伸び率推移」では各週の前週比伸び率の変化を確認できます。複数人を重ねて見ると差が際立ちます。
+      マイリストに登録した練習生の数値推移を折れ線グラフで比較します。「再生数推移」では週ごとの注目度の積み上がりを、「順位推移」では投票順位の変動を、「伸び率推移」では前週比の加速・減速を確認できます。複数人を重ねて見ると、伸び方の違いや逆転の兆しが際立ちます。
     </blockquote>
     <p class="sub-label">マイリストで選んだ練習生の推移を表示します</p>
     <div class="g-tabs">
@@ -159,7 +159,7 @@ tr:hover td{background:var(--surface);}
 
   <div id="tab-heat" class="section">
     <blockquote style="border-left:3px solid var(--border2);background:var(--surface);padding:0.8rem 1.1rem;margin-bottom:1.25rem;border-radius:0 5px 5px 0;font-size:0.76rem;color:var(--text);opacity:0.75;line-height:1.8;">
-      各週の再生数増加量を色の濃さで表示します。濃い緑ほどその週の伸びが大きい。「再評価クラス帯順」で並べると、スキルと注目度の関係が見えてきます。特定の週だけ突出して伸びた人の発見に。
+      各週の再生数増加量を色の濃さで表示します。濃い緑ほどその週の伸びが大きい。「週間伸び率順」を選ぶと対象週を個別に指定して並び替えできます。「再評価クラス帯順」で並べると、スキル評価と注目度の関係が浮かび上がります。特定の週だけ突出して伸びた人の発見に。
     </blockquote>
     <p class="sub-label">各週の増加数を色の濃さで表示。濃いほど増加大。</p>
     <div class="row">
@@ -171,13 +171,19 @@ tr:hover td{background:var(--surface);}
         <option value="growth">週間伸び率順</option>
         <option value="rank">投票順位順</option>
       </select>
+      <select id="heat-week" onchange="renderHeatmap()" style="display:none;">
+        <option value="0">3/6→3/14</option>
+        <option value="1">3/14→3/21</option>
+        <option value="2">3/21→3/28</option>
+        <option value="3" selected>3/28→4/4</option>
+      </select>
     </div>
     <div id="heatmap-wrap"></div>
   </div>
 
   <div id="tab-scatter" class="section">
     <blockquote style="border-left:3px solid var(--border2);background:var(--surface);padding:0.8rem 1.1rem;margin-bottom:1.25rem;border-radius:0 5px 5px 0;font-size:0.76rem;color:var(--text);opacity:0.75;line-height:1.8;">
-      再生数の伸び率（注目度）と投票順位（人気）の関係を可視化します。左上＝再生も票も伸びている最注目ゾーン。右上＝注目されているのに票が入っていない「埋もれた逸材」ゾーン。点の色はクラス変動、金色はA→Aのトップ維持を示します。
+      再生数の週間伸び率（注目度）と投票順位（人気）の関係を2軸で可視化します。左上＝再生も票も伸びている最注目ゾーン、右上＝注目されているのに票が入っていない「埋もれた逸材」ゾーン。点の色はクラス変動を表し、金色はA→Aのトップ維持。初回・再評価クラス別に絞り込んで傾向を比較できます。
     </blockquote>
     <p class="sub-label" style="margin-top:-0.4rem;">縦軸: 週間伸び率　横軸: 投票順位（左が1位・右が101位）　点の色: クラス変動</p>
     <div class="row">
@@ -427,11 +433,22 @@ function switchGraph(type){
   renderTrend();
 }
 
-function sortList(list,sort){
+function sortList(list, sort, weekIdx){
   if(sort==='abc') list.sort((a,b)=>a.reading.localeCompare(b.reading));
   else if(sort==='name') list.sort((a,b)=>a.name.localeCompare(b.name,'ja'));
   else if(sort==='cur') list.sort((a,b)=>b.cur-a.cur);
-  else if(sort==='growth') list.sort((a,b)=>(b.growPct||0)-(a.growPct||0));
+  else if(sort==='growth'){
+    // weekIdxが指定されていればその週の伸び率、なければ最新週
+    const wi = weekIdx!=null ? weekIdx : (d=>d.vals.length-2);
+    list.sort((a,b)=>{
+      const getRate=(d)=>{
+        const idx = typeof wi==='function' ? wi(d) : wi;
+        const cur=d.vals[idx+1], prev=d.vals[idx];
+        return (cur!=null&&prev!=null&&prev>0) ? (cur-prev)/prev*100 : 0;
+      };
+      return getRate(b)-getRate(a);
+    });
+  }
   else if(sort==='growabs') list.sort((a,b)=>(b.growAbs||0)-(a.growAbs||0));
   else if(sort==='rank') list.sort((a,b)=>(a.votes[0]||999)-(b.votes[0]||999));
   else if(sort==='eval-class') list.sort((a,b)=>{
@@ -536,9 +553,14 @@ function renderWatch(){
 function renderHeatmap(){
   const wrap=document.getElementById('heatmap-wrap');
   const sort=document.getElementById('heat-sort').value;
+  const weekSel=document.getElementById('heat-week');
+  const isGrowth=(sort==='growth');
+  weekSel.style.display=isGrowth?'':'none';
+  const weekIdx=isGrowth ? parseInt(weekSel.value) : null;
+
   const diffLabels=["3/6→3/14","3/14→3/21","3/21→3/28","3/28→4/4"];
   const sorted=[...data];
-  sortList(sorted, sort);
+  sortList(sorted, sort, weekIdx);
   const allDiffs=sorted.flatMap(d=>{
     const diffs=[];
     for(let i=1;i<d.vals.length;i++){
