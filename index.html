@@ -182,10 +182,14 @@ tr:hover td{background:var(--surface);}
   </div>
 
   <div id="tab-scatter" class="section">
-    <blockquote style="border-left:3px solid var(--border2);background:var(--surface);padding:0.8rem 1.1rem;margin-bottom:1.25rem;border-radius:0 5px 5px 0;font-size:0.76rem;color:var(--text);opacity:0.75;line-height:1.8;">
-      再生数の週間伸び率（注目度）と投票順位（人気）の関係を2軸で可視化します。左上＝再生も票も伸びている最注目ゾーン、右上＝注目されているのに票が入っていない「埋もれた逸材」ゾーン。点の色はクラス変動を表し、金色はA→Aのトップ維持。初回・再評価クラス別に絞り込んで傾向を比較できます。
+    <div class="g-tabs" style="margin-bottom:0.75rem;">
+      <button class="g-tab active" id="smtab-note" onclick="switchScatterMode('note')">注目度 vs 順位</button>
+      <button class="g-tab" id="smtab-skill" onclick="switchScatterMode('skill')">実力 vs 順位</button>
+    </div>
+    <blockquote id="scatter-bq" style="border-left:3px solid var(--border2);background:var(--surface);padding:0.8rem 1.1rem;margin-bottom:1.25rem;border-radius:0 5px 5px 0;font-size:0.76rem;color:var(--text);opacity:0.75;line-height:1.8;">
+      再生数の週間伸び率（注目度）と投票順位（人気）の関係を2軸で可視化します。左上＝注目されているのに票が入っていない「埋もれた逸材」ゾーン、右上＝再生も票も伸びている最注目ゾーン。点の色はクラス変動を表し、金色はA→Aのトップ維持。
     </blockquote>
-    <p class="sub-label" style="margin-top:-0.4rem;">縦軸: 週間伸び率　横軸: 投票順位（左が1位・右が101位）　点の色: クラス変動</p>
+    <p class="sub-label" id="scatter-sublabel" style="margin-top:-0.4rem;">縦軸: 週間伸び率　横軸: 投票順位（右が1位）　点の色: クラス変動</p>
     <div class="row">
       <span class="label">クラス絞り込み:</span>
       <select id="scatter-filter" onchange="renderScatter()">
@@ -216,11 +220,22 @@ tr:hover td{background:var(--surface);}
       <span class="scatter-leg"><span class="scatter-dot" style="background:#888884"></span>クラス維持</span>
       <span class="scatter-leg"><span class="scatter-dot" style="background:#ff5c35"></span>クラスDOWN</span>
     </div>
-    <div style="position:relative;width:100%;margin-bottom:0.5rem;">
-      <canvas id="chartScatter" style="width:100%;display:block;cursor:crosshair;"></canvas>
-      <div id="scatter-tooltip" style="display:none;position:absolute;background:#1f1f24;border:1px solid rgba(255,255,255,0.13);border-radius:6px;padding:7px 10px;font-size:0.72rem;font-family:monospace;color:#f0f0ee;pointer-events:none;line-height:1.7;z-index:10;"></div>
+    <div class="chart-wrap" style="height:460px;">
+      <canvas id="chartScatter"></canvas>
     </div>
     <p class="sub-label" style="margin-top:0.25rem;">※ 投票順位がない練習生は表示されません</p>
+
+    <!-- 象限カード -->
+    <div style="margin-top:1.5rem;">
+      <div class="g-tabs" id="quadrant-tabs">
+        <button class="g-tab active" onclick="switchQuadrant('tl')" id="qtab-tl"></button>
+        <button class="g-tab" onclick="switchQuadrant('tr')" id="qtab-tr"></button>
+        <button class="g-tab" onclick="switchQuadrant('bl')" id="qtab-bl"></button>
+        <button class="g-tab" onclick="switchQuadrant('br')" id="qtab-br"></button>
+      </div>
+      <p class="sub-label" id="quadrant-desc" style="margin-bottom:0.75rem;"></p>
+      <div class="cards" id="quadrant-cards"></div>
+    </div>
   </div>
 
 </div>
@@ -283,6 +298,38 @@ const rawPlay = [
 ["大林 悠成","YUSEI.O",4.5,5.1,5.6,6.7,8.5],["佐野 由征","YUSEI.S",2,2.2,2.4,2.8,3.2],
 ["板倉 悠太","YUTA",2.5,2.8,3,4,5.8],
 ];
+
+const rawBroadcast = [
+["アダム・ナガイ","前半組"],["中丸 晏寿","前半組"],["本荘 晃","前半組"],["オム・スアンカワーテン","前半組"],
+["アーチャー・ウイ","前半組"],["児島 歩夢","前半組"],["篠ヶ谷 歩夢","前半組"],["小林 千悟","前半組"],
+["市川 大輝","前半組"],["加藤 大樹","前半組"],["カク・ドンミン","後半組"],["末川 瑛太","前半組"],
+["金田 栄都","後半組"],["櫻井 楓真","前半組"],["小笠原 ジュゼッペ 慧","前半組"],["倉橋 吾槙","前半組"],
+["村松 遼空","前半組"],["髙城 暖人","前半組"],["堀尾 聖","前半組"],["平島 輝","前半組"],
+["瑞慶覧 太都","前半組"],["ユ・ヒョンスン","前半組"],["岡田 彪吾","後半組"],["イ・ヒョンジェ","前半組"],
+["柳谷 伊冴","後半組"],["ユン・ジェヨン","前半組"],["ジュアン・ジェイ","後半組"],["丸尾 尋一郎","後半組"],
+["河邊 晟","前半組"],["シン・ジョンウク","前半組"],["金安 純正","前半組"],["リュウ・カイチ","前半組"],
+["宇野 海夢","後半組"],["多比 奏聖","前半組"],["横山 奏夢","後半組"],["黒﨑 貫汰","前半組"],
+["関 敬次郎","前半組"],["黄 敬眞","前半組"],["髙松 敬祐","前半組"],["小野 慶人","後半組"],
+["西山 賢人","前半組"],["釼持 吉成","前半組"],["河合 晃誠","前半組"],["青沼 昂史朗","前半組"],
+["照井 康祐","前半組"],["浅香 孝太郎","後半組"],["髙谷 京平","後半組"],["田中 蒔","後半組"],
+["森 明育","前半組"],["山根 武蔵","後半組"],["土田 央修","前半組"],["小清水 蓮","前半組"],
+["堀野 蓮","前半組"],["小林 蓮翔","前半組"],["チェン・リッキー","後半組"],["神元 理丘","前半組"],
+["今江 陸斗","後半組"],["鳩場 陸人","前半組"],["甲斐 陸也","前半組"],["大瀬 凜和","前半組"],
+["上野 琉偉","前半組"],["水上 琉偉","前半組"],["飯塚 亮賀","前半組"],["石田 亮太","前半組"],
+["岡戸 竜芽","後半組"],["杉山 竜司","前半組"],["香月 誠太","後半組"],["澤井 星名","前半組"],
+["オ・シンヘン","前半組"],["岩城 慎二","前半組"],["宮崎 真佑","前半組"],["西﨑 柊","前半組"],
+["山下 柊","前半組"],["パク・シヨン","前半組"],["松田 颯吾","後半組"],["佐藤 碧空","前半組"],
+["髙橋 空良","前半組"],["西田 颯梓","前半組"],["東野 蒼汰","前半組"],["藤牧 大雅","後半組"],
+["松田 太雅","前半組"],["金倉 拓未","前半組"],["岡本 拓士","前半組"],["熊部 拓斗","前半組"],
+["宮里 拓利","前半組"],["南平 達矢","前半組"],["森井 輝","後半組"],["北林 天虎","前半組"],
+["藤芳 辰弥","前半組"],["増田 倫希","前半組"],["濱田 永遠","前半組"],["アギナルド・トリスタン・ジェームス","後半組"],
+["リー・ウェイゼ","前半組"],["ヨハン・エマニュエル","前半組"],["矢田 佳暉","前半組"],["後藤 結","前半組"],
+["岡田 侑磨","前半組"],["安部 結蘭","後半組"],["大林 悠成","前半組"],["佐野 由征","前半組"],
+["板倉 悠太","前半組"],
+];
+
+const broadcastMap = {};
+rawBroadcast.forEach(r => { broadcastMap[r[0]] = r[1]; });
 
 const rawVote = [
 ["アダム・ナガイ","ADAM",7],["中丸 晏寿","AJU",54],["本荘 晃","AKIRA",51],
@@ -386,7 +433,8 @@ const dataRaw = rawPlay.map(r => {
   const diff = cls.first!=='-' ? getClassDiff(cls.first, cls.eval) : null;
   const clsLabel = diff!==null ? getClassLabel(diff, cls.first, cls.eval) : 'keep';
   return {name, reading, vals, cur, prev, growAbs, growPct, tier:'steady', votes,
-          classFirst:cls.first, classEval:cls.eval, classDiff:diff, clsLabel};
+          classFirst:cls.first, classEval:cls.eval, classDiff:diff, clsLabel,
+          broadcast: broadcastMap[name] || '-'};
 });
 
 (function(){
@@ -616,7 +664,7 @@ function renderAll(){
   if(filter==='cls-down') list=list.filter(d=>d.clsLabel==='down');
   sortList(list,sort);
   const vHeaders=VOTE_DATES.map(d=>`<th>${d}順位</th>`).join('');
-  let html=`<thead><tr><th style="text-align:left;">名前</th><th>reading</th><th>初回</th><th>再評価</th><th>現在（万回）</th><th>週間+（万）</th><th>週間伸び率</th>${vHeaders}</tr></thead><tbody>`;
+  let html=`<thead><tr><th style="text-align:left;">名前</th><th>reading</th><th>初回</th><th>再評価</th><th>レベル分け</th><th>現在（万回）</th><th>週間+（万）</th><th>週間伸び率</th>${vHeaders}</tr></thead><tbody>`;
   list.forEach(d=>{
     const tc=d.tier==='hot'?'td-hot':d.tier==='rise'?'td-rise':'';
     const gPct=d.growPct!=null?`<span class="${tc}">+${d.growPct}%</span>`:'-';
@@ -624,11 +672,13 @@ function renderAll(){
     const votes=VOTE_DATES.map((_,i)=>`<td>${d.votes[i]!=null?d.votes[i]+'位':'-'}</td>`).join('');
     const cc='td-cls-'+d.clsLabel;
     const arrow=d.clsLabel==='aa'?'★':d.clsLabel==='up'?'↑':d.clsLabel==='down'?'↓':'→';
+    const bc = d.broadcast==='前半組' ? 'color:var(--accent)' : 'color:var(--muted)';
     html+=`<tr>
       <td>${d.name}</td>
       <td style="color:var(--hint);font-size:0.7rem;">${d.reading}</td>
       <td style="text-align:center;">${d.classFirst}</td>
       <td style="text-align:center;" class="${cc}">${d.classEval}${arrow}</td>
+      <td style="text-align:center;font-size:0.7rem;${bc}">${d.broadcast}</td>
       <td>${d.cur.toFixed(1)}</td><td>${gAbs}</td><td>${gPct}</td>${votes}
     </tr>`;
   });
@@ -744,122 +794,251 @@ function renderTrend(){
   }
 }
 
+let scatterMode = 'note'; // 'note'=注目度 vs 順位, 'skill'=実力 vs 順位
+
+// 四象限の定義（モード別）
+const QUADRANTS = {
+  note: {
+    tl: { label:'💎 注目↑ 票↓', desc:'注目されているのに票が伸びていない「埋もれた逸材」。ファン拡大のチャンスゾーン。' },
+    tr: { label:'🔥 注目↑ 票↑', desc:'再生数も伸び、投票順位も高い。今最も波に乗っている練習生。' },
+    bl: { label:'😴 注目↓ 票↓', desc:'再生数・投票ともに伸び悩み。巻き返しの糸口が必要なゾーン。' },
+    br: { label:'📉 注目↓ 票↑', desc:'投票順位は高いが再生数の伸びが鈍い。固定ファンに支えられているタイプ。' },
+  },
+  skill: {
+    tl: { label:'💎 実力↑ 票↓', desc:'実力はあるのに票が入っていない「隠れた逸材」。認知拡大が課題。' },
+    tr: { label:'🏆 実力↑ 票↑', desc:'再評価クラスも高く投票順位も上位。実力と人気が一致している練習生。' },
+    bl: { label:'📋 実力↓ 票↓', desc:'クラス・投票ともに伸びしろゾーン。今後の成長が鍵。' },
+    br: { label:'🌟 実力↓ 票↑', desc:'クラスは低めだが票を集めている。キャラクター・ビジュアル人気が強いタイプ。' },
+  },
+};
+
+function switchScatterMode(mode){
+  scatterMode = mode;
+  ['note','skill'].forEach(m => {
+    const el = document.getElementById('smtab-'+m);
+    el.classList.toggle('active', m===mode);
+  });
+  const bq = document.getElementById('scatter-bq');
+  const sl = document.getElementById('scatter-sublabel');
+  if(mode==='note'){
+    bq.textContent = '再生数の週間伸び率（注目度）と投票順位（人気）の関係を2軸で可視化します。左上＝注目されているのに票が入っていない「埋もれた逸材」ゾーン、右上＝再生も票も伸びている最注目ゾーン。点の色はクラス変動を表し、金色はA→Aのトップ維持。';
+    sl.textContent = '縦軸: 週間伸び率　横軸: 投票順位（右が1位）　点の色: クラス変動';
+  } else {
+    bq.textContent = '再評価クラス（実力）と投票順位（人気）の関係を可視化します。左上＝実力はあるのに票が入っていない練習生、右上＝実力も票も高い最注目ゾーン。クラスが高いほど上、投票順位が高いほど右に配置されます。';
+    sl.textContent = '縦軸: 再評価クラス（上がA）　横軸: 投票順位（右が1位）　点の色: クラス変動';
+  }
+  renderScatter();
+}
+let currentQuadrant = 'tl';
+let scatterAllList = [];
+
+function getQuadrant(d, medianRank, medianGrowth, medianSkill){
+  const right = d.votes[0] <= medianRank; // 順位が小さい＝上位＝右側（右が1位）
+  if(scatterMode === 'note'){
+    const up = d.growPct >= medianGrowth;
+    if(up && !right) return 'tl'; // 左上：注目↑ 票↓
+    if(up && right)  return 'tr'; // 右上：注目↑ 票↑
+    if(!up && !right)return 'bl'; // 左下：注目↓ 票↓
+    return 'br';                   // 右下：注目↓ 票↑
+  } else {
+    const clsVal = CLASS_ORDER[d.classEval] != null ? CLASS_ORDER[d.classEval] : 4;
+    const up = clsVal <= medianSkill;
+    if(up && !right) return 'tl';
+    if(up && right)  return 'tr';
+    if(!up && !right)return 'bl';
+    return 'br';
+  }
+}
+
+function switchQuadrant(q){
+  currentQuadrant = q;
+  ['tl','tr','bl','br'].forEach(id => {
+    document.getElementById('qtab-'+id).classList.toggle('active', id===q);
+  });
+  renderQuadrantCards();
+}
+
+function updateQuadrantTabLabels(){
+  const qDefs = QUADRANTS[scatterMode];
+  ['tl','tr','bl','br'].forEach(q => {
+    document.getElementById('qtab-'+q).textContent = qDefs[q].label;
+  });
+}
+
+function renderQuadrantCards(){
+  const q = currentQuadrant;
+  const qList = scatterAllList.filter(d => d.quadrant === q);
+  const qDef = QUADRANTS[scatterMode][q];
+  document.getElementById('quadrant-desc').textContent = qDef.desc + `（${qList.length}名）`;
+  const clsColors = {aa:'#f0c040', up:'#4ec87a', keep:'#888884', down:'#ff5c35'};
+  const tierColor2 = {hot:'#ff5c35', rise:'#4ec87a', steady:'#555552'};
+  const cards = qList.map(d => {
+    const color = clsColors[d.clsLabel] || '#888884';
+    const tierC = tierColor2[d.tier];
+    return `<div class="card">
+      <div class="card-name">${d.name} <span style="font-size:0.6rem;color:var(--hint);font-family:monospace;">${d.reading}</span></div>
+      <div class="card-val" style="color:${color}">${d.classFirst}→${d.classEval}</div>
+      <div class="card-sub">
+        <span>${d.votes[0]}位</span>
+        <span>${d.cur.toFixed(1)}万</span>
+        <span style="color:${tierC}">+${d.growPct}%</span>
+      </div>
+    </div>`;
+  }).join('');
+  document.getElementById('quadrant-cards').innerHTML = cards || '<p style="font-size:0.78rem;color:var(--muted);">該当なし</p>';
+}
+
 function renderScatter(){
-  const canvas=document.getElementById('chartScatter');
-  const tooltip=document.getElementById('scatter-tooltip');
-  const filter=document.getElementById('scatter-filter').value;
+  const filter = document.getElementById('scatter-filter').value;
+  const clsColors = {aa:'#f0c040', up:'#4ec87a', keep:'#888884', down:'#ff5c35'};
 
-  let list=data.filter(d=>d.votes.length>0&&d.growPct!=null);
-  if(filter==='aa') list=list.filter(d=>d.clsLabel==='aa');
-  else if(filter==='up') list=list.filter(d=>d.clsLabel==='up');
-  else if(filter==='keep') list=list.filter(d=>d.clsLabel==='keep');
-  else if(filter==='down') list=list.filter(d=>d.clsLabel==='down');
-  else if(filter.startsWith('first-')) list=list.filter(d=>d.classFirst===filter.slice(6));
-  else if(filter.startsWith('eval-')) list=list.filter(d=>d.classEval===filter.slice(5));
+  const base = data.filter(d => d.votes.length > 0 && d.growPct != null);
 
-  const clsColors={aa:'#f0c040',up:'#4ec87a',keep:'#888884',down:'#ff5c35'};
+  // 中央値計算
+  const ranks = base.map(d => d.votes[0]).sort((a,b)=>a-b);
+  const growths = base.map(d => d.growPct).sort((a,b)=>a-b);
+  const medianRank   = ranks[Math.floor(ranks.length/2)];
+  const medianGrowth = growths[Math.floor(growths.length/2)];
+  const medianSkill  = 1.5; // A(0)・B(1)を「実力あり」、C(2)以下を「実力下」とするためB/C間固定
 
-  const W=canvas.parentElement.clientWidth||800;
-  const H=440;
-  canvas.width=W;
-  canvas.height=H;
-  const pad={top:20,right:30,bottom:50,left:60};
-  const plotW=W-pad.left-pad.right;
-  const plotH=H-pad.top-pad.bottom;
+  // 全員に象限付与
+  scatterAllList = base.map(d => ({...d, quadrant: getQuadrant(d, medianRank, medianGrowth, medianSkill)}));
 
-  const ctx=canvas.getContext('2d');
-  ctx.clearRect(0,0,W,H);
+  // 絞り込み
+  let list = [...scatterAllList];
+  if(filter==='aa') list = list.filter(d => d.clsLabel==='aa');
+  else if(filter==='up') list = list.filter(d => d.clsLabel==='up');
+  else if(filter==='keep') list = list.filter(d => d.clsLabel==='keep');
+  else if(filter==='down') list = list.filter(d => d.clsLabel==='down');
+  else if(filter.startsWith('first-')) list = list.filter(d => d.classFirst===filter.slice(6));
+  else if(filter.startsWith('eval-')) list = list.filter(d => d.classEval===filter.slice(5));
 
-  const xMin=1, xMax=101;
-  const allY=list.map(d=>d.growPct);
-  const yMin=Math.floor(Math.min(...allY,0)/10)*10;
-  const yMax=Math.ceil(Math.max(...allY,10)/10)*10;
+  // モード別にptsを生成
+  const pts = list.map(d => ({
+    x: d.votes[0],
+    y: scatterMode === 'note' ? d.growPct : (CLASS_ORDER[d.classEval] != null ? CLASS_ORDER[d.classEval] : 4),
+    name: d.name, reading: d.reading,
+    clsLabel: d.clsLabel, classFirst: d.classFirst, classEval: d.classEval,
+    cur: d.cur, growPct: d.growPct,
+  }));
 
-  function toCanvasX(rank){ return pad.left+(rank-xMin)/(xMax-xMin)*plotW; }
-  function toCanvasY(pct){ return pad.top+(yMax-pct)/(yMax-yMin)*plotH; }
+  if(chartScatter){ chartScatter.destroy(); chartScatter = null; }
 
-  ctx.strokeStyle='rgba(255,255,255,0.04)';
-  ctx.lineWidth=1;
-  for(let y=yMin;y<=yMax;y+=10){
-    const cy=toCanvasY(y);
-    ctx.beginPath(); ctx.moveTo(pad.left,cy); ctx.lineTo(W-pad.right,cy); ctx.stroke();
-  }
-  [1,25,50,75,101].forEach(rank=>{
-    const cx=toCanvasX(rank);
-    ctx.beginPath(); ctx.moveTo(cx,pad.top); ctx.lineTo(cx,H-pad.bottom); ctx.stroke();
-  });
+  // 四象限プラグイン
+  const quadrantPlugin = {
+    id: 'quadrantBg',
+    beforeDraw(chart){
+      const {ctx, chartArea:{left,right,top,bottom}, scales:{x,y}} = chart;
+      const mx = x.getPixelForValue(medianRank);
+      const my = scatterMode === 'note'
+        ? y.getPixelForValue(medianGrowth)
+        : y.getPixelForValue(medianSkill); // B(1)とC(2)の間＝1.5
 
-  ctx.strokeStyle='rgba(255,255,255,0.15)';
-  ctx.lineWidth=1;
-  const cy0=toCanvasY(0);
-  ctx.beginPath(); ctx.moveTo(pad.left,cy0); ctx.lineTo(W-pad.right,cy0); ctx.stroke();
-
-  ctx.fillStyle='#888884';
-  ctx.font='11px monospace';
-  ctx.textAlign='center';
-  [1,25,50,75,101].forEach(rank=>{
-    ctx.fillText(rank+'位', toCanvasX(rank), H-pad.bottom+16);
-  });
-
-  ctx.textAlign='right';
-  for(let y=yMin;y<=yMax;y+=10){
-    ctx.fillText((y>=0?'+':'')+y+'%', pad.left-6, toCanvasY(y)+4);
-  }
-
-  ctx.fillStyle='#888884';
-  ctx.font='11px monospace';
-  ctx.textAlign='center';
-  ctx.fillText('投票順位（左が1位・右が101位）', pad.left+plotW/2, H-4);
-
-  ctx.save();
-  ctx.translate(14, pad.top+plotH/2);
-  ctx.rotate(-Math.PI/2);
-  ctx.fillText('週間伸び率', 0, 0);
-  ctx.restore();
-
-  const points=[];
-  list.forEach(d=>{
-    const cx=toCanvasX(d.votes[0]);
-    const cy=toCanvasY(d.growPct);
-    const color=clsColors[d.clsLabel]||'#888884';
-    ctx.beginPath();
-    ctx.arc(cx,cy,6,0,Math.PI*2);
-    ctx.fillStyle=color+'cc';
-    ctx.fill();
-    ctx.strokeStyle=color;
-    ctx.lineWidth=1;
-    ctx.stroke();
-    points.push({cx,cy,d});
-  });
-
-  canvas.onmousemove=function(e){
-    const rect=canvas.getBoundingClientRect();
-    const mx=e.clientX-rect.left;
-    const my=e.clientY-rect.top;
-    let hit=null;
-    for(const p of points){
-      const dx=p.cx-mx, dy=p.cy-my;
-      if(Math.sqrt(dx*dx+dy*dy)<8){hit=p;break;}
-    }
-    if(hit){
-      const d=hit.d;
-      tooltip.style.display='block';
-      tooltip.innerHTML=
-        `<span style="color:${clsColors[d.clsLabel]};font-weight:500;">${d.name}</span> (${d.reading})<br>`+
-        `クラス: ${d.classFirst}→${d.classEval}<br>`+
-        `伸び率: +${d.growPct}%<br>`+
-        `投票順位: ${d.votes[0]}位<br>`+
-        `再生数: ${d.cur.toFixed(1)}万`;
-      let tx=hit.cx+12, ty=hit.cy-10;
-      if(tx+160>W) tx=hit.cx-170;
-      if(ty+100>H) ty=H-110;
-      tooltip.style.left=tx+'px';
-      tooltip.style.top=ty+'px';
-    } else {
-      tooltip.style.display='none';
+      const labels = scatterMode === 'note'
+        ? ['注目↑ 票↓','注目↑ 票↑','注目↓ 票↓','注目↓ 票↑']
+        : ['実力↑ 票↓','実力↑ 票↑','実力↓ 票↓','実力↓ 票↑'];
+      const colors = [
+        'rgba(78,200,122,0.13)', 'rgba(200,184,255,0.11)',
+        'rgba(240,192,64,0.11)', 'rgba(255,92,53,0.11)',
+      ];
+      const regions = [
+        {x1:left,x2:mx,y1:top,y2:my,       color:colors[0], label:labels[0], lx:left+8, ly:top+16},
+        {x1:mx,x2:right,y1:top,y2:my,       color:colors[1], label:labels[1], lx:mx+8,   ly:top+16},
+        {x1:left,x2:mx,y1:my,y2:bottom,     color:colors[2], label:labels[2], lx:left+8, ly:my+16},
+        {x1:mx,x2:right,y1:my,y2:bottom,    color:colors[3], label:labels[3], lx:mx+8,   ly:my+16},
+      ];
+      regions.forEach(r => {
+        ctx.fillStyle = r.color;
+        ctx.fillRect(r.x1, r.y1, r.x2-r.x1, r.y2-r.y1);
+        ctx.fillStyle = 'rgba(255,255,255,0.2)';
+        ctx.font = '11px monospace';
+        ctx.fillText(r.label, r.lx, r.ly);
+      });
+      ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+      ctx.lineWidth = 1;
+      ctx.setLineDash([4,4]);
+      ctx.beginPath(); ctx.moveTo(mx,top); ctx.lineTo(mx,bottom); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(left,my); ctx.lineTo(right,my); ctx.stroke();
+      ctx.setLineDash([]);
     }
   };
-  canvas.onmouseleave=function(){ tooltip.style.display='none'; };
+
+  // スケール設定
+  const xScale = {
+    reverse: true, min: 0, max: 102,
+    title: { display: true, text: '投票順位（右が1位・左が101位）', color: '#888', font: {size:11} },
+    ticks: { color: '#888', font: {size:11}, callback: v => v===0||v===102 ? '' : v+'位' },
+    grid: { color: 'rgba(255,255,255,0.04)' },
+  };
+  const yScale = scatterMode === 'note' ? {
+    title: { display: true, text: '週間伸び率（%）', color: '#888', font: {size:11} },
+    ticks: { color: '#888', font: {size:11}, callback: v => (v>=0?'+':'')+v+'%' },
+    grid: { color: 'rgba(255,255,255,0.04)' },
+  } : {
+    reverse: true,
+    min: -0.5, max: 4.5,
+    title: { display: true, text: '再評価クラス（上がA）', color: '#888', font: {size:11} },
+    ticks: { color: '#888', font: {size:11}, callback: v => ({0:'A',1:'B',2:'C',3:'D',4:'F'}[v] || '') },
+    grid: { color: 'rgba(255,255,255,0.04)' },
+  };
+
+  chartScatter = new Chart(document.getElementById('chartScatter'), {
+    type: 'scatter',
+    plugins: [quadrantPlugin],
+    data: {
+      datasets: [{
+        data: pts,
+        backgroundColor: pts.map(p => clsColors[p.clsLabel] + 'bb'),
+        borderColor: pts.map(p => clsColors[p.clsLabel]),
+        borderWidth: 1,
+        pointRadius: 6,
+        pointHoverRadius: 8,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: c => {
+              const p = c.raw;
+              if(scatterMode === 'note'){
+                return [
+                  `${p.name}（${p.reading}）`,
+                  `クラス: ${p.classFirst}→${p.classEval}`,
+                  `伸び率: +${p.growPct}%`,
+                  `投票順位: ${p.x}位`,
+                  `再生数: ${p.cur.toFixed(1)}万`,
+                ];
+              } else {
+                return [
+                  `${p.name}（${p.reading}）`,
+                  `再評価クラス: ${p.classEval}`,
+                  `投票順位: ${p.x}位`,
+                  `週間伸び率: +${p.growPct}%`,
+                  `再生数: ${p.cur.toFixed(1)}万`,
+                ];
+              }
+            }
+          },
+          backgroundColor: '#1f1f24',
+          borderColor: 'rgba(255,255,255,0.13)',
+          borderWidth: 1,
+          bodyColor: '#f0f0ee',
+          bodyFont: { family: 'monospace', size: 12 },
+          padding: 10,
+          displayColors: false,
+        }
+      },
+      scales: { x: xScale, y: yScale }
+    }
+  });
+
+  // 象限タブのラベルを更新してカードも描画
+  updateQuadrantTabLabels();
+  renderQuadrantCards();
 }
 
 loadSelection();
