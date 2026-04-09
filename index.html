@@ -87,7 +87,7 @@ tr:hover td{background:var(--surface);}
 <body>
 <header>
   <h1>新世界 数値トラッカー</h1>
-  <p>101 trainees · updated 4/4</p>
+  <p>101 trainees · updated 4/9</p>
 </header>
 <div class="tabs">
   <button class="tab active" onclick="switchTab('watch')">マイリスト</button>
@@ -112,7 +112,7 @@ tr:hover td{background:var(--surface);}
         <option value="abc">ABC順</option>
         <option value="cur">再生数順</option>
         <option value="growth">伸び率順</option>
-        <option value="rank">投票順位順</option>
+        <option value="rank">最新投票順位順</option>
       </select>
       <button onclick="clearSelection()" style="font-size:0.72rem;padding:5px 10px;border-radius:5px;border:1px solid var(--border2);background:transparent;color:var(--muted);cursor:pointer;font-family:inherit;">クリア</button>
     </div>
@@ -130,7 +130,7 @@ tr:hover td{background:var(--surface);}
         <option value="growth">週間伸び率</option>
         <option value="growabs">週間伸び数</option>
         <option value="cur">再生数（多い順）</option>
-        <option value="rank">投票順位</option>
+        <option value="rank">最新投票順位</option>
         <option value="abc">ABC順</option>
       </select>
       <select id="all-filter" onchange="renderAll()">
@@ -169,7 +169,7 @@ tr:hover td{background:var(--surface);}
         <option value="abc">ABC順</option>
         <option value="cur">再生数（多い順）</option>
         <option value="growth">週間伸び率順</option>
-        <option value="rank">投票順位順</option>
+        <option value="rank">最新投票順位順</option>
       </select>
       <select id="heat-week" onchange="renderHeatmap()" style="display:none;">
         <option value="0">3/6→3/14</option>
@@ -241,7 +241,7 @@ tr:hover td{background:var(--surface);}
 </div>
 <script>
 const PLAY_DATES = ["3月6日","3月14日","3月21日","3月28日","4月4日"];
-const VOTE_DATES = ["4月2日"];
+const VOTE_DATES = ["4月2日","4月9日"];
 const CLASS_ORDER = {A:0,B:1,C:2,D:3,F:4};
 const palette = ['#ff5c35','#4ec87a','#c8b8ff','#f0c040','#60c8e0','#e080c0','#80d060','#a0a8ff','#f09878','#98e0b0','#d8c0ff','#f8e080'];
 
@@ -299,74 +299,102 @@ const rawPlay = [
 ["板倉 悠太","YUTA",2.5,2.8,3,4,5.8],
 ];
 
-const rawBroadcast = [
-["アダム・ナガイ","前半組"],["中丸 晏寿","前半組"],["本荘 晃","前半組"],["オム・スアンカワーテン","前半組"],
-["アーチャー・ウイ","前半組"],["児島 歩夢","前半組"],["篠ヶ谷 歩夢","前半組"],["小林 千悟","前半組"],
-["市川 大輝","前半組"],["加藤 大樹","前半組"],["カク・ドンミン","後半組"],["末川 瑛太","前半組"],
-["金田 栄都","後半組"],["櫻井 楓真","前半組"],["小笠原 ジュゼッペ 慧","前半組"],["倉橋 吾槙","前半組"],
-["村松 遼空","前半組"],["髙城 暖人","前半組"],["堀尾 聖","前半組"],["平島 輝","前半組"],
-["瑞慶覧 太都","前半組"],["ユ・ヒョンスン","前半組"],["岡田 彪吾","後半組"],["イ・ヒョンジェ","前半組"],
-["柳谷 伊冴","後半組"],["ユン・ジェヨン","前半組"],["ジュアン・ジェイ","後半組"],["丸尾 尋一郎","後半組"],
-["河邊 晟","前半組"],["シン・ジョンウク","前半組"],["金安 純正","前半組"],["リュウ・カイチ","前半組"],
-["宇野 海夢","後半組"],["多比 奏聖","前半組"],["横山 奏夢","後半組"],["黒﨑 貫汰","前半組"],
-["関 敬次郎","前半組"],["黄 敬眞","前半組"],["髙松 敬祐","前半組"],["小野 慶人","後半組"],
-["西山 賢人","前半組"],["釼持 吉成","前半組"],["河合 晃誠","前半組"],["青沼 昂史朗","前半組"],
-["照井 康祐","前半組"],["浅香 孝太郎","後半組"],["髙谷 京平","後半組"],["田中 蒔","後半組"],
-["森 明育","前半組"],["山根 武蔵","後半組"],["土田 央修","前半組"],["小清水 蓮","前半組"],
-["堀野 蓮","前半組"],["小林 蓮翔","前半組"],["チェン・リッキー","後半組"],["神元 理丘","前半組"],
-["今江 陸斗","後半組"],["鳩場 陸人","前半組"],["甲斐 陸也","前半組"],["大瀬 凜和","前半組"],
-["上野 琉偉","前半組"],["水上 琉偉","前半組"],["飯塚 亮賀","前半組"],["石田 亮太","前半組"],
-["岡戸 竜芽","後半組"],["杉山 竜司","前半組"],["香月 誠太","後半組"],["澤井 星名","前半組"],
-["オ・シンヘン","前半組"],["岩城 慎二","前半組"],["宮崎 真佑","前半組"],["西﨑 柊","前半組"],
-["山下 柊","前半組"],["パク・シヨン","前半組"],["松田 颯吾","後半組"],["佐藤 碧空","前半組"],
-["髙橋 空良","前半組"],["西田 颯梓","前半組"],["東野 蒼汰","前半組"],["藤牧 大雅","後半組"],
-["松田 太雅","前半組"],["金倉 拓未","前半組"],["岡本 拓士","前半組"],["熊部 拓斗","前半組"],
-["宮里 拓利","前半組"],["南平 達矢","前半組"],["森井 輝","後半組"],["北林 天虎","前半組"],
-["藤芳 辰弥","前半組"],["増田 倫希","前半組"],["濱田 永遠","前半組"],["アギナルド・トリスタン・ジェームス","後半組"],
-["リー・ウェイゼ","前半組"],["ヨハン・エマニュエル","前半組"],["矢田 佳暉","前半組"],["後藤 結","前半組"],
-["岡田 侑磨","前半組"],["安部 結蘭","後半組"],["大林 悠成","前半組"],["佐野 由征","前半組"],
-["板倉 悠太","前半組"],
-];
+// レベル分けテスト前後半（CSVの「レベル分け」列）
+const levelMap = {
+"アダム・ナガイ":"前半組","中丸 晏寿":"前半組","本荘 晃":"前半組","オム・スアンカワーテン":"前半組",
+"アーチャー・ウイ":"前半組","児島 歩夢":"前半組","篠ヶ谷 歩夢":"前半組","小林 千悟":"前半組",
+"市川 大輝":"前半組","加藤 大樹":"前半組","カク・ドンミン":"後半組","末川 瑛太":"前半組",
+"金田 栄都":"後半組","櫻井 楓真":"前半組","小笠原 ジュゼッペ 慧":"前半組","倉橋 吾槙":"前半組",
+"村松 遼空":"前半組","髙城 暖人":"前半組","堀尾 聖":"前半組","平島 輝":"前半組",
+"瑞慶覧 太都":"前半組","ユ・ヒョンスン":"前半組","岡田 彪吾":"後半組","イ・ヒョンジェ":"前半組",
+"柳谷 伊冴":"後半組","ユン・ジェヨン":"前半組","ジュアン・ジェイ":"後半組","丸尾 尋一郎":"後半組",
+"河邊 晟":"前半組","シン・ジョンウク":"前半組","金安 純正":"前半組","リュウ・カイチ":"前半組",
+"宇野 海夢":"後半組","多比 奏聖":"前半組","横山 奏夢":"後半組","黒﨑 貫汰":"前半組",
+"関 敬次郎":"前半組","黄 敬眞":"前半組","髙松 敬祐":"前半組","小野 慶人":"後半組",
+"西山 賢人":"前半組","釼持 吉成":"前半組","河合 晃誠":"前半組","青沼 昂史朗":"前半組",
+"照井 康祐":"前半組","浅香 孝太郎":"後半組","髙谷 京平":"後半組","田中 蒔":"後半組",
+"森 明育":"前半組","山根 武蔵":"後半組","土田 央修":"前半組","小清水 蓮":"前半組",
+"堀野 蓮":"前半組","小林 蓮翔":"前半組","チェン・リッキー":"後半組","神元 理丘":"前半組",
+"今江 陸斗":"後半組","鳩場 陸人":"前半組","甲斐 陸也":"前半組","大瀬 凜和":"前半組",
+"上野 琉偉":"前半組","水上 琉偉":"前半組","飯塚 亮賀":"前半組","石田 亮太":"前半組",
+"岡戸 竜芽":"後半組","杉山 竜司":"前半組","香月 誠太":"後半組","澤井 星名":"前半組",
+"オ・シンヘン":"前半組","岩城 慎二":"前半組","宮崎 真佑":"前半組","西﨑 柊":"前半組",
+"山下 柊":"前半組","パク・シヨン":"前半組","松田 颯吾":"後半組","佐藤 碧空":"前半組",
+"髙橋 空良":"前半組","西田 颯梓":"前半組","東野 蒼汰":"前半組","藤牧 大雅":"後半組",
+"松田 太雅":"前半組","金倉 拓未":"前半組","岡本 拓士":"前半組","熊部 拓斗":"前半組",
+"宮里 拓利":"前半組","南平 達矢":"前半組","森井 輝":"後半組","北林 天虎":"前半組",
+"藤芳 辰弥":"前半組","増田 倫希":"前半組","濱田 永遠":"前半組","アギナルド・トリスタン・ジェームス":"後半組",
+"リー・ウェイゼ":"前半組","ヨハン・エマニュエル":"前半組","矢田 佳暉":"前半組","後藤 結":"前半組",
+"岡田 侑磨":"前半組","安部 結蘭":"後半組","大林 悠成":"前半組","佐野 由征":"前半組",
+"板倉 悠太":"前半組",
+};
 
-const broadcastMap = {};
-rawBroadcast.forEach(r => { broadcastMap[r[0]] = r[1]; });
+// グループバトル前後半（CSVの「グループ」列）
+const broadcastMap = {
+"アダム・ナガイ":"前半組","中丸 晏寿":"前半組","本荘 晃":"前半組","オム・スアンカワーテン":"前半組",
+"アーチャー・ウイ":"前半組","児島 歩夢":"後半組","篠ヶ谷 歩夢":"後半組","小林 千悟":"後半組",
+"市川 大輝":"後半組","加藤 大樹":"後半組","カク・ドンミン":"後半組","末川 瑛太":"後半組",
+"金田 栄都":"前半組","櫻井 楓真":"後半組","小笠原 ジュゼッペ 慧":"後半組","倉橋 吾槙":"前半組",
+"村松 遼空":"後半組","髙城 暖人":"前半組","堀尾 聖":"後半組","平島 輝":"後半組",
+"瑞慶覧 太都":"前半組","ユ・ヒョンスン":"前半組","岡田 彪吾":"後半組","イ・ヒョンジェ":"前半組",
+"柳谷 伊冴":"前半組","ユン・ジェヨン":"後半組","ジュアン・ジェイ":"前半組","丸尾 尋一郎":"前半組",
+"河邊 晟":"前半組","シン・ジョンウク":"前半組","金安 純正":"前半組","リュウ・カイチ":"前半組",
+"宇野 海夢":"後半組","多比 奏聖":"前半組","横山 奏夢":"前半組","黒﨑 貫汰":"後半組",
+"関 敬次郎":"後半組","黄 敬眞":"後半組","髙松 敬祐":"後半組","小野 慶人":"後半組",
+"西山 賢人":"前半組","釼持 吉成":"前半組","河合 晃誠":"前半組","青沼 昂史朗":"後半組",
+"照井 康祐":"前半組","浅香 孝太郎":"前半組","髙谷 京平":"前半組","田中 蒔":"前半組",
+"森 明育":"前半組","山根 武蔵":"後半組","土田 央修":"後半組","小清水 蓮":"前半組",
+"堀野 蓮":"後半組","小林 蓮翔":"後半組","チェン・リッキー":"前半組","神元 理丘":"前半組",
+"今江 陸斗":"前半組","鳩場 陸人":"後半組","甲斐 陸也":"後半組","大瀬 凜和":"前半組",
+"上野 琉偉":"後半組","水上 琉偉":"前半組","飯塚 亮賀":"後半組","石田 亮太":"後半組",
+"岡戸 竜芽":"後半組","杉山 竜司":"後半組","香月 誠太":"後半組","澤井 星名":"前半組",
+"オ・シンヘン":"前半組","岩城 慎二":"前半組","宮崎 真佑":"後半組","西﨑 柊":"後半組",
+"山下 柊":"後半組","パク・シヨン":"後半組","松田 颯吾":"前半組","佐藤 碧空":"前半組",
+"髙橋 空良":"前半組","西田 颯梓":"前半組","東野 蒼汰":"後半組","藤牧 大雅":"前半組",
+"松田 太雅":"後半組","金倉 拓未":"後半組","岡本 拓士":"後半組","熊部 拓斗":"前半組",
+"宮里 拓利":"前半組","南平 達矢":"前半組","森井 輝":"後半組","北林 天虎":"前半組",
+"藤芳 辰弥":"前半組","増田 倫希":"後半組","濱田 永遠":"後半組","アギナルド・トリスタン・ジェームス":"前半組",
+"リー・ウェイゼ":"前半組","ヨハン・エマニュエル":"前半組","矢田 佳暉":"後半組","後藤 結":"後半組",
+"岡田 侑磨":"前半組","安部 結蘭":"後半組","大林 悠成":"後半組","佐野 由征":"後半組",
+"板倉 悠太":"後半組",
+};
 
 const rawVote = [
-["アダム・ナガイ","ADAM",7],["中丸 晏寿","AJU",54],["本荘 晃","AKIRA",51],
-["オム・スアンカワーテン","AOM",67],["アーチャー・ウイ","ARCHER",20],["児島 歩夢","AYUMU.K",75],
-["篠ヶ谷 歩夢","AYUMU.S",29],["小林 千悟","CHISATO",23],["市川 大輝","DAIKI.I",66],
-["加藤 大樹","DAIKI.K",3],["カク・ドンミン","DONGMIN",33],["末川 瑛太","EITA",83],
-["金田 栄都","EITO",52],["櫻井 楓真","FUMA",59],["小笠原 ジュゼッペ 慧","GIUSEPPE",18],
-["倉橋 吾槙","GOTEN",11],["村松 遼空","HARUKU",74],["髙城 暖人","HARUTO",58],
-["堀尾 聖","HIJIRI",63],["平島 輝","HIKARU",44],["瑞慶覧 太都","HIROTO",71],
-["ユ・ヒョンスン","HYEONSEUNG",15],["岡田 彪吾","HYUGO",93],["イ・ヒョンジェ","HYUNJAE",21],
-["柳谷 伊冴","ISSA",48],["ユン・ジェヨン","JAEYONG",32],["ジュアン・ジェイ","JAY",50],
-["丸尾 尋一郎","JINICHIRO",62],["河邊 晟","JOE",101],["シン・ジョンウク","JUNGUK",87],
-["金安 純正","JUNSEI",40],["リュウ・カイチ","KAICHI",68],["宇野 海夢","KAIMU",42],
-["多比 奏聖","KANADE",99],["横山 奏夢","KANAME",27],["黒﨑 貫汰","KANTA",57],
-["関 敬次郎","KEIJIRO",98],["黄 敬眞","KEISHIN",69],["髙松 敬祐","KEISUKE",90],
-["小野 慶人","KEITO",13],["西山 賢人","KENTO",96],["釼持 吉成","KINARI",2],
-["河合 晃誠","KOSEI",94],["青沼 昂史朗","KOSHIRO",32],["照井 康祐","KOSUKE",9],
-["浅香 孝太郎","KOTARO",26],["髙谷 京平","KYOHEI",86],["田中 蒔","MAKI",25],
-["森 明育","MEI",39],["山根 武蔵","MUSASHI",65],["土田 央修","OSUKE",14],
-["小清水 蓮","REN.KO",8],["堀野 蓮","REN.H",56],["小林 蓮翔","RENTO",55],
-["チェン・リッキー","RICKEY",38],["神元 理丘","RIKU",97],["今江 陸斗","RIKUTO.I",35],
-["鳩場 陸人","RIKUTO.H",84],["甲斐 陸也","RIKUYA",88],["大瀬 凜和","RINTO",46],
-["上野 琉偉","RUI.U",79],["水上 琉偉","RUI.M",61],["飯塚 亮賀","RYOGA",10],
-["石田 亮太","RYOTA",41],["岡戸 竜芽","RYUGA",95],["杉山 竜司","RYUJI",22],
-["香月 誠太","SEITA",91],["澤井 星名","SENA",36],["オ・シンヘン","SHINHAENG",6],
-["岩城 慎二","SHINJI",73],["宮崎 真佑","SHINSUKE",72],["西﨑 柊","SHU.N",45],
-["山下 柊","SHU.Y",28],["パク・シヨン","SIYOUNG",5],["松田 颯吾","SOGO",85],
-["佐藤 碧空","SORA.S",77],["髙橋 空良","SORA.T",37],["西田 颯梓","SOSHI",64],
-["東野 蒼汰","SOTA",82],["藤牧 大雅","TAIGA.F",34],["松田 太雅","TAIGA.M",30],
-["金倉 拓未","TAKUMI",81],["岡本 拓士","TAKUTO.O",49],["熊部 拓斗","TAKUTO.K",12],
-["宮里 拓利","TAKUTO.M",80],["南平 達矢","TATSUYA",43],["森井 輝","TERU",100],
-["北林 天虎","TETORA",89],["藤芳 辰弥","TOKIYA",92],["増田 倫希","TOMOKI",76],
-["濱田 永遠","TOWA",16],["アギナルド・トリスタン・ジェームス","TRISTAN",70],
-["リー・ウェイゼ","WEIZE",53],["ヨハン・エマニュエル","YOHAN",78],
-["矢田 佳暉","YOSHIKI",1],["後藤 結","YUKI",17],["岡田 侑磨","YUMA",47],
-["安部 結蘭","YURA",4],["大林 悠成","YUSEI.O",24],["佐野 由征","YUSEI.S",60],
-["板倉 悠太","YUTA",19],
+["アダム・ナガイ","ADAM",7,7],["中丸 晏寿","AJU",54,57],["本荘 晃","AKIRA",51,52],
+["オム・スアンカワーテン","AOM",67,72],["アーチャー・ウイ","ARCHER",20,18],["児島 歩夢","AYUMU.K",75,83],
+["篠ヶ谷 歩夢","AYUMU.S",29,30],["小林 千悟","CHISATO",23,23],["市川 大輝","DAIKI.I",66,62],
+["加藤 大樹","DAIKI.K",3,2],["カク・ドンミン","DONGMIN",33,35],["末川 瑛太","EITA",83,79],
+["金田 栄都","EITO",52,53],["櫻井 楓真","FUMA",59,59],["小笠原 ジュゼッペ 慧","GIUSEPPE",18,20],
+["倉橋 吾槙","GOTEN",11,13],["村松 遼空","HARUKU",74,78],["髙城 暖人","HARUTO",58,60],
+["堀尾 聖","HIJIRI",63,63],["平島 輝","HIKARU",44,49],["瑞慶覧 太都","HIROTO",71,76],
+["ユ・ヒョンスン","HYEONSEUNG",15,10],["岡田 彪吾","HYUGO",93,75],["イ・ヒョンジェ","HYUNJAE",21,21],
+["柳谷 伊冴","ISSA",48,37],["ユン・ジェヨン","JAEYONG",32,33],["ジュアン・ジェイ","JAY",50,45],
+["丸尾 尋一郎","JINICHIRO",62,61],["河邊 晟","JOE",101,91],["シン・ジョンウク","JUNGUK",87,101],
+["金安 純正","JUNSEI",40,43],["リュウ・カイチ","KAICHI",68,73],["宇野 海夢","KAIMU",42,42],
+["多比 奏聖","KANADE",99,93],["横山 奏夢","KANAME",27,26],["黒﨑 貫汰","KANTA",57,56],
+["関 敬次郎","KEIJIRO",98,98],["黄 敬眞","KEISHIN",69,74],["髙松 敬祐","KEISUKE",90,96],
+["小野 慶人","KEITO",13,15],["西山 賢人","KENTO",96,99],["釼持 吉成","KINARI",2,1],
+["河合 晃誠","KOSEI",94,87],["青沼 昂史朗","KOSHIRO",31,27],["照井 康祐","KOSUKE",9,8],
+["浅香 孝太郎","KOTARO",26,24],["髙谷 京平","KYOHEI",86,86],["田中 蒔","MAKI",25,29],
+["森 明育","MEI",39,41],["山根 武蔵","MUSASHI",65,68],["土田 央修","OSUKE",14,14],
+["小清水 蓮","REN.KO",8,12],["堀野 蓮","REN.H",56,50],["小林 蓮翔","RENTO",55,58],
+["チェン・リッキー","RICKEY",38,28],["神元 理丘","RIKU",97,71],["今江 陸斗","RIKUTO.I",35,36],
+["鳩場 陸人","RIKUTO.H",84,88],["甲斐 陸也","RIKUYA",88,97],["大瀬 凜和","RINTO",46,46],
+["上野 琉偉","RUI.U",79,100],["水上 琉偉","RUI.M",61,64],["飯塚 亮賀","RYOGA",10,11],
+["石田 亮太","RYOTA",41,38],["岡戸 竜芽","RYUGA",95,84],["杉山 竜司","RYUJI",22,25],
+["香月 誠太","SEITA",91,67],["澤井 星名","SENA",36,40],["オ・シンヘン","SHINHAENG",6,6],
+["岩城 慎二","SHINJI",73,66],["宮崎 真佑","SHINSUKE",72,77],["西﨑 柊","SHU.N",45,44],
+["山下 柊","SHU.Y",28,31],["パク・シヨン","SIYOUNG",5,5],["松田 颯吾","SOGO",85,81],
+["佐藤 碧空","SORA.S",77,82],["髙橋 空良","SORA.T",37,39],["西田 颯梓","SOSHI",64,65],
+["東野 蒼汰","SOTA",82,85],["藤牧 大雅","TAIGA.F",34,34],["松田 太雅","TAIGA.M",30,32],
+["金倉 拓未","TAKUMI",81,92],["岡本 拓士","TAKUTO.O",49,51],["熊部 拓斗","TAKUTO.K",12,9],
+["宮里 拓利","TAKUTO.M",80,95],["南平 達矢","TATSUYA",43,47],["森井 輝","TERU",100,89],
+["北林 天虎","TETORA",89,94],["藤芳 辰弥","TOKIYA",92,90],["増田 倫希","TOMOKI",76,80],
+["濱田 永遠","TOWA",16,16],["アギナルド・トリスタン・ジェームス","TRISTAN",70,69],
+["リー・ウェイゼ","WEIZE",53,54],["ヨハン・エマニュエル","YOHAN",78,70],
+["矢田 佳暉","YOSHIKI",1,3],["後藤 結","YUKI",17,17],["岡田 侑磨","YUMA",47,48],
+["安部 結蘭","YURA",4,4],["大林 悠成","YUSEI.O",24,22],["佐野 由征","YUSEI.S",60,55],
+["板倉 悠太","YUTA",19,19],
 ];
 
 // ── クラスデータ ──
@@ -434,6 +462,7 @@ const dataRaw = rawPlay.map(r => {
   const clsLabel = diff!==null ? getClassLabel(diff, cls.first, cls.eval) : 'keep';
   return {name, reading, vals, cur, prev, growAbs, growPct, tier:'steady', votes,
           classFirst:cls.first, classEval:cls.eval, classDiff:diff, clsLabel,
+          level: levelMap[name] || '-',
           broadcast: broadcastMap[name] || '-'};
 });
 
@@ -498,7 +527,7 @@ function sortList(list, sort, weekIdx){
     });
   }
   else if(sort==='growabs') list.sort((a,b)=>(b.growAbs||0)-(a.growAbs||0));
-  else if(sort==='rank') list.sort((a,b)=>(a.votes[0]||999)-(b.votes[0]||999));
+  else if(sort==='rank') list.sort((a,b)=>{const ai=a.votes.length?a.votes[a.votes.length-1]:999;const bi=b.votes.length?b.votes[b.votes.length-1]:999;return ai-bi;});
   else if(sort==='eval-class') list.sort((a,b)=>{
     const ao=CLASS_ORDER[a.classEval]??5, bo=CLASS_ORDER[b.classEval]??5;
     if(ao!==bo) return ao-bo;
@@ -579,7 +608,14 @@ function renderWatch(){
   const cards=items.map(d=>{
     const gStr=d.growPct!=null?'+'+d.growPct+'%':'-';
     const gAbsStr=d.growAbs!=null?'+'+d.growAbs+'万':'-';
-    const vStr=d.votes.length?VOTE_DATES[0]+': '+d.votes[0]+'位':'投票未発表';
+    const latestVI=d.votes.length-1;
+    let vStr='投票未発表';
+    if(d.votes.length){
+      const lRank=d.votes[latestVI];
+      let diff='';
+      if(d.votes.length>=2){const delta=d.votes[latestVI]-d.votes[latestVI-1];diff=delta<0?' <span style="color:#4ec87a">▲'+Math.abs(delta)+'</span>':delta>0?' <span style="color:#ff5c35">▼'+delta+'</span>':' <span style="color:#888">－</span>';}
+      vStr=VOTE_DATES[latestVI]+': '+lRank+'位'+diff;
+    }
     const spark=sparkline(d.vals, tierColor[d.tier]);
     return `<div class="card">
       <div class="card-name">${d.name} <span style="font-size:0.6rem;color:var(--hint);font-family:monospace;">${d.reading}</span></div>
@@ -664,7 +700,7 @@ function renderAll(){
   if(filter==='cls-down') list=list.filter(d=>d.clsLabel==='down');
   sortList(list,sort);
   const vHeaders=VOTE_DATES.map(d=>`<th>${d}順位</th>`).join('');
-  let html=`<thead><tr><th style="text-align:left;">名前</th><th>reading</th><th>初回</th><th>再評価</th><th>レベル分け</th><th>現在（万回）</th><th>週間+（万）</th><th>週間伸び率</th>${vHeaders}</tr></thead><tbody>`;
+  let html=`<thead><tr><th style="text-align:left;">名前</th><th>reading</th><th>初回</th><th>再評価</th><th>レベル分け</th><th>グループバトル</th><th>現在（万回）</th><th>週間+（万）</th><th>週間伸び率</th>${vHeaders}</tr></thead><tbody>`;
   list.forEach(d=>{
     const tc=d.tier==='hot'?'td-hot':d.tier==='rise'?'td-rise':'';
     const gPct=d.growPct!=null?`<span class="${tc}">+${d.growPct}%</span>`:'-';
@@ -672,13 +708,16 @@ function renderAll(){
     const votes=VOTE_DATES.map((_,i)=>`<td>${d.votes[i]!=null?d.votes[i]+'位':'-'}</td>`).join('');
     const cc='td-cls-'+d.clsLabel;
     const arrow=d.clsLabel==='aa'?'★':d.clsLabel==='up'?'↑':d.clsLabel==='down'?'↓':'→';
-    const bc = d.broadcast==='前半組' ? 'color:var(--accent)' : 'color:var(--muted)';
+    const lcColor = d.level==='前半組' ? 'color:var(--accent)' : 'color:var(--muted)';
+    const bcBg = d.broadcast==='前半組' ? 'rgba(96,200,224,0.15)' : 'rgba(224,128,192,0.15)';
+    const bcTxt = d.broadcast==='前半組' ? '#60c8e0' : '#e080c0';
     html+=`<tr>
       <td>${d.name}</td>
       <td style="color:var(--hint);font-size:0.7rem;">${d.reading}</td>
       <td style="text-align:center;">${d.classFirst}</td>
       <td style="text-align:center;" class="${cc}">${d.classEval}${arrow}</td>
-      <td style="text-align:center;font-size:0.7rem;${bc}">${d.broadcast}</td>
+      <td style="text-align:center;font-size:0.7rem;${lcColor}">${d.level}</td>
+      <td style="text-align:center;"><span style="font-size:0.65rem;padding:1px 6px;border-radius:3px;background:${bcBg};color:${bcTxt};">${d.broadcast}</span></td>
       <td>${d.cur.toFixed(1)}</td><td>${gAbs}</td><td>${gPct}</td>${votes}
     </tr>`;
   });
@@ -895,7 +934,7 @@ function renderScatter(){
   const base = data.filter(d => d.votes.length > 0 && d.growPct != null);
 
   // 中央値計算
-  const ranks = base.map(d => d.votes[0]).sort((a,b)=>a-b);
+  const ranks = base.map(d => d.votes[d.votes.length-1]).sort((a,b)=>a-b);
   const growths = base.map(d => d.growPct).sort((a,b)=>a-b);
   const medianRank   = ranks[Math.floor(ranks.length/2)];
   const medianGrowth = growths[Math.floor(growths.length/2)];
@@ -915,7 +954,7 @@ function renderScatter(){
 
   // モード別にptsを生成
   const pts = list.map(d => ({
-    x: d.votes[0],
+    x: d.votes[d.votes.length-1],
     y: scatterMode === 'note' ? d.growPct : (CLASS_ORDER[d.classEval] != null ? CLASS_ORDER[d.classEval] : 4),
     name: d.name, reading: d.reading,
     clsLabel: d.clsLabel, classFirst: d.classFirst, classEval: d.classEval,
