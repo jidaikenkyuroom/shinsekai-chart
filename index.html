@@ -82,6 +82,14 @@ tr:hover td{background:var(--surface);}
 .hm-row{display:flex;align-items:center;gap:3px;margin-bottom:2px;}
 .hm-name{font-size:0.68rem;color:var(--color-text-secondary);width:90px;text-align:right;flex-shrink:0;font-family:monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:6px;}
 .hm-cell{flex:1;min-width:70px;height:26px;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:0.62rem;font-family:monospace;font-weight:500;}
+.b-section{display:none;}.b-section.active{display:block;}
+.team-bar-wrap{display:flex;align-items:center;gap:8px;margin-bottom:5px;}
+.team-bar-label{width:72px;font-size:0.68rem;color:var(--muted);font-family:monospace;flex-shrink:0;}
+.team-bar-track{flex:1;background:rgba(255,255,255,0.05);border-radius:3px;height:22px;overflow:hidden;}
+.team-bar-fill{height:100%;border-radius:3px;min-width:2px;}
+.team-bar-val{font-size:0.68rem;font-family:monospace;width:88px;text-align:right;flex-shrink:0;}
+.song-card{margin-bottom:1.5rem;padding:1rem;background:var(--surface);border-radius:8px;border:1px solid var(--border);}
+.member-chip{display:inline-block;font-size:0.67rem;padding:2px 6px;border-radius:4px;margin:2px;color:var(--muted);}
 </style>
 </head>
 <body>
@@ -95,6 +103,7 @@ tr:hover td{background:var(--surface);}
   <button class="tab" onclick="switchTab('trend')">推移グラフ</button>
   <button class="tab" onclick="switchTab('heat')">ヒートマップ</button>
   <button class="tab" onclick="switchTab('scatter')">散布図</button>
+  <button class="tab" onclick="switchTab('battle')">グループバトル</button>
 </div>
 <div class="main">
 
@@ -236,6 +245,57 @@ tr:hover td{background:var(--surface);}
       </div>
       <p class="sub-label" id="quadrant-desc" style="margin-bottom:0.75rem;"></p>
       <div class="cards" id="quadrant-cards"></div>
+    </div>
+  </div>
+
+  <!-- ========== グループバトル ========== -->
+  <div id="tab-battle" class="section">
+    <div class="g-tabs" id="battle-tabs">
+      <button class="g-tab active" onclick="switchBattleTab('list')">チーム一覧</button>
+      <button class="g-tab" onclick="switchBattleTab('compare')">チーム比較</button>
+      <button class="g-tab" onclick="switchBattleTab('scatter')">推しカメラ散布図</button>
+      <button class="g-tab" onclick="switchBattleTab('timing')">放送タイミング</button>
+    </div>
+
+    <div id="btab-list" class="b-section active">
+      <div class="row">
+        <span class="label">並び替え:</span>
+        <select id="bl-sort" onchange="renderBattleList()">
+          <option value="song">楽曲・チーム順</option>
+          <option value="views">推しカメラ再生数順</option>
+          <option value="rank">投票順位順</option>
+          <option value="abc">ABC順</option>
+        </select>
+        <select id="bl-filter" onchange="renderBattleList()">
+          <option value="all">全員</option>
+          <option value="zen">前半放送のみ</option>
+          <option value="ko">後半放送のみ</option>
+        </select>
+      </div>
+      <div id="bl-content"></div>
+    </div>
+
+    <div id="btab-compare" class="b-section">
+      <p class="sub-label">楽曲ごとに TEAM 1 vs TEAM 2 を比較。YouTube動画は前半放送3曲（ENHYPEN / Ado / JO1）のみ取得済み。米津玄師は著作権により非公開。後半4曲はYouTube未取得。</p>
+      <div id="bc-content"></div>
+    </div>
+
+    <div id="btab-scatter" class="b-section">
+      <p class="sub-label">推しカメラ再生数（mnetplus 4/12時点）と投票順位の相関。点の色は楽曲。○=前半放送 △=後半放送。</p>
+      <div class="row">
+        <span class="label">楽曲絞り込み:</span>
+        <select id="bs-song" onchange="renderBattleScatter()">
+          <option value="all">全楽曲</option>
+          <option value="前半組">前半放送のみ</option>
+          <option value="後半組">後半放送のみ</option>
+        </select>
+      </div>
+      <div class="chart-wrap" style="height:480px;"><canvas id="chartBattleScatter"></canvas></div>
+    </div>
+
+    <div id="btab-timing" class="b-section">
+      <p class="sub-label">グループバトルの放送タイミング（前半 vs 後半）が推しカメラ再生数に与える影響。推しカメラ動画（mnetplus）は前半・後半とも同タイミングで公開。YouTube のチームハイライト動画は前半放送3曲のみ取得済み（後半は未取得）。</p>
+      <div id="bt-content"></div>
     </div>
   </div>
 
@@ -495,7 +555,7 @@ function loadSelection(){
 }
 
 function switchTab(t){
-  ['watch','all','trend','heat','scatter'].forEach((id,i)=>{
+  ['watch','all','trend','heat','scatter','battle'].forEach((id,i)=>{
     document.getElementById('tab-'+id).classList.toggle('active',id===t);
     document.querySelectorAll('.tab')[i].classList.toggle('active',id===t);
   });
@@ -503,6 +563,7 @@ function switchTab(t){
   if(t==='trend') renderTrend();
   if(t==='heat') renderHeatmap();
   if(t==='scatter') renderScatter();
+  if(t==='battle') renderBattle();
 }
 
 function switchGraph(type){
@@ -1079,6 +1140,373 @@ function renderScatter(){
   // 象限タブのラベルを更新してカードも描画
   updateQuadrantTabLabels();
   renderQuadrantCards();
+}
+
+// ==============================
+// グループバトル データ
+// ==============================
+const rawBattleTeam = [
+["アダム・ナガイ","ADAM","ENHYPEN","Bite Me",1,"前半組"],["中丸 晏寿","AJU","米津玄師","IRIS OUT",2,"前半組"],
+["本荘 晃","AKIRA","Ado","Show",2,"前半組"],["オム・スアンカワーテン","AOM","Ado","Show",2,"前半組"],
+["アーチャー・ウイ","ARCHER","Ado","Show",1,"前半組"],["児島 歩夢","AYUMU.K","SEKAI NO OWARI","The Peak (最高到達点)",1,"後半組"],
+["篠ヶ谷 歩夢","AYUMU.S","INI","LOUD",1,"後半組"],["小林 千悟","CHISATO","INI","LOUD",1,"後半組"],
+["市川 大輝","DAIKI.I","SEKAI NO OWARI","The Peak (最高到達点)",2,"後半組"],["加藤 大樹","DAIKI.K","Wanna One","Energetic",1,"後半組"],
+["カク・ドンミン","DONGMIN","INI","LOUD",1,"後半組"],["末川 瑛太","EITA","INI","LOUD",2,"後半組"],
+["金田 栄都","EITO","米津玄師","IRIS OUT",1,"前半組"],["櫻井 楓真","FUMA","Wanna One","Energetic",2,"後半組"],
+["小笠原 ジュゼッペ 慧","GIUSEPPE","Wanna One","Energetic",1,"後半組"],["倉橋 吾槙","GOTEN","米津玄師","IRIS OUT",2,"前半組"],
+["村松 遼空","HARUKU","INI","LOUD",2,"後半組"],["髙城 暖人","HARUTO","JO1","Love seeker",2,"前半組"],
+["堀尾 聖","HIJIRI","Wanna One","Energetic",2,"後半組"],["平島 輝","HIKARU","INI","LOUD",2,"後半組"],
+["瑞慶覧 太都","HIROTO","Ado","Show",1,"前半組"],["ユ・ヒョンスン","HYEONSEUNG","米津玄師","IRIS OUT",1,"前半組"],
+["岡田 彪吾","HYUGO","Stray Kids","CASE 143",1,"後半組"],["イ・ヒョンジェ","HYUNJAE","ENHYPEN","Bite Me",1,"前半組"],
+["柳谷 伊冴","ISSA","ENHYPEN","Bite Me",2,"前半組"],["ユン・ジェヨン","JAEYONG","Wanna One","Energetic",1,"後半組"],
+["ジュアン・ジェイ","JAY","Ado","Show",1,"前半組"],["丸尾 尋一郎","JINICHIRO","米津玄師","IRIS OUT",2,"前半組"],
+["河邊 晟","JOE","JO1","Love seeker",1,"前半組"],["シン・ジョンウク","JUNGUK","Ado","Show",1,"前半組"],
+["金安 純正","JUNSEI","ENHYPEN","Bite Me",2,"前半組"],["リュウ・カイチ","KAICHI","JO1","Love seeker",1,"前半組"],
+["宇野 海夢","KAIMU","SEKAI NO OWARI","The Peak (最高到達点)",1,"後半組"],["多比 奏聖","KANADE","JO1","Love seeker",1,"前半組"],
+["横山 奏夢","KANAME","Ado","Show",2,"前半組"],["黒﨑 貫汰","KANTA","Stray Kids","CASE 143",2,"後半組"],
+["関 敬次郎","KEIJIRO","SEKAI NO OWARI","The Peak (最高到達点)",1,"後半組"],["黄 敬眞","KEISHIN","INI","LOUD",2,"後半組"],
+["髙松 敬祐","KEISUKE","Stray Kids","CASE 143",2,"後半組"],["小野 慶人","KEITO","SEKAI NO OWARI","The Peak (最高到達点)",2,"後半組"],
+["西山 賢人","KENTO","Ado","Show",2,"前半組"],["釼持 吉成","KINARI","ENHYPEN","Bite Me",1,"前半組"],
+["河合 晃誠","KOSEI","ENHYPEN","Bite Me",2,"前半組"],["青沼 昂史朗","KOSHIRO","SEKAI NO OWARI","The Peak (最高到達点)",2,"後半組"],
+["照井 康祐","KOSUKE","JO1","Love seeker",1,"前半組"],["浅香 孝太郎","KOTARO","JO1","Love seeker",2,"前半組"],
+["髙谷 京平","KYOHEI","米津玄師","IRIS OUT",2,"前半組"],["田中 蒔","MAKI","米津玄師","IRIS OUT",2,"前半組"],
+["森 明育","MEI","JO1","Love seeker",2,"前半組"],["山根 武蔵","MUSASHI","Stray Kids","CASE 143",1,"後半組"],
+["土田 央修","OSUKE","Wanna One","Energetic",2,"後半組"],["小清水 蓮","REN.KO","ENHYPEN","Bite Me",2,"前半組"],
+["堀野 蓮","REN.H","INI","LOUD",1,"後半組"],["小林 蓮翔","RENTO","Stray Kids","CASE 143",1,"後半組"],
+["チェン・リッキー","RICKEY","Ado","Show",1,"前半組"],["神元 理丘","RIKU","ENHYPEN","Bite Me",1,"前半組"],
+["今江 陸斗","RIKUTO.I","ENHYPEN","Bite Me",2,"前半組"],["鳩場 陸人","RIKUTO.H","Stray Kids","CASE 143",2,"後半組"],
+["甲斐 陸也","RIKUYA","Stray Kids","CASE 143",1,"後半組"],["大瀬 凜和","RINTO","JO1","Love seeker",1,"前半組"],
+["上野 琉偉","RUI.U","Stray Kids","CASE 143",1,"後半組"],["水上 琉偉","RUI.M","Ado","Show",2,"前半組"],
+["飯塚 亮賀","RYOGA","SEKAI NO OWARI","The Peak (最高到達点)",2,"後半組"],["石田 亮太","RYOTA","INI","LOUD",1,"後半組"],
+["岡戸 竜芽","RYUGA","SEKAI NO OWARI","The Peak (最高到達点)",1,"後半組"],["杉山 竜司","RYUJI","Wanna One","Energetic",2,"後半組"],
+["香月 誠太","SEITA","SEKAI NO OWARI","The Peak (最高到達点)",1,"後半組"],["澤井 星名","SENA","JO1","Love seeker",2,"前半組"],
+["オ・シンヘン","SHINHAENG","ENHYPEN","Bite Me",1,"前半組"],["岩城 慎二","SHINJI","米津玄師","IRIS OUT",1,"前半組"],
+["宮崎 真佑","SHINSUKE","INI","LOUD",2,"後半組"],["西﨑 柊","SHU.N","INI","LOUD",1,"後半組"],
+["山下 柊","SHU.Y","SEKAI NO OWARI","The Peak (最高到達点)",1,"後半組"],["パク・シヨン","SIYOUNG","Wanna One","Energetic",1,"後半組"],
+["松田 颯吾","SOGO","米津玄師","IRIS OUT",1,"前半組"],["佐藤 碧空","SORA.S","米津玄師","IRIS OUT",2,"前半組"],
+["髙橋 空良","SORA.T","JO1","Love seeker",1,"前半組"],["西田 颯梓","SOSHI","Ado","Show",2,"前半組"],
+["東野 蒼汰","SOTA","Stray Kids","CASE 143",2,"後半組"],["藤牧 大雅","TAIGA.F","ENHYPEN","Bite Me",1,"前半組"],
+["松田 太雅","TAIGA.M","Wanna One","Energetic",2,"後半組"],["金倉 拓未","TAKUMI","Stray Kids","CASE 143",2,"後半組"],
+["岡本 拓士","TAKUTO.O","INI","LOUD",2,"後半組"],["熊部 拓斗","TAKUTO.K","ENHYPEN","Bite Me",2,"前半組"],
+["宮里 拓利","TAKUTO.M","Ado","Show",2,"前半組"],["南平 達矢","TATSUYA","JO1","Love seeker",2,"前半組"],
+["森井 輝","TERU","Stray Kids","CASE 143",1,"後半組"],["北林 天虎","TETORA","JO1","Love seeker",2,"前半組"],
+["藤芳 辰弥","TOKIYA","米津玄師","IRIS OUT",1,"前半組"],["増田 倫希","TOMOKI","SEKAI NO OWARI","The Peak (最高到達点)",2,"後半組"],
+["濱田 永遠","TOWA","Stray Kids","CASE 143",2,"後半組"],["アギナルド・トリスタン・ジェームス","TRISTAN","米津玄師","IRIS OUT",1,"前半組"],
+["リー・ウェイゼ","WEIZE","ENHYPEN","Bite Me",2,"前半組"],["ヨハン・エマニュエル","YOHAN","Ado","Show",1,"前半組"],
+["矢田 佳暉","YOSHIKI","Wanna One","Energetic",1,"後半組"],["後藤 結","YUKI","Wanna One","Energetic",2,"後半組"],
+["岡田 侑磨","YUMA","ENHYPEN","Bite Me",1,"前半組"],["安部 結蘭","YURA","Wanna One","Energetic",1,"後半組"],
+["大林 悠成","YUSEI.O","INI","LOUD",1,"後半組"],["佐野 由征","YUSEI.S","INI","LOUD",2,"後半組"],
+["板倉 悠太","YUTA","SEKAI NO OWARI","The Peak (最高到達点)",2,"後半組"],
+];
+
+// 推しカメラ再生数（mnetplus 4月12日）: reading → [views, likes, comments]
+const rawOshiCam = {
+"ADAM":[5227,926,83],"AJU":[606,139,14],"AKIRA":[527,88,9],"AOM":[175,61,8],
+"ARCHER":[1293,505,51],"AYUMU.K":[971,107,31],"AYUMU.S":[4205,549,62],"CHISATO":[6354,850,88],
+"DAIKI.I":[1306,226,38],"DAIKI.K":[21713,3235,226],"DONGMIN":[3380,602,78],"EITA":[2050,280,59],
+"EITO":[455,107,12],"FUMA":[1739,321,52],"GIUSEPPE":[4140,755,71],"GOTEN":[5798,1678,198],
+"HARUKU":[810,101,15],"HARUTO":[188,58,8],"HIJIRI":[5390,1010,152],"HIKARU":[2980,411,44],
+"HIROTO":[332,130,15],"HYEONSEUNG":[4664,1372,106],"HYUGO":[5887,585,71],"HYUNJAE":[5219,1330,117],
+"ISSA":[12884,3059,340],"JAEYONG":[5297,1056,140],"JAY":[690,287,40],"JINICHIRO":[2016,483,37],
+"JOE":[172,57,7],"JUNGUK":[170,65,9],"JUNSEI":[741,233,28],"KAICHI":[949,313,30],
+"KAIMU":[3396,496,42],"KANADE":[385,105,25],"KANAME":[5130,1582,165],"KANTA":[2059,336,40],
+"KEIJIRO":[880,160,20],"KEISHIN":[638,75,13],"KEISUKE":[1699,251,40],"KEITO":[13384,1839,217],
+"KENTO":[274,72,8],"KINARI":[15748,3336,267],"KOSEI":[785,139,18],"KOSHIRO":[5104,1299,144],
+"KOSUKE":[17436,3969,585],"KOTARO":[2150,780,103],"KYOHEI":[2442,769,62],"MAKI":[2537,767,64],
+"MEI":[458,153,14],"MUSASHI":[995,150,12],"OSUKE":[17610,2977,385],"REN.KO":[3010,846,92],
+"REN.H":[3010,556,51],"RENTO":[1342,157,31],"RICKEY":[1594,620,61],"RIKU":[1424,270,62],
+"RIKUTO.I":[3582,1088,114],"RIKUTO.H":[1056,173,30],"RIKUYA":[1158,153,31],"RINTO":[1271,419,64],
+"RUI.U":[739,51,7],"RUI.M":[423,102,7],"RYOGA":[14805,2626,256],"RYOTA":[3803,765,81],
+"RYUGA":[1616,223,28],"RYUJI":[26878,3921,523],"SEITA":[1691,230,21],"SENA":[1185,386,63],
+"SHINHAENG":[6800,2120,187],"SHINJI":[1362,353,51],"SHINSUKE":[1133,158,24],"SHU.N":[2273,420,69],
+"SHU.Y":[5479,906,75],"SIYOUNG":[18378,2735,492],"SOGO":[176,49,7],"SORA.S":[1618,504,78],
+"SORA.T":[424,147,28],"SOSHI":[784,269,34],"SOTA":[1128,180,27],"TAIGA.F":[3153,656,132],
+"TAIGA.M":[2886,592,117],"TAKUMI":[1450,205,45],"TAKUTO.O":[2312,360,38],"TAKUTO.K":[8688,2528,384],
+"TAKUTO.M":[1283,426,47],"TATSUYA":[1081,357,33],"TERU":[1387,188,50],"TETORA":[330,116,15],
+"TOKIYA":[581,174,24],"TOMOKI":[1243,239,61],"TOWA":[15182,2137,267],"TRISTAN":[320,116,22],
+"WEIZE":[1174,387,36],"YOHAN":[235,88,21],"YOSHIKI":[14256,2506,309],"YUKI":[9569,1634,169],
+"YUMA":[3153,831,74],"YURA":[14248,2494,307],"YUSEI.O":[8291,1359,125],"YUSEI.S":[1652,245,50],
+"YUTA":[4472,844,78]
+};
+
+// YouTube チーム動画（前半3曲のみ）: [artist, song, team, videoId, views_4月12日]
+const rawYtTeam = [
+["ENHYPEN","Bite Me",1,"aMQnVQWG3kI",262503],["ENHYPEN","Bite Me",2,"zVikns6RB_M",388153],
+["Ado","Show",1,"XPT8CFEKCGg",104405],["Ado","Show",2,"VK-NCpcdJTc",151331],
+["JO1","Love seeker",1,"lii4F3ujNEk",262064],["JO1","Love seeker",2,"Kzgq0Ghr1zk",131151],
+];
+
+const SONGS_INFO = [
+  {artist:"ENHYPEN",  song:"Bite Me",              broadcast:"前半組"},
+  {artist:"米津玄師",   song:"IRIS OUT",             broadcast:"前半組"},
+  {artist:"Ado",      song:"Show",                  broadcast:"前半組"},
+  {artist:"JO1",      song:"Love seeker",           broadcast:"前半組"},
+  {artist:"INI",      song:"LOUD",                  broadcast:"後半組"},
+  {artist:"Wanna One",song:"Energetic",             broadcast:"後半組"},
+  {artist:"SEKAI NO OWARI",song:"The Peak (最高到達点)",broadcast:"後半組"},
+  {artist:"Stray Kids",song:"CASE 143",             broadcast:"後半組"},
+];
+const SONG_COLORS = {
+  "Bite Me":"#c8b8ff","IRIS OUT":"#60c8e0","Show":"#f09878","Love seeker":"#f0c040",
+  "LOUD":"#4ec87a","Energetic":"#e080c0","The Peak (最高到達点)":"#ff5c35","CASE 143":"#a0a8ff",
+};
+
+const ytTeamMap = {};
+rawYtTeam.forEach(r => { ytTeamMap[`${r[0]}|${r[1]}|${r[2]}`] = {videoId:r[3], views:r[4]}; });
+
+const battleData = rawBattleTeam.map(r => {
+  const [name, reading, artist, song, team, broadcast] = r;
+  const oshi = rawOshiCam[reading] || [0,0,0];
+  const votes = voteMap[name] || [];
+  const cls = classMap[name] || {first:'-', eval:'-'};
+  return {name, reading, artist, song, team, broadcast,
+          oshiViews:oshi[0], oshiLikes:oshi[1], oshiComments:oshi[2],
+          votes, classFirst:cls.first, classEval:cls.eval};
+});
+
+let chartBattleScatter = null;
+let currentBattleTab = 'list';
+
+function switchBattleTab(tab) {
+  currentBattleTab = tab;
+  ['list','compare','scatter','timing'].forEach(t => {
+    document.getElementById('btab-'+t).classList.toggle('active', t===tab);
+  });
+  document.querySelectorAll('#battle-tabs .g-tab').forEach((el,i) => {
+    el.classList.toggle('active', ['list','compare','scatter','timing'][i]===tab);
+  });
+  if(tab==='list')    renderBattleList();
+  if(tab==='compare') renderBattleCompare();
+  if(tab==='scatter') renderBattleScatter();
+  if(tab==='timing')  renderBattleTiming();
+}
+
+function renderBattle() { renderBattleList(); }
+
+function renderBattleList() {
+  const sort   = document.getElementById('bl-sort').value;
+  const filter = document.getElementById('bl-filter').value;
+  let list = [...battleData];
+  if(filter==='zen') list = list.filter(d => d.broadcast==='前半組');
+  if(filter==='ko')  list = list.filter(d => d.broadcast==='後半組');
+
+  const songOrder = SONGS_INFO.map(s => s.song);
+  if(sort==='song') {
+    list.sort((a,b) => {
+      const sd = songOrder.indexOf(a.song) - songOrder.indexOf(b.song);
+      if(sd!==0) return sd;
+      if(a.team!==b.team) return a.team - b.team;
+      return b.oshiViews - a.oshiViews;
+    });
+  } else if(sort==='views') {
+    list.sort((a,b) => b.oshiViews - a.oshiViews);
+  } else if(sort==='rank') {
+    list.sort((a,b) => {
+      const av = a.votes.length ? a.votes[a.votes.length-1] : 999;
+      const bv = b.votes.length ? b.votes[b.votes.length-1] : 999;
+      return av - bv;
+    });
+  } else if(sort==='abc') {
+    list.sort((a,b) => a.reading.localeCompare(b.reading));
+  }
+
+  let html = `<div class="tbl-wrap"><table><thead><tr>
+    <th style="text-align:left;">名前</th><th>読み方</th><th>楽曲</th>
+    <th>チーム</th><th>放送</th><th>推しカメラ再生数</th><th>イイネ</th><th>コメ</th><th>投票順位</th>
+  </tr></thead><tbody>`;
+  list.forEach(d => {
+    const sc  = SONG_COLORS[d.song] || '#888';
+    const bc  = d.broadcast==='前半組' ? '#60c8e0' : '#e080c0';
+    const bcBg = d.broadcast==='前半組' ? 'rgba(96,200,224,0.13)' : 'rgba(224,128,192,0.13)';
+    const latestVote = d.votes.length ? d.votes[d.votes.length-1]+'位' : '-';
+    html += `<tr>
+      <td>${d.name}</td>
+      <td style="color:var(--hint);font-size:0.7rem;">${d.reading}</td>
+      <td><span style="font-size:0.62rem;padding:1px 5px;border-radius:3px;background:${sc}22;color:${sc};">${d.artist} ♪${d.song}</span></td>
+      <td style="text-align:center;">TEAM ${d.team}</td>
+      <td style="text-align:center;"><span style="font-size:0.62rem;padding:1px 5px;border-radius:3px;background:${bcBg};color:${bc};">${d.broadcast}</span></td>
+      <td>${d.oshiViews ? d.oshiViews.toLocaleString() : '-'}</td>
+      <td>${d.oshiLikes ? d.oshiLikes.toLocaleString() : '-'}</td>
+      <td>${d.oshiComments ? d.oshiComments.toLocaleString() : '-'}</td>
+      <td>${latestVote}</td>
+    </tr>`;
+  });
+  html += '</tbody></table></div>';
+  document.getElementById('bl-content').innerHTML = html;
+}
+
+function teamBarHtml(label, value, maxValue, color) {
+  const pct = maxValue > 0 ? Math.max(1, value/maxValue*100).toFixed(1) : 0;
+  return `<div class="team-bar-wrap">
+    <div class="team-bar-label">${label}</div>
+    <div class="team-bar-track"><div class="team-bar-fill" style="width:${pct}%;background:${color}55;border-right:2px solid ${color};"></div></div>
+    <div class="team-bar-val" style="color:${color};">${value.toLocaleString()}</div>
+  </div>`;
+}
+
+function renderBattleCompare() {
+  let html = '';
+  SONGS_INFO.forEach(({artist, song, broadcast}) => {
+    const sc   = SONG_COLORS[song] || '#888';
+    const bc   = broadcast==='前半組' ? '#60c8e0' : '#e080c0';
+    const bcBg = broadcast==='前半組' ? 'rgba(96,200,224,0.13)' : 'rgba(224,128,192,0.13)';
+    const members = battleData.filter(d => d.song===song);
+    const t1 = members.filter(d => d.team===1);
+    const t2 = members.filter(d => d.team===2);
+    const t1total = t1.reduce((s,d) => s+d.oshiViews, 0);
+    const t2total = t2.reduce((s,d) => s+d.oshiViews, 0);
+    const oshiMax = Math.max(t1total, t2total, 1);
+    const yt1 = ytTeamMap[`${artist}|${song}|1`];
+    const yt2 = ytTeamMap[`${artist}|${song}|2`];
+    const ytMax = Math.max(yt1?.views||0, yt2?.views||0, 1);
+
+    html += `<div class="song-card">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:1rem;flex-wrap:wrap;">
+        <span style="font-size:0.88rem;font-weight:500;color:${sc};">${artist}</span>
+        <span style="font-size:0.8rem;color:var(--muted);">♪${song}</span>
+        <span style="font-size:0.62rem;padding:1px 6px;border-radius:3px;background:${bcBg};color:${bc};">${broadcast}</span>
+      </div>`;
+
+    if(yt1 || yt2) {
+      html += `<div style="margin-bottom:1rem;"><div style="font-size:0.7rem;color:var(--muted);margin-bottom:6px;font-family:monospace;">YouTube チーム動画（4/12時点）</div>
+        ${teamBarHtml('TEAM 1', yt1?.views||0, ytMax, '#c8b8ff')}
+        ${teamBarHtml('TEAM 2', yt2?.views||0, ytMax, '#f0c040')}
+      </div>`;
+    } else if(broadcast==='前半組') {
+      html += `<div style="font-size:0.7rem;color:var(--hint);margin-bottom:1rem;font-family:monospace;">YouTube動画: 著作権により非公開（${artist}）</div>`;
+    } else {
+      html += `<div style="font-size:0.7rem;color:var(--hint);margin-bottom:1rem;font-family:monospace;">YouTube動画: 未取得（後半放送）</div>`;
+    }
+
+    html += `<div style="margin-bottom:1rem;"><div style="font-size:0.7rem;color:var(--muted);margin-bottom:6px;font-family:monospace;">推しカメラ 合計再生数（mnetplus 4/12）</div>
+      ${teamBarHtml('TEAM 1 計', t1total, oshiMax, '#c8b8ff')}
+      ${teamBarHtml('TEAM 2 計', t2total, oshiMax, '#f0c040')}
+    </div>`;
+
+    const memberChips = (arr, color) => arr
+      .sort((a,b) => b.oshiViews-a.oshiViews)
+      .map(d => `<span class="member-chip" style="background:${color}15;border:1px solid ${color}33;">${d.name} <span style="color:var(--hint);font-size:0.6rem;">${d.oshiViews.toLocaleString()}</span></span>`)
+      .join('');
+
+    html += `<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+      <div><div style="font-size:0.65rem;color:#c8b8ff;font-family:monospace;margin-bottom:4px;">TEAM 1（${t1.length}名）</div>${memberChips(t1,'#c8b8ff')}</div>
+      <div><div style="font-size:0.65rem;color:#f0c040;font-family:monospace;margin-bottom:4px;">TEAM 2（${t2.length}名）</div>${memberChips(t2,'#f0c040')}</div>
+    </div></div>`;
+  });
+  document.getElementById('bc-content').innerHTML = html;
+}
+
+function renderBattleScatter() {
+  if(chartBattleScatter){ chartBattleScatter.destroy(); chartBattleScatter=null; }
+  const filter = document.getElementById('bs-song').value;
+  const ctx = document.getElementById('chartBattleScatter');
+  const songList = filter==='all' ? SONGS_INFO : SONGS_INFO.filter(s => s.broadcast===filter);
+  const datasets = songList.map(({artist, song, broadcast}) => {
+    const color = SONG_COLORS[song] || '#888';
+    const pts = battleData
+      .filter(d => d.song===song && d.votes.length>0)
+      .map(d => ({
+        x: d.votes[d.votes.length-1], y: d.oshiViews,
+        name:d.name, reading:d.reading, song:d.song, team:d.team, broadcast:d.broadcast,
+        oshiViews:d.oshiViews,
+      }));
+    return {
+      label:`${artist} ♪${song}`,
+      data: pts,
+      backgroundColor: color+'bb', borderColor: color, borderWidth:1,
+      pointRadius:6, pointHoverRadius:9,
+      pointStyle: broadcast==='前半組' ? 'circle' : 'triangle',
+    };
+  });
+
+  chartBattleScatter = new Chart(ctx, {
+    type:'scatter',
+    data:{datasets},
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{
+        legend:{display:true, position:'bottom', labels:{color:'#888', font:{size:10}, boxWidth:10, padding:8}},
+        tooltip:{
+          callbacks:{
+            label: c => {
+              const p=c.raw;
+              return [`${p.name}（${p.reading}）`,`推しカメラ: ${p.oshiViews.toLocaleString()}回`,`投票順位: ${p.x}位`,`TEAM ${p.team} / ${p.broadcast}`];
+            }
+          },
+          backgroundColor:'#1f1f24', borderColor:'rgba(255,255,255,0.13)', borderWidth:1,
+          bodyColor:'#f0f0ee', bodyFont:{family:'monospace',size:12}, padding:10, displayColors:false,
+        }
+      },
+      scales:{
+        x:{
+          reverse:true, min:0, max:102,
+          title:{display:true, text:'投票順位（右が1位）', color:'#888', font:{size:11}},
+          ticks:{color:'#888', font:{size:11}, callback:v=>v===0||v===102?'':v+'位'},
+          grid:{color:'rgba(255,255,255,0.04)'},
+        },
+        y:{
+          title:{display:true, text:'推しカメラ再生数', color:'#888', font:{size:11}},
+          ticks:{color:'#888', font:{size:11}, callback:v=>v>=1000?(v/1000).toFixed(0)+'k':v},
+          grid:{color:'rgba(255,255,255,0.04)'},
+        }
+      }
+    }
+  });
+}
+
+function renderBattleTiming() {
+  const zen = battleData.filter(d => d.broadcast==='前半組');
+  const ko  = battleData.filter(d => d.broadcast==='後半組');
+  const avgViews = arr => arr.length ? Math.round(arr.reduce((s,d)=>s+d.oshiViews,0)/arr.length) : 0;
+  const avgRank  = arr => {
+    const w = arr.filter(d=>d.votes.length>0);
+    return w.length ? (w.reduce((s,d)=>s+d.votes[d.votes.length-1],0)/w.length).toFixed(1) : '-';
+  };
+  const topViews = arr => arr.length ? Math.max(...arr.map(d=>d.oshiViews)) : 0;
+
+  let html = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.5rem;">
+    <div style="background:var(--surface);border-radius:8px;padding:1rem;border-left:3px solid #60c8e0;">
+      <div style="font-size:0.7rem;color:#60c8e0;font-family:monospace;margin-bottom:8px;">前半放送組（${zen.length}名）</div>
+      <div style="font-size:1.5rem;font-weight:500;font-family:monospace;">${avgViews(zen).toLocaleString()}</div>
+      <div style="font-size:0.68rem;color:var(--muted);margin-bottom:8px;">平均推しカメラ再生数</div>
+      <div style="font-size:0.7rem;color:var(--muted);">平均投票順位: <span style="color:var(--text);">${avgRank(zen)}位</span></div>
+      <div style="font-size:0.7rem;color:var(--muted);">最高再生数: <span style="color:var(--text);">${topViews(zen).toLocaleString()}</span></div>
+    </div>
+    <div style="background:var(--surface);border-radius:8px;padding:1rem;border-left:3px solid #e080c0;">
+      <div style="font-size:0.7rem;color:#e080c0;font-family:monospace;margin-bottom:8px;">後半放送組（${ko.length}名）</div>
+      <div style="font-size:1.5rem;font-weight:500;font-family:monospace;">${avgViews(ko).toLocaleString()}</div>
+      <div style="font-size:0.68rem;color:var(--muted);margin-bottom:8px;">平均推しカメラ再生数</div>
+      <div style="font-size:0.7rem;color:var(--muted);">平均投票順位: <span style="color:var(--text);">${avgRank(ko)}位</span></div>
+      <div style="font-size:0.7rem;color:var(--muted);">最高再生数: <span style="color:var(--text);">${topViews(ko).toLocaleString()}</span></div>
+    </div>
+  </div>
+  <div style="font-size:0.72rem;color:var(--muted);margin-bottom:0.75rem;font-family:monospace;">楽曲別 推しカメラ合計・平均再生数</div>`;
+
+  const songStats = SONGS_INFO.map(({artist,song,broadcast}) => {
+    const m = battleData.filter(d=>d.song===song);
+    const total = m.reduce((s,d)=>s+d.oshiViews,0);
+    return {artist, song, broadcast, total, avg: m.length?Math.round(total/m.length):0, count:m.length};
+  });
+  const maxTotal = Math.max(...songStats.map(s=>s.total), 1);
+
+  songStats.forEach(s => {
+    const color = s.broadcast==='前半組' ? '#60c8e0' : '#e080c0';
+    const pct   = (s.total / maxTotal * 100).toFixed(1);
+    html += `<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+      <div style="width:170px;flex-shrink:0;">
+        <div style="font-size:0.68rem;color:${color};">${s.artist}</div>
+        <div style="font-size:0.6rem;color:var(--hint);">♪${s.song}</div>
+      </div>
+      <div style="flex:1;background:rgba(255,255,255,0.05);border-radius:3px;height:24px;overflow:hidden;">
+        <div style="width:${pct}%;background:${color}44;height:100%;border-right:2px solid ${color};min-width:2px;"></div>
+      </div>
+      <div style="font-size:0.65rem;font-family:monospace;color:var(--muted);width:180px;text-align:right;">
+        合計 ${s.total.toLocaleString()} / 平均 ${s.avg.toLocaleString()}
+      </div>
+    </div>`;
+  });
+
+  document.getElementById('bt-content').innerHTML = html;
 }
 
 loadSelection();
