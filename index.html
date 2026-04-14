@@ -95,7 +95,7 @@ tr:hover td{background:var(--surface);}
 <body>
 <header>
   <h1>新世界 数値トラッカー</h1>
-  <p>101 trainees · updated 4/12</p>
+  <p>101 trainees · updated 4/14</p>
 </header>
 <div class="tabs">
   <button class="tab active" onclick="switchTab('watch')">マイリスト</button>
@@ -281,7 +281,7 @@ tr:hover td{background:var(--surface);}
     </div>
 
     <div id="btab-scatter" class="b-section">
-      <p class="sub-label">推しカメラ再生数（mnetplus 4/12時点）と投票順位の相関。点の色は楽曲。○=前半放送 △=後半放送。</p>
+      <p class="sub-label">推しカメラ再生数（mnetplus 4/14時点）と投票順位の相関。点の色は楽曲。○=前半放送 △=後半放送。</p>
       <div class="row">
         <span class="label">楽曲絞り込み:</span>
         <select id="bs-song" onchange="renderBattleScatter()">
@@ -1199,41 +1199,41 @@ const rawBattleTeam = [
 ["板倉 悠太","YUTA","SEKAI NO OWARI","The Peak (最高到達点)",2,"後半組"],
 ];
 
-// 推しカメラ再生数（mnetplus 4月12日）: reading → [views, likes, comments]
+// 推しカメラ再生数（mnetplus 4月14日）: reading → [views, likes, comments]
 const rawOshiCam = {
-"ADAM":[5227,926,83],"AJU":[606,139,14],"AKIRA":[527,88,9],"AOM":[175,61,8],
-"ARCHER":[1293,505,51],"AYUMU.K":[971,107,31],"AYUMU.S":[4205,549,62],"CHISATO":[6354,850,88],
-"DAIKI.I":[1306,226,38],"DAIKI.K":[21713,3235,226],"DONGMIN":[3380,602,78],"EITA":[2050,280,59],
-"EITO":[455,107,12],"FUMA":[1739,321,52],"GIUSEPPE":[4140,755,71],"GOTEN":[5798,1678,198],
-"HARUKU":[810,101,15],"HARUTO":[188,58,8],"HIJIRI":[5390,1010,152],"HIKARU":[2980,411,44],
-"HIROTO":[332,130,15],"HYEONSEUNG":[4664,1372,106],"HYUGO":[5887,585,71],"HYUNJAE":[5219,1330,117],
-"ISSA":[12884,3059,340],"JAEYONG":[5297,1056,140],"JAY":[690,287,40],"JINICHIRO":[2016,483,37],
-"JOE":[172,57,7],"JUNGUK":[170,65,9],"JUNSEI":[741,233,28],"KAICHI":[949,313,30],
-"KAIMU":[3396,496,42],"KANADE":[385,105,25],"KANAME":[5130,1582,165],"KANTA":[2059,336,40],
-"KEIJIRO":[880,160,20],"KEISHIN":[638,75,13],"KEISUKE":[1699,251,40],"KEITO":[13384,1839,217],
-"KENTO":[274,72,8],"KINARI":[15748,3336,267],"KOSEI":[785,139,18],"KOSHIRO":[5104,1299,144],
-"KOSUKE":[17436,3969,585],"KOTARO":[2150,780,103],"KYOHEI":[2442,769,62],"MAKI":[2537,767,64],
-"MEI":[458,153,14],"MUSASHI":[995,150,12],"OSUKE":[17610,2977,385],"REN.KO":[3010,846,92],
-"REN.H":[3010,556,51],"RENTO":[1342,157,31],"RICKEY":[1594,620,61],"RIKU":[1424,270,62],
-"RIKUTO.I":[3582,1088,114],"RIKUTO.H":[1056,173,30],"RIKUYA":[1158,153,31],"RINTO":[1271,419,64],
-"RUI.U":[739,51,7],"RUI.M":[423,102,7],"RYOGA":[14805,2626,256],"RYOTA":[3803,765,81],
-"RYUGA":[1616,223,28],"RYUJI":[26878,3921,523],"SEITA":[1691,230,21],"SENA":[1185,386,63],
-"SHINHAENG":[6800,2120,187],"SHINJI":[1362,353,51],"SHINSUKE":[1133,158,24],"SHU.N":[2273,420,69],
-"SHU.Y":[5479,906,75],"SIYOUNG":[18378,2735,492],"SOGO":[176,49,7],"SORA.S":[1618,504,78],
-"SORA.T":[424,147,28],"SOSHI":[784,269,34],"SOTA":[1128,180,27],"TAIGA.F":[3153,656,132],
-"TAIGA.M":[2886,592,117],"TAKUMI":[1450,205,45],"TAKUTO.O":[2312,360,38],"TAKUTO.K":[8688,2528,384],
-"TAKUTO.M":[1283,426,47],"TATSUYA":[1081,357,33],"TERU":[1387,188,50],"TETORA":[330,116,15],
-"TOKIYA":[581,174,24],"TOMOKI":[1243,239,61],"TOWA":[15182,2137,267],"TRISTAN":[320,116,22],
-"WEIZE":[1174,387,36],"YOHAN":[235,88,21],"YOSHIKI":[14256,2506,309],"YUKI":[9569,1634,169],
-"YUMA":[3153,831,74],"YURA":[14248,2494,307],"YUSEI.O":[8291,1359,125],"YUSEI.S":[1652,245,50],
-"YUTA":[4472,844,78]
+"ADAM":[11408,1743,177],"AJU":[1534,259,22],"AKIRA":[1523,178,23],"AOM":[505,123,16],
+"ARCHER":[3090,966,87],"AYUMU.K":[2619,190,90],"AYUMU.S":[8876,963,124],"CHISATO":[14199,1722,182],
+"DAIKI.I":[2696,438,59],"DAIKI.K":[44967,5604,386],"DONGMIN":[6988,1046,142],"EITA":[4127,467,95],
+"EITO":[1225,242,34],"FUMA":[3585,537,84],"GIUSEPPE":[9408,1509,167],"GOTEN":[15574,3149,422],
+"HARUKU":[1639,164,21],"HARUTO":[535,110,15],"HIJIRI":[13529,1924,358],"HIKARU":[5066,597,67],
+"HIROTO":[924,241,38],"HYEONSEUNG":[11388,2622,233],"HYUGO":[16571,1394,200],"HYUNJAE":[10946,2197,173],
+"ISSA":[35108,5454,850],"JAEYONG":[11771,1798,255],"JAY":[1550,528,71],"JINICHIRO":[5713,1115,107],
+"JOE":[481,109,13],"JUNGUK":[417,120,16],"JUNSEI":[1787,405,51],"KAICHI":[1908,567,59],
+"KAIMU":[6070,754,88],"KANADE":[853,209,36],"KANAME":[10588,2501,304],"KANTA":[4395,565,75],
+"KEIJIRO":[1950,275,39],"KEISHIN":[1371,139,25],"KEISUKE":[4041,435,86],"KEITO":[28722,3195,381],
+"KENTO":[737,190,24],"KINARI":[31868,5309,585],"KOSEI":[2027,366,47],"KOSHIRO":[11434,2323,273],
+"KOSUKE":[42198,6820,1012],"KOTARO":[5644,1540,218],"KYOHEI":[6935,1564,148],"MAKI":[6052,1363,134],
+"MEI":[1023,282,20],"MUSASHI":[2158,275,29],"OSUKE":[40224,4809,649],"REN.KO":[6517,1388,143],
+"REN.H":[6097,951,84],"RENTO":[2766,256,49],"RICKEY":[3635,1181,124],"RIKU":[3531,602,127],
+"RIKUTO.I":[8491,1917,257],"RIKUTO.H":[2523,323,61],"RIKUYA":[2437,269,55],"RINTO":[2902,671,112],
+"RUI.U":[1736,100,19],"RUI.M":[988,190,10],"RYOGA":[29558,4160,461],"RYOTA":[7158,1266,149],
+"RYUGA":[3562,421,54],"RYUJI":[69871,7535,1055],"SEITA":[3741,473,95],"SENA":[2283,621,95],
+"SHINHAENG":[13830,3717,461],"SHINJI":[3697,628,102],"SHINSUKE":[2365,301,42],"SHU.N":[4160,687,117],
+"SHU.Y":[10788,1495,149],"SIYOUNG":[42536,4529,868],"SOGO":[568,85,14],"SORA.S":[4424,1026,164],
+"SORA.T":[908,252,41],"SOSHI":[1724,421,56],"SOTA":[3064,351,65],"TAIGA.F":[8340,1178,258],
+"TAIGA.M":[6168,1097,177],"TAKUMI":[3239,355,82],"TAKUTO.O":[3990,538,63],"TAKUTO.K":[21630,4243,1416],
+"TAKUTO.M":[3207,826,107],"TATSUYA":[2522,636,55],"TERU":[3476,380,117],"TETORA":[794,204,26],
+"TOKIYA":[1440,349,48],"TOMOKI":[2499,415,92],"TOWA":[34038,3646,494],"TRISTAN":[742,205,43],
+"WEIZE":[3228,745,82],"YOHAN":[649,172,33],"YOSHIKI":[31141,4069,588],"YUKI":[20810,2891,369],
+"YUMA":[7489,1428,184],"YURA":[35373,4423,845],"YUSEI.O":[16869,2348,223],"YUSEI.S":[3582,452,93],
+"YUTA":[10116,1614,169]
 };
 
-// YouTube チーム動画（前半3曲のみ）: [artist, song, team, videoId, views_4月12日]
+// YouTube チーム動画（前半3曲のみ）: [artist, song, team, videoId, views_4月14日]
 const rawYtTeam = [
-["ENHYPEN","Bite Me",1,"aMQnVQWG3kI",262503],["ENHYPEN","Bite Me",2,"zVikns6RB_M",388153],
-["Ado","Show",1,"XPT8CFEKCGg",104405],["Ado","Show",2,"VK-NCpcdJTc",151331],
-["JO1","Love seeker",1,"lii4F3ujNEk",262064],["JO1","Love seeker",2,"Kzgq0Ghr1zk",131151],
+["ENHYPEN","Bite Me",1,"aMQnVQWG3kI",311456],["ENHYPEN","Bite Me",2,"zVikns6RB_M",482953],
+["Ado","Show",1,"XPT8CFEKCGg",119265],["Ado","Show",2,"VK-NCpcdJTc",177057],
+["JO1","Love seeker",1,"lii4F3ujNEk",315662],["JO1","Love seeker",2,"Kzgq0Ghr1zk",152814],
 ];
 
 const SONGS_INFO = [
@@ -1368,7 +1368,7 @@ function renderBattleCompare() {
       </div>`;
 
     if(yt1 || yt2) {
-      html += `<div style="margin-bottom:1rem;"><div style="font-size:0.7rem;color:var(--muted);margin-bottom:6px;font-family:monospace;">YouTube チーム動画（4/12時点）</div>
+      html += `<div style="margin-bottom:1rem;"><div style="font-size:0.7rem;color:var(--muted);margin-bottom:6px;font-family:monospace;">YouTube チーム動画（4/14時点）</div>
         ${teamBarHtml('TEAM 1', yt1?.views||0, ytMax, '#c8b8ff')}
         ${teamBarHtml('TEAM 2', yt2?.views||0, ytMax, '#f0c040')}
       </div>`;
@@ -1378,7 +1378,7 @@ function renderBattleCompare() {
       html += `<div style="font-size:0.7rem;color:var(--hint);margin-bottom:1rem;font-family:monospace;">YouTube動画: 未取得（後半放送）</div>`;
     }
 
-    html += `<div style="margin-bottom:1rem;"><div style="font-size:0.7rem;color:var(--muted);margin-bottom:6px;font-family:monospace;">推しカメラ 合計再生数（mnetplus 4/12）</div>
+    html += `<div style="margin-bottom:1rem;"><div style="font-size:0.7rem;color:var(--muted);margin-bottom:6px;font-family:monospace;">推しカメラ 合計再生数（mnetplus 4/14）</div>
       ${teamBarHtml('TEAM 1 計', t1total, oshiMax, '#c8b8ff')}
       ${teamBarHtml('TEAM 2 計', t2total, oshiMax, '#f0c040')}
     </div>`;
