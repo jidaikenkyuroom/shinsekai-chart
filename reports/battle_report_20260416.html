@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>グループバトル後半組 放送直前分析レポート｜新世界 数値トラッカー</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500&display=swap');
+:root{--bg:#0a0a0c;--s1:#111115;--s2:#18181d;--border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);--text:#ededeb;--muted:#888882;--hint:#444440;--accent:#c8b8ff;--gold:#f0c040;--green:#4ec87a;--red:#ff5c35;--cyan:#60c8e0;--pink:#e080c0;--orange:#f09878;}
+*{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text);line-height:1.75;font-size:14px;}
+.wrap{max-width:860px;margin:0 auto;padding:0 1.5rem 6rem;}
+.hero{padding:3.5rem 0 2.5rem;border-bottom:1px solid var(--border);margin-bottom:3rem;}
+.hero-tag{font-family:'JetBrains Mono',monospace;font-size:0.65rem;color:var(--accent);letter-spacing:0.18em;text-transform:uppercase;margin-bottom:0.75rem;opacity:0.8;}
+.hero h1{font-size:1.55rem;font-weight:700;letter-spacing:-0.01em;line-height:1.3;margin-bottom:0.75rem;}
+.hero-meta{font-family:'JetBrains Mono',monospace;font-size:0.7rem;color:var(--muted);line-height:1.8;}
+.section{margin-bottom:3.5rem;}
+.section-head{display:flex;align-items:baseline;gap:0.75rem;margin-bottom:1.5rem;padding-bottom:0.6rem;border-bottom:1px solid var(--border);}
+.section-num{font-family:'JetBrains Mono',monospace;font-size:0.62rem;color:var(--accent);opacity:0.6;}
+.section-title{font-size:1rem;font-weight:700;letter-spacing:0.02em;}
+p{font-size:0.875rem;color:#ccc;margin-bottom:0.9rem;line-height:1.85;}
+p:last-child{margin-bottom:0;}
+strong{color:var(--text);font-weight:500;}
+.insight{background:var(--s1);border:1px solid var(--border2);border-left:3px solid var(--accent);border-radius:0 6px 6px 0;padding:1rem 1.25rem;margin:1.25rem 0;font-size:0.84rem;color:var(--text);line-height:1.75;}
+.insight.green{border-left-color:var(--green);}
+.insight.gold{border-left-color:var(--gold);}
+.insight.red{border-left-color:var(--red);}
+.insight.cyan{border-left-color:var(--cyan);}
+.insight.orange{border-left-color:var(--orange);}
+.insight.pink{border-left-color:var(--pink);}
+.flow-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:1.25rem 0;}
+.flow-card{background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:1.1rem 1.2rem;}
+.flow-card.zen{border-top:2px solid var(--cyan);}
+.flow-card.ko{border-top:2px solid var(--pink);}
+.flow-card-title{font-size:0.68rem;font-family:'JetBrains Mono',monospace;letter-spacing:0.08em;margin-bottom:0.75rem;}
+.flow-step{display:flex;align-items:center;gap:6px;font-size:0.75rem;margin-bottom:5px;}
+.flow-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.flow-arrow{font-size:0.6rem;color:var(--hint);padding-left:4px;}
+.flow-note{font-size:0.67rem;font-family:'JetBrains Mono',monospace;color:var(--muted);margin-top:0.75rem;padding-top:0.6rem;border-top:1px solid var(--border);line-height:1.6;}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:1.25rem 0;}
+.stat-card{background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:1rem 1.2rem;}
+.stat-label{font-size:0.65rem;font-family:'JetBrains Mono',monospace;color:var(--muted);letter-spacing:0.08em;margin-bottom:4px;}
+.stat-val{font-size:1.6rem;font-weight:700;font-family:'JetBrains Mono',monospace;line-height:1;}
+.stat-sub{font-size:0.7rem;color:var(--muted);margin-top:4px;}
+.bar-section{margin:1rem 0;}
+.bar-row{display:flex;align-items:center;gap:8px;margin-bottom:7px;}
+.bar-label{width:180px;font-size:0.72rem;color:var(--muted);flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.bar-track{flex:1;background:rgba(255,255,255,0.04);border-radius:3px;height:20px;overflow:hidden;}
+.bar-fill{height:100%;border-radius:3px;min-width:2px;display:flex;align-items:center;padding-left:6px;font-size:0.6rem;font-family:'JetBrains Mono',monospace;color:rgba(255,255,255,0.6);}
+.bar-val{font-size:0.7rem;font-family:'JetBrains Mono',monospace;width:80px;text-align:right;flex-shrink:0;}
+.tbl-wrap{overflow-x:auto;margin:1rem 0;}
+table{width:100%;border-collapse:collapse;font-size:0.78rem;}
+th{font-size:0.65rem;color:var(--muted);font-weight:400;text-align:right;padding:6px 8px;border-bottom:1px solid var(--border);white-space:nowrap;font-family:'JetBrains Mono',monospace;}
+th:first-child{text-align:left;}
+td{padding:6px 8px;border-bottom:1px solid var(--border);text-align:right;font-family:'JetBrains Mono',monospace;font-size:0.75rem;color:var(--muted);}
+td:first-child{text-align:left;color:var(--text);font-family:'Noto Sans JP',sans-serif;}
+tr:hover td{background:var(--s1);}
+.duel{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:12px;background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:1rem;margin-bottom:8px;}
+.duel-team{text-align:center;}
+.duel-name{font-size:0.68rem;color:var(--muted);font-family:'JetBrains Mono',monospace;margin-bottom:2px;}
+.duel-val{font-size:1.1rem;font-weight:700;font-family:'JetBrains Mono',monospace;}
+.duel-sep{font-size:0.65rem;color:var(--hint);}
+.duel-song{font-size:0.65rem;color:var(--muted);text-align:center;margin-bottom:2px;}
+.duel-winner{font-size:0.55rem;letter-spacing:0.1em;text-transform:uppercase;font-family:'JetBrains Mono',monospace;}
+.duel-note{font-size:0.6rem;color:var(--hint);text-align:center;margin-top:3px;}
+.highlight-box{background:var(--s2);border:1px solid rgba(200,184,255,0.25);border-radius:8px;padding:1.25rem;margin:1.25rem 0;}
+.highlight-box-title{font-size:0.7rem;font-family:'JetBrains Mono',monospace;color:var(--accent);letter-spacing:0.1em;margin-bottom:0.75rem;}
+.rank-change{display:flex;align-items:center;gap:12px;margin-bottom:0.75rem;flex-wrap:wrap;}
+.rank-num{font-size:2rem;font-weight:700;font-family:'JetBrains Mono',monospace;line-height:1;}
+.rank-arrow{font-size:1.5rem;color:var(--green);}
+.predict{background:linear-gradient(135deg,rgba(200,184,255,0.06),rgba(78,200,122,0.04));border:1px solid rgba(200,184,255,0.2);border-radius:8px;padding:1.25rem;margin:1.25rem 0;}
+.predict-title{font-size:0.68rem;font-family:'JetBrains Mono',monospace;color:var(--accent);letter-spacing:0.1em;margin-bottom:0.75rem;}
+.predict-item{display:flex;gap:8px;align-items:flex-start;font-size:0.84rem;margin-bottom:0.6rem;line-height:1.7;}
+.predict-icon{flex-shrink:0;margin-top:2px;}
+.footnote{font-size:0.72rem;color:var(--hint);font-family:'JetBrains Mono',monospace;border-top:1px solid var(--border);margin-top:0.75rem;padding-top:0.6rem;line-height:1.6;}
+.rule-box{background:var(--s2);border:1px solid rgba(240,192,64,0.2);border-radius:8px;padding:1.25rem;margin:1.25rem 0;}
+.rule-title{font-size:0.68rem;font-family:'JetBrains Mono',monospace;color:var(--gold);letter-spacing:0.1em;margin-bottom:0.75rem;}
+.rule-item{display:flex;gap:8px;font-size:0.82rem;color:#ccc;margin-bottom:0.5rem;line-height:1.7;}
+.rule-icon{flex-shrink:0;color:var(--gold);}
+.c-zen{color:var(--cyan);}
+.c-ko{color:var(--pink);}
+.c-gold{color:var(--gold);}
+.c-green{color:var(--green);}
+.c-red{color:var(--red);}
+.c-accent{color:var(--accent);}
+.c-orange{color:var(--orange);}
+.growth-badge{display:inline-block;font-size:0.62rem;font-family:'JetBrains Mono',monospace;padding:1px 5px;border-radius:3px;background:rgba(78,200,122,0.12);color:var(--green);border:1px solid rgba(78,200,122,0.25);margin-left:4px;}
+.mini-grid{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;margin:1rem 0;}
+.mini-card{background:var(--s2);border:1px solid var(--border);border-radius:6px;padding:0.75rem;}
+.mini-label{font-size:0.6rem;font-family:'JetBrains Mono',monospace;color:var(--muted);margin-bottom:3px;}
+.mini-val{font-size:1rem;font-weight:700;font-family:'JetBrains Mono',monospace;}
+.mini-sub{font-size:0.62rem;color:var(--muted);}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="hero">
+  <div class="hero-tag">Analysis Report · Group Battle Vol.2</div>
+  <h1>グループバトル後半組<br>放送直前 数値分析レポート</h1>
+  <div class="hero-meta">
+    新世界 ｜ mnetplus 推しカメラ 4/16 時点 ｜ 投票順位 4/9 時点<br>
+    後半組（INI / Wanna One / SEKAI NO OWARI / Stray Kids）放送日当日の記録<br>
+    ※ 投票締め切り 4/17 — 放送から締め切りまで実質2日
+  </div>
+</div>
+
+<!-- 00 -->
+<div class="section">
+  <div class="section-head"><span class="section-num">00</span><span class="section-title">前回レポートの仮説を踏まえて——今日という日の意味</span></div>
+
+  <p>前回（4/14）のレポートでは、後半組について次のように書いた。「放送が4/16・投票締め切りが4/17と<strong>実質2日間</strong>では、パフォーマンスを見て新たに気持ちが動いた視聴者が票に転換しにくい構造になっている」。今日がまさにその当日だ。</p>
+  <p>では今この瞬間、後半組の数字はどこにあるのか。放送を「見る前」の素の人気度——それが今日4/16の推しカメラデータが示すものだ。これは前半組が1〜2週間かけて積み上げてきた数字と同じ土俵で比べられる、<strong>個人の認知度・人気の地力</strong>の指標とも言える。</p>
+
+  <div class="rule-box">
+    <div class="rule-title">── グループバトルの勝敗ルール（確認）</div>
+    <div class="rule-item"><span class="rule-icon">▸</span><span>同じ楽曲の2チームが対決。勝敗は<strong>現場の国民プロデューサー＋SEKAIプロデューサーによる現場投票</strong>で決まる。</span></div>
+    <div class="rule-item"><span class="rule-icon">▸</span><span>現場投票は2種類：①対決全メンバーの中で<strong>一番良かった練習生に1人1票</strong> ②<strong>FREE PARTが良かった方のチームに1票</strong>（両方OKなら両方に投票可、どちらもNGなら棄権可）。</span></div>
+    <div class="rule-item"><span class="rule-icon">▸</span><span>勝利チームの練習生には<strong>オンライン得票数にベネフィットが加算</strong>。全員に+2,000票、さらにFREE PART投票でも勝利した場合は<strong>FREE PART獲得票の4倍</strong>が追加。</span></div>
+    <div class="rule-item"><span class="rule-icon">▸</span><span>グループバトルの<strong>翌週</strong>に第一回順位発表式。<strong>51位以下は脱落</strong>。現在は1回あたり12名を選んで投票できる。</span></div>
+  </div>
+
+  <div class="insight cyan">
+    このルール設計において重要なのは、<strong>チーム勝利ボーナスは人気者が多いチームをさらに有利にする</strong>点だ。すでに票が集まっているチームが現場投票でも勝てば、オンライン票に2,000票上積み＋FREE PART×4が全員に入る。また現在は12名まで選べるため票が分散しやすく、<strong>ベネフィットの有無が順位に大きく影響する</strong>構造になっている。推しカメラの数値格差は、この勝利ボーナスがどちらのチームに入るかを事前に予測するデータとして機能する。
+  </div>
+</div>
+
+<!-- 01 -->
+<div class="section">
+  <div class="section-head"><span class="section-num">01</span><span class="section-title">後半組の「今の地力」——4/16時点スナップショット</span></div>
+
+  <div class="stat-grid">
+    <div class="stat-card" style="border-top:2px solid var(--pink);">
+      <div class="stat-label c-ko">後半組 推しカメラ合計（4/16）</div>
+      <div class="stat-val">743,392</div>
+      <div class="stat-sub">50名 ｜ 平均 14,868</div>
+    </div>
+    <div class="stat-card" style="border-top:2px solid var(--cyan);">
+      <div class="stat-label c-zen">前半組 推しカメラ合計（4/16）</div>
+      <div class="stat-val">381,278</div>
+      <div class="stat-sub">51名 ｜ 平均 7,476</div>
+    </div>
+  </div>
+
+  <p>前回レポートでは前半51名平均6,217・後半50名平均12,201という数字が出た。4/16時点では<strong>後半平均14,868（前半7,476の約2.0倍）</strong>。この差は2日で拡大こそすれ、縮まっていない。後半組には人気の高い練習生が構造的に多く配置されていることを改めて確認できる。</p>
+
+  <p>後半組の楽曲別では、Wanna One「Energetic」が突出している。</p>
+
+  <div class="bar-section">
+    <div style="font-size:0.65rem;color:var(--muted);font-family:'JetBrains Mono',monospace;letter-spacing:0.08em;margin-bottom:0.75rem;">── 後半組 楽曲別 推しカメラ合計（4/16）</div>
+    <div class="bar-row"><div class="bar-label c-ko">Wanna One / Energetic</div><div class="bar-track"><div class="bar-fill" style="width:100%;background:rgba(224,128,192,0.4);">401,038</div></div><div class="bar-val c-ko">401,038</div></div>
+    <div class="bar-row"><div class="bar-label" style="color:#ff8870;">SEKAI NO OWARI / The Peak</div><div class="bar-track"><div class="bar-fill" style="width:34.3%;background:rgba(255,92,53,0.3);">137,529</div></div><div class="bar-val" style="color:#ff8870;">137,529</div></div>
+    <div class="bar-row"><div class="bar-label c-green">INI / LOUD</div><div class="bar-track"><div class="bar-fill" style="width:25.7%;background:rgba(78,200,122,0.3);">102,936</div></div><div class="bar-val c-green">102,936</div></div>
+    <div class="bar-row"><div class="bar-label" style="color:#a0a8ff;">Stray Kids / CASE 143</div><div class="bar-track"><div class="bar-fill" style="width:25.4%;background:rgba(160,168,255,0.3);">101,889</div></div><div class="bar-val" style="color:#a0a8ff;">101,889</div></div>
+    <div style="margin-top:1.25rem;font-size:0.65rem;color:var(--muted);font-family:'JetBrains Mono',monospace;letter-spacing:0.08em;margin-bottom:0.75rem;">── 前半組 楽曲別 推しカメラ合計（参考・4/16）</div>
+    <div class="bar-row"><div class="bar-label c-accent">ENHYPEN / Bite Me</div><div class="bar-track"><div class="bar-fill" style="width:45.9%;background:rgba(200,184,255,0.4);">183,992</div></div><div class="bar-val c-accent">183,992</div></div>
+    <div class="bar-row"><div class="bar-label c-gold">JO1 / Love seeker</div><div class="bar-track"><div class="bar-fill" style="width:20.1%;background:rgba(240,192,64,0.3);">80,483</div></div><div class="bar-val c-gold">80,483</div></div>
+    <div class="bar-row"><div class="bar-label c-cyan">米津玄師 / IRIS OUT</div><div class="bar-track"><div class="bar-fill" style="width:19.7%;background:rgba(96,200,224,0.3);">79,204</div></div><div class="bar-val c-cyan">79,204</div></div>
+    <div class="bar-row"><div class="bar-label c-orange">Ado / Show</div><div class="bar-track"><div class="bar-fill" style="width:9.4%;background:rgba(240,152,120,0.3);">37,599</div></div><div class="bar-val c-orange">37,599</div></div>
+  </div>
+
+  <div class="insight gold">
+    前回レポートで「前半組の中で最下位」だったAdo「Show」（37,599）と、後半組のINI「LOUD」（102,936）・Stray Kids「CASE 143」（101,889）を比べると、<strong>後半組の「一番弱い」楽曲でも前半組の最強ENHYPEN（183,992）の56%ある</strong>。前後半の構造的な人気格差の大きさは数字として明らかだ。
+  </div>
+</div>
+
+<!-- 02 -->
+<div class="section">
+  <div class="section-head"><span class="section-num">02</span><span class="section-title">2日間の伸び——4/14→4/16で何が起きたか</span></div>
+
+  <p>4/14（前回レポート時点）から4/16（今日）にかけて、後半組全体の推しカメラ数はどう変化したか。</p>
+
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr>
+        <th>楽曲</th>
+        <th>4/14</th>
+        <th>4/16</th>
+        <th>増加数</th>
+        <th>伸び率</th>
+      </tr></thead>
+      <tbody>
+        <tr><td>Wanna One / Energetic</td><td>317,612</td><td class="c-ko">401,038</td><td class="c-green">+83,426</td><td class="c-green">+26.3%</td></tr>
+        <tr><td>Stray Kids / CASE 143</td><td>80,444</td><td style="color:#a0a8ff;">101,889</td><td class="c-green">+21,445</td><td class="c-green">+26.7%</td></tr>
+        <tr><td>SEKAI NO OWARI / The Peak</td><td>113,755</td><td style="color:#ff8870;">137,529</td><td class="c-green">+23,774</td><td class="c-green">+20.9%</td></tr>
+        <tr><td>INI / LOUD</td><td>86,487</td><td class="c-green">102,936</td><td class="c-green">+16,449</td><td class="c-green">+19.0%</td></tr>
+        <tr style="border-top:1px solid var(--border2);"><td><strong>後半組合計</strong></td><td>598,298</td><td>743,392</td><td class="c-green">+145,094</td><td class="c-green">+24.2%</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>全体で2日間に+24.2%。これは毎週土曜の自動収集と同じスパンではないため単純比較はできないが、<strong>放送日を翌日以降に控えた「前哨戦」としての数字の動き</strong>を示している。特にStray Kids「CASE 143」の+26.7%は楽曲別では最高で、TOWA（+9,351）の牽引によるものだ。</p>
+
+  <p>個人の伸び率では、絶対数が小さい練習生が上位に来やすい。以下は特に目立つケースだ。</p>
+
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr>
+        <th>名前</th>
+        <th>楽曲</th>
+        <th>4/14</th>
+        <th>4/16</th>
+        <th>伸び率</th>
+        <th>投票(4/9)</th>
+      </tr></thead>
+      <tbody>
+        <tr><td>児島 歩夢（AYUMU.K）</td><td style="color:#ff8870;">SEKAI T1</td><td>2,619</td><td>3,758</td><td class="c-green">+43.5%</td><td>83位</td></tr>
+        <tr><td>東野 蒼汰（SOTA）</td><td style="color:#a0a8ff;">SKZ T2</td><td>3,064</td><td>4,388</td><td class="c-green">+43.2%</td><td>85位</td></tr>
+        <tr><td>安部 結蘭（YURA）</td><td class="c-ko">Wanna T1</td><td>35,373</td><td>47,408</td><td class="c-green">+34.0%</td><td>4位</td></tr>
+        <tr><td>矢田 佳暉（YOSHIKI）</td><td class="c-ko">Wanna T1</td><td>31,141</td><td>40,730</td><td class="c-green">+30.8%</td><td>3位</td></tr>
+        <tr><td>森井 輝（TERU）</td><td style="color:#a0a8ff;">SKZ T1</td><td>3,476</td><td>4,537</td><td class="c-green">+30.5%</td><td>89位</td></tr>
+        <tr><td>パク・シヨン（SIYOUNG）</td><td class="c-ko">Wanna T1</td><td>42,536</td><td>55,198</td><td class="c-green">+29.8%</td><td>5位</td></tr>
+        <tr><td>黒﨑 貫汰（KANTA）</td><td style="color:#a0a8ff;">SKZ T2</td><td>4,395</td><td>5,647</td><td class="c-green">+28.5%</td><td>56位</td></tr>
+        <tr><td>杉山 竜司（RYUJI）</td><td class="c-ko">Wanna T2</td><td>69,871</td><td>88,548</td><td class="c-green">+26.7%</td><td>25位</td></tr>
+        <tr><td>濱田 永遠（TOWA）</td><td style="color:#a0a8ff;">SKZ T2</td><td>34,038</td><td>43,389</td><td class="c-green">+27.5%</td><td>16位</td></tr>
+        <tr><td>飯塚 亮賀（RYOGA）</td><td style="color:#ff8870;">SEKAI T2</td><td>29,558</td><td>36,134</td><td class="c-green">+22.2%</td><td>11位</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="insight">
+    AYUMU.K（+43.5%）とSOTA（+43.2%）は絶対数こそ低いが伸び率は全体最高水準。クラス評価や周辺コンテンツの影響で注目が集まっている可能性がある。一方、<strong>YURA・YOSHIKI・SIYOUNGのWanna One TEAM1トリオがいずれも+29〜34%の高伸び率で絶対数も突出</strong>している点は、今日の放送後のさらなる伸びを期待させる。
+  </div>
+</div>
+
+<!-- 03 -->
+<div class="section">
+  <div class="section-head"><span class="section-num">03</span><span class="section-title">チーム格差の構造——勝敗ルールと重ねて読む</span></div>
+
+  <p>推しカメラの数字は「どちらのチームにファンが多いか」の代理指標になる。これをグループバトルのチーム格差に重ねて読むと、勝敗の見通しと、<strong>勝利ボーナスがどちらに渡るか</strong>の予測ができる。</p>
+
+  <div style="margin:1rem 0 0.5rem;font-size:0.68rem;color:var(--muted);font-family:'JetBrains Mono',monospace;letter-spacing:0.08em;">── TEAM 1 vs TEAM 2 推しカメラ合計（4/16）</div>
+
+  <div class="duel">
+    <div class="duel-team">
+      <div class="duel-name">TEAM 1</div>
+      <div class="duel-val c-ko">207,486</div>
+      <div class="duel-winner c-gold">≈ 拮抗</div>
+    </div>
+    <div>
+      <div class="duel-song">Wanna One / Energetic</div>
+      <div class="duel-sep">vs</div>
+      <div class="duel-note">1.07x差 ── 最も接戦</div>
+    </div>
+    <div class="duel-team">
+      <div class="duel-name">TEAM 2</div>
+      <div class="duel-val c-gold">193,552</div>
+      <div class="duel-winner c-gold">≈ 拮抗</div>
+    </div>
+  </div>
+
+  <div class="duel">
+    <div class="duel-team">
+      <div class="duel-name">TEAM 1</div>
+      <div class="duel-val c-green">76,799</div>
+      <div class="duel-winner c-green">▲ 勝利</div>
+    </div>
+    <div>
+      <div class="duel-song">INI / LOUD</div>
+      <div class="duel-sep">vs</div>
+      <div class="duel-note">2.9x差 ── T1が圧倒</div>
+    </div>
+    <div class="duel-team">
+      <div class="duel-name">TEAM 2</div>
+      <div class="duel-val" style="color:var(--hint);">26,137</div>
+    </div>
+  </div>
+
+  <div class="duel">
+    <div class="duel-team">
+      <div class="duel-name">TEAM 1</div>
+      <div class="duel-val" style="color:var(--hint);">35,185</div>
+    </div>
+    <div>
+      <div class="duel-song">SEKAI NO OWARI / The Peak</div>
+      <div class="duel-sep">vs</div>
+      <div class="duel-note">2.9x差 ── T2が圧倒</div>
+    </div>
+    <div class="duel-team">
+      <div class="duel-name">TEAM 2</div>
+      <div class="duel-val c-green">102,344</div>
+      <div class="duel-winner c-green">▲ 勝利</div>
+    </div>
+  </div>
+
+  <div class="duel">
+    <div class="duel-team">
+      <div class="duel-name">TEAM 1</div>
+      <div class="duel-val" style="color:var(--hint);">36,498</div>
+    </div>
+    <div>
+      <div class="duel-song">Stray Kids / CASE 143</div>
+      <div class="duel-sep">vs</div>
+      <div class="duel-note">1.8x差 ── T2勝利</div>
+    </div>
+    <div class="duel-team">
+      <div class="duel-name">TEAM 2</div>
+      <div class="duel-val c-green">65,391</div>
+      <div class="duel-winner c-green">▲ 勝利</div>
+    </div>
+  </div>
+
+  <div class="insight red">
+    <strong>INI「LOUD」とSEKAI NO OWARI「The Peak」はいずれも約3倍差</strong>——これは前半組のJO1（3.8倍差、前回最大格差）に匹敵する水準だ。特にINI TEAM2は7人いながら合計26,137と、TEAM1の1人あたり平均（10,971）を全員が下回っている。逆にSEKAI TEAM2にはRYOGA（36,134）・KEITO（33,889）という2大看板が集中しており、チーム分けの偏りが数字に如実に出ている。
+  </div>
+
+  <div class="insight gold">
+    ルール上の注目点：<strong>Wanna One「Energetic」の1.07倍差</strong>は後半4曲の中で唯一の真の接戦。TEAM1にはYOSHIKI（40,730）・SIYOUNG（55,198）・YURA（47,408）・DAIKI.K（52,826）が揃うが、TEAM2にはRYUJI（88,548）という全後半組最高数値の1人がいる。このバランスは<strong>FREE PARTのパフォーマンス次第でどちらが勝つか読めない</strong>唯一の一戦だ。勝利ボーナス（2,000票＋FREE PART×4）がどちらに入るかは、今日の放送後に大きな意味を持つ。
+  </div>
+</div>
+
+<!-- 04 -->
+<div class="section">
+  <div class="section-head"><span class="section-num">04</span><span class="section-title">個人フォーカス——「数字以上」「数字以下」の読み方</span></div>
+
+  <div class="highlight-box">
+    <div class="highlight-box-title">CASE 01 ── 杉山 竜司（RYUJI）/ Wanna One「Energetic」TEAM2 後半組</div>
+    <div class="rank-change">
+      <div><div class="stat-label">推しカメラ（全101名中）</div><div class="rank-num c-ko">1位</div></div>
+      <div class="rank-arrow" style="color:var(--hint);">→</div>
+      <div>
+        <div class="stat-label">投票順位（4/9時点）</div>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:4px;">
+          <span style="font-size:1.3rem;font-weight:700;font-family:'JetBrains Mono',monospace;color:var(--muted);">22位</span>
+          <span style="color:var(--hint);font-size:1rem;">→</span>
+          <span style="font-size:1.3rem;font-weight:700;font-family:'JetBrains Mono',monospace;color:var(--hint);">25位</span>
+          <span style="font-size:0.8rem;color:var(--red);font-family:'JetBrains Mono',monospace;background:rgba(255,92,53,0.1);padding:2px 6px;border-radius:3px;">▼ 3</span>
+        </div>
+      </div>
+    </div>
+    <p style="font-size:0.82rem;color:#ccc;margin:0;">推しカメラ88,548回（全体1位）でありながら投票は25位——<strong>数字と票の最大のねじれケース</strong>。4/14→4/16の2日間で+18,677回（+26.7%）と絶対値の増加数も全体最大だが、投票は逆に後退している。後半組未放送という状況では、このタイムラグは特に大きく出やすい。今日の放送後、RYUJI名前は「このパフォーマンスを見ていなかったのに数字が1位だったのか」という文脈で改めて注目を集める可能性がある。</p>
+    <div class="insight pink" style="margin:0.75rem 0 0;">
+      クラス評価はBランク（初回A→再評価B）。数字の高さに評価が完全に追いついていないことも示している。<strong>今日のパフォーマンスが票の転換点になりうる最重要人物</strong>として注目。
+    </div>
+  </div>
+
+  <div class="highlight-box">
+    <div class="highlight-box-title">CASE 02 ── 岡田 彪吾（HYUGO）/ Stray Kids「CASE 143」TEAM1 後半組</div>
+    <div class="rank-change">
+      <div><div class="stat-label">推しカメラ</div><div class="rank-num c-accent">20,533</div></div>
+      <div class="rank-arrow" style="color:var(--green);">↑</div>
+      <div>
+        <div class="stat-label">投票順位の推移</div>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:4px;">
+          <span style="font-size:1.3rem;font-weight:700;font-family:'JetBrains Mono',monospace;color:var(--muted);">93位</span>
+          <span style="color:var(--green);font-size:1rem;">↑</span>
+          <span style="font-size:1.3rem;font-weight:700;font-family:'JetBrains Mono',monospace;color:var(--green);">75位</span>
+          <span style="font-size:0.8rem;color:var(--green);font-family:'JetBrains Mono',monospace;background:rgba(78,200,122,0.12);padding:2px 6px;border-radius:3px;">▲ 18</span>
+        </div>
+      </div>
+    </div>
+    <p style="font-size:0.82rem;color:#ccc;margin:0;">グループバトル前は93位（実質最下位圏）だったが、推しカメラ解禁で75位まで18ランクアップ。推しカメラの20,533という数値は後半組の中では中位だが、クラス評価はB→Aと最高評価に達している。<strong>今日の放送前に流れた予告映像でHYUGOのチームに何かありそうだと察した視聴者が推しカメラを見に来た可能性も高く</strong>、それが票の上昇を後押ししていると考えられる。</p>
+    <div class="insight green" style="margin:0.75rem 0 0;">
+      スタートラインが低かったぶん、「認知→関心→投票」のタイムラグがそのまま順位上昇として現れているケース。今日の放送で初めてパフォーマンスを見るファンが多い。<strong>放送後の急伸が最も期待される一人</strong>であり、前回ISSAについて分析した「タイムラグ解消型」の後半組版と言える。
+    </div>
+  </div>
+
+  <div class="highlight-box">
+    <div class="highlight-box-title">CASE 03 ── 矢田 佳暉（YOSHIKI）/ Wanna One「Energetic」TEAM1 後半組</div>
+    <div class="rank-change">
+      <div><div class="stat-label">推しカメラ</div><div class="rank-num" style="color:var(--gold);">40,730</div></div>
+      <div class="rank-arrow" style="color:var(--hint);">→</div>
+      <div>
+        <div class="stat-label">投票順位の推移</div>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:4px;">
+          <span style="font-size:1.3rem;font-weight:700;font-family:'JetBrains Mono',monospace;color:var(--gold);">1位</span>
+          <span style="color:var(--hint);font-size:1rem;">→</span>
+          <span style="font-size:1.3rem;font-weight:700;font-family:'JetBrains Mono',monospace;color:var(--hint);">3位</span>
+          <span style="font-size:0.8rem;color:var(--red);font-family:'JetBrains Mono',monospace;background:rgba(255,92,53,0.1);padding:2px 6px;border-radius:3px;">▼ 2</span>
+        </div>
+      </div>
+    </div>
+    <p style="font-size:0.82rem;color:#ccc;margin:0;">4/9以前は全体1位だったが、4/9時点で3位に後退。ただし推しカメラは4/14→4/16で+9,589（+30.8%）と高い伸び率を示している。<strong>数字は伸びているのに票が下落している</strong>という前回のKOSUKEとは逆の構図だ。これはKINARIやDAIKI.Kなどが台頭してきた結果であり、YOSHIKIの絶対的な人気が衰えたわけではない。</p>
+    <div class="insight" style="margin:0.75rem 0 0;">
+      今日の放送後、Wanna Oneチームのパフォーマンス注目度は全曲中最高になる可能性が高い。その文脈でYOSHIKIの「放送を見てからも変わらず1位圏の推しカメラ」という事実が知られれば、<strong>票の巻き返しの機会になりうる</strong>。
+    </div>
+  </div>
+
+  <div class="highlight-box" style="border-color:rgba(255,92,53,0.2);">
+    <div class="highlight-box-title" style="color:var(--orange);">CASE 04 ── 香月 誠太（SEITA）/ SEKAI NO OWARI「The Peak」TEAM1 後半組</div>
+    <div class="rank-change">
+      <div><div class="stat-label">推しカメラ（相対的に低い）</div><div class="rank-num" style="color:var(--orange);">4,457</div></div>
+      <div class="rank-arrow" style="color:var(--green);">↑↑</div>
+      <div>
+        <div class="stat-label">投票順位の推移</div>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:4px;">
+          <span style="font-size:1.3rem;font-weight:700;font-family:'JetBrains Mono',monospace;color:var(--muted);">91位</span>
+          <span style="color:var(--green);font-size:1rem;">↑</span>
+          <span style="font-size:1.3rem;font-weight:700;font-family:'JetBrains Mono',monospace;color:var(--green);">67位</span>
+          <span style="font-size:0.8rem;color:var(--green);font-family:'JetBrains Mono',monospace;background:rgba(78,200,122,0.12);padding:2px 6px;border-radius:3px;">▲ 24</span>
+        </div>
+      </div>
+    </div>
+    <p style="font-size:0.82rem;color:#ccc;margin:0;">推しカメラ4,457と後半組の中でも低い水準ながら、投票は91位→67位と24ランクの大幅上昇。<strong>数字に表れない票の動きの正体</strong>はクラス評価A（初回・再評価ともにA→Bと高水準）にあるとみられる。再評価ステージなど、推しカメラには映らないパフォーマンスの印象が票に反映されているケースだ。</p>
+    <div class="insight orange" style="margin:0.75rem 0 0;">
+      SEKAI NO OWARI TEAM1は推しカメラ合計で大きく劣勢（T2の34%）。ただしFREE PARTの投票はチーム全体への一票であり、TEAM1がFREE PARTで評価されれば<strong>TEAM1全員に同じベネフィットが入る</strong>。チームの推しカメラ格差を覆す唯一の逆転ルートとして注目したい。
+    </div>
+  </div>
+</div>
+
+<!-- 05 -->
+<div class="section">
+  <div class="section-head"><span class="section-num">05</span><span class="section-title">前回レポートの仮説検証——数字は何を語るか</span></div>
+
+  <p>前回4/14のレポートでは後半組について4つの仮説を提示した。今日時点のデータでそれぞれを確認する。</p>
+
+  <div class="predict">
+    <div class="predict-title">前回仮説の検証（4/16時点）</div>
+    <div class="predict-item"><span class="predict-icon c-green">✓</span><span><strong class="c-green">「前半組は二極化が進む」（前回仮説）→ 確認</strong>。前半組の最高ENHYPEN(183,992)と最低Ado(37,599)の差は4.9倍。前回（4/14）時点より格差はさらに拡大している。</span></div>
+    <div class="predict-item"><span class="predict-icon c-green">✓</span><span><strong class="c-green">「既存ファンの多い練習生は別」（前回仮説）→ 確認</strong>。YOSHIKI・YURA・SIYOUNG・DAIKI.Kは後半組未放送にもかかわらず票の上位圏を維持。固定ファンの投票行動は放送と独立している。</span></div>
+    <div class="predict-item"><span class="predict-icon c-accent">△</span><span><strong class="c-accent">「後半組の上昇幅は限定的」（前回仮説）→ 一部確認、一部に例外</strong>。SEITAは推しカメラ解禁だけで+24ランクアップ。HYUGOの+18は、今日の放送予告映像に「HYUGOのチームで何かありそう」な場面が映っており、それを察した視聴者が推しカメラを確認しに来たことが一因と考えられる。<strong>「放送前の情報」だけでも票は動く</strong>ことが示された例外ケースだ。</span></div>
+    <div class="predict-item"><span class="predict-icon c-gold">?</span><span><strong class="c-gold">「後半組のパフォーマンスを見て票が乗りにくい」（前回仮説）→ 今日以降が本番</strong>。これはまだ検証不可能。今夜の放送後のデータが唯一の答えになる。</span></div>
+  </div>
+
+  <div class="insight">
+    前回ISSAについて書いた「タイムラグが解消されつつある途中の数字」という分析は、後半組のHYUGO・SEITAにそのまま当てはまる。<strong>推しカメラ解禁や予告映像という「放送前の断片情報」だけで票が動いた</strong>という事実は、今夜の「パフォーマンス本編」によってさらに大きな動きが起きる可能性を示唆している。ただし投票締め切りまでの時間が足りない。
+  </div>
+</div>
+
+<!-- 06 -->
+<div class="section">
+  <div class="section-head"><span class="section-num">06</span><span class="section-title">放送後の注目指標——何が動けば仮説が確認できるか</span></div>
+
+  <div class="predict">
+    <div class="predict-title">今夜以降に見るべきポイント</div>
+    <div class="predict-item"><span class="predict-icon c-ko">◈</span><span><strong class="c-ko">Wanna One「Energetic」TEAM1 vs TEAM2 の勝敗</strong>。後半4曲唯一の接戦（1.07倍差）。現場投票の結果次第でどちらも勝ちうる。FREE PARTはチーム全体への投票なので、どちらのチームのFREE PARTが評価されるかで、そのチーム全員へのボーナス（+FREE PART票×4）の行方が変わる。</span></div>
+    <div class="predict-item"><span class="predict-icon c-green">◈</span><span><strong class="c-green">HYUGOとSEITAのさらなる上昇</strong>。放送前の断片情報だけでそれぞれ+18・+24ランクアップした2人が、今夜のパフォーマンス本編を見た視聴者の票でどこまで行くか。第一回順位発表の「51位ライン」攻防に直接関わる。</span></div>
+    <div class="predict-item"><span class="predict-icon" style="color:#ff8870;">◈</span><span><strong style="color:#ff8870;">SEKAI NO OWARI TEAM1のFREE PART評価</strong>。推しカメラ合計では3倍の劣勢でも、FREE PARTでTEAM1が評価されれば全員に同じベネフィットが入る。チームとして現場で評価されるかどうかが、TEAM1メンバー全員の命運を左右する。</span></div>
+    <div class="predict-item"><span class="predict-icon c-accent">◈</span><span><strong class="c-accent">RYUJIの投票転換</strong>。88,548という推しカメラ最高値の練習生が、今日の放送後に票が跳ねるかどうか。「数字はあった、でも投票が追いついていなかった」という構図が解消されるなら、それはタイムラグ解消の最大事例になる。</span></div>
+  </div>
+
+  <div class="insight cyan">
+    第一回順位発表は<strong>グループバトル翌週</strong>に行われる。今日の放送後から4/17の投票締め切りまでに積まれた票と、後半組へのベネフィット加算の結果が反映される。特に注目すべきは51位ライン付近の練習生——TAKUTO.O（51位）・REN.H（50位）らにとって、後半組ベネフィットの有無が生き残りを左右しうる。
+  </div>
+</div>
+
+<!-- 07 -->
+<div class="section">
+  <div class="section-head"><span class="section-num">07</span><span class="section-title">総括——「放送前の地力」と「放送が開く扉」</span></div>
+
+  <p>今日4/16の数字が示すのは、後半組の練習生が<strong>パフォーマンスを1秒も見せていない段階でも、前半組平均の約2倍の推しカメラ数を積み上げてきた</strong>という事実だ。これはWanna One「Energetic」のメンバーが特にそうで、SIYOUNG・DAIKI.K・YURA・YOSHIKI・OSUKEという顔ぶれが個人人気の高さをそのまま数字に変換している。</p>
+
+  <p>一方でRYUJIのような「数字は最高なのに票が追いついていない」ケースや、SEITAのような「数字は低いのに票が大きく動いた」ケースは、<strong>推しカメラと投票が必ずしも同じ軸で動いていない</strong>ことを示している。グループバトルには推しカメラには映らない「全体パフォーマンスの印象」という変数があり、それが票に大きく影響していると見られる。</p>
+
+  <p>前回レポートの締めくくりで書いた「後半組の票転換は今回ではなく次回以降になるかもしれない」という予測は、今日の放送結果が出て初めて検証できる。だが一つ言えるのは、<strong>今夜が後半組にとっての本当のスタートライン</strong>だということだ。推しカメラの数字は「可能性を示す地力」であり、パフォーマンスが「それを票に変える鍵」になる。</p>
+
+  <div class="footnote">
+    本レポートは mnetplus 推しカメラデータ（4/16 時点）および投票順位データ（4/9 時点）を基に作成。<br>
+    グループバトルルールは公式発表情報に基づく（投票12名/回・勝利チーム+2,000票・FREE PART×4）。<br>
+    投票締め切り 4/17。第一回順位発表後、51位以下の練習生は脱落となる見込み。<br>
+    ※ 後半組のYouTubeチームハイライト動画は本稿作成時点で未公開。<br>
+    © 2026 jidaikenkyuroom
+  </div>
+</div>
+
+</div>
+</body>
+</html>
