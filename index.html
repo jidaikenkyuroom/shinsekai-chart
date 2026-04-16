@@ -269,6 +269,13 @@ tr:hover td{background:var(--surface);}
       <button class="g-tab" onclick="switchBattleTab('timing')">放送タイミング</button>
     </div>
 
+    <div style="background:var(--surface);border-radius:6px;padding:0.65rem 1rem;margin-bottom:1rem;border-left:3px solid var(--accent);font-size:0.7rem;color:var(--muted);font-family:monospace;line-height:1.8;">
+      <span style="color:var(--accent);font-weight:500;">得票ルール</span>
+      <span style="color:var(--text);">勝者</span>: 個人現場票 + FREE PART票 ×4 + ベネフィット 2,000票
+      <span style="color:var(--text);">敗者</span>: 個人現場票 + FREE PART票 ×1
+      <span style="color:var(--hint);">※ SEKAI NO OWARI「The Peak」のみ FREE PART 同票のため、両チームとも ×2 加算</span>
+    </div>
+
     <div id="btab-list" class="b-section active">
       <div class="row">
         <span class="label">並び替え:</span>
@@ -276,6 +283,7 @@ tr:hover td{background:var(--surface);}
           <option value="song">楽曲・チーム順</option>
           <option value="views">推しカメラ再生数順</option>
           <option value="rank">投票順位順</option>
+          <option value="battlerank">バトル個人順位順</option>
           <option value="abc">ABC順</option>
         </select>
         <select id="bl-filter" onchange="renderBattleList()">
@@ -288,12 +296,12 @@ tr:hover td{background:var(--surface);}
     </div>
 
     <div id="btab-compare" class="b-section">
-      <p class="sub-label">楽曲ごとに TEAM 1 vs TEAM 2 を比較。YouTube動画は前半放送3曲（ENHYPEN / Ado / JO1）のみ取得済み。米津玄師は著作権により非公開。後半4曲はYouTube未取得。</p>
+      <p class="sub-label">楽曲ごとに TEAM 1 vs TEAM 2 を比較。YouTube動画は7曲分取得済み（米津玄師「IRIS OUT」は著作権により非公開）。</p>
       <div id="bc-content"></div>
     </div>
 
     <div id="btab-scatter" class="b-section">
-      <p class="sub-label">推しカメラ再生数（mnetplus 4/14時点）と投票順位の相関。点の色は楽曲。○=前半放送 △=後半放送。</p>
+      <p class="sub-label">推しカメラ再生数（mnetplus 4/16時点）と投票順位の相関。点の色は楽曲。○=前半放送 △=後半放送。</p>
       <div class="row">
         <span class="label">楽曲絞り込み:</span>
         <select id="bs-song" onchange="renderBattleScatter()">
@@ -306,7 +314,7 @@ tr:hover td{background:var(--surface);}
     </div>
 
     <div id="btab-timing" class="b-section">
-      <p class="sub-label">グループバトルの放送タイミング（前半 vs 後半）が推しカメラ再生数に与える影響。推しカメラ動画（mnetplus）は前半・後半とも同タイミングで公開。YouTube のチームハイライト動画は前半放送3曲のみ取得済み（後半は未取得）。</p>
+      <p class="sub-label">グループバトルの放送タイミング（前半 vs 後半）が推しカメラ再生数に与える影響。推しカメラ動画（mnetplus）は前半・後半とも同タイミングで公開。</p>
       <div id="bt-content"></div>
     </div>
   </div>
@@ -1241,12 +1249,71 @@ const rawOshiCam = {
 "YUTA":[12020,1791,191]
 };
 
-// YouTube チーム動画（前半3曲のみ）: [artist, song, team, videoId, views_4月16日]
+// YouTube チーム動画（全8曲）: [artist, song, team, videoId, views_4月17日]
 const rawYtTeam = [
-["ENHYPEN","Bite Me",1,"aMQnVQWG3kI",354827],["ENHYPEN","Bite Me",2,"zVikns6RB_M",567201],
-["Ado","Show",1,"XPT8CFEKCGg",130614],["Ado","Show",2,"VK-NCpcdJTc",198626],
-["JO1","Love seeker",1,"lii4F3ujNEk",360312],["JO1","Love seeker",2,"Kzgq0Ghr1zk",169378],
+["ENHYPEN","Bite Me",1,"aMQnVQWG3kI",362202],["ENHYPEN","Bite Me",2,"zVikns6RB_M",581577],
+["Ado","Show",1,"XPT8CFEKCGg",132734],["Ado","Show",2,"VK-NCpcdJTc",202447],
+["JO1","Love seeker",1,"lii4F3ujNEk",367825],["JO1","Love seeker",2,"Kzgq0Ghr1zk",172318],
+["INI","LOUD",1,"lZxyjC-R-II",9116],["INI","LOUD",2,"3kzZSdl0Bzc",7131],
+["Wanna One","Energetic",1,"QQBwcf_ougU",5019],["Wanna One","Energetic",2,"UUTGkgJ8VSw",5022],
+["Stray Kids","CASE 143",1,"vuZrYLtWIUs",7239],["Stray Kids","CASE 143",2,"6F5UxvrmTzg",6868],
+["SEKAI NO OWARI","The Peak (最高到達点)",1,"wySd8eO6G6k",3150],["SEKAI NO OWARI","The Peak (最高到達点)",2,"FgYcyA8HevA",5203],
 ];
+
+// グループバトル結果: reading → {result, indv, free, total, bRank}
+const rawBattleResult = {
+"MAKI":{result:"WIN",indv:84,free:381,total:3608,bRank:1},"KOSUKE":{result:"WIN",indv:134,free:358,total:3566,bRank:2},
+"GOTEN":{result:"WIN",indv:41,free:381,total:3565,bRank:3},"KYOHEI":{result:"WIN",indv:35,free:381,total:3559,bRank:4},
+"JINICHIRO":{result:"WIN",indv:31,free:381,total:3555,bRank:5},"AJU":{result:"WIN",indv:25,free:381,total:3549,bRank:6},
+"SORA.S":{result:"WIN",indv:14,free:381,total:3538,bRank:7},"ISSA":{result:"WIN",indv:102,free:352,total:3510,bRank:8},
+"RINTO":{result:"WIN",indv:47,free:358,total:3479,bRank:9},"CHISATO":{result:"WIN",indv:87,free:347,total:3475,bRank:10},
+"KANAME":{result:"WIN",indv:81,free:348,total:3473,bRank:11},"REN.KO":{result:"WIN",indv:58,free:352,total:3466,bRank:12},
+"TAKUTO.M":{result:"WIN",indv:72,free:348,total:3464,bRank:13},"AKIRA":{result:"WIN",indv:66,free:348,total:3458,bRank:14},
+"JOE":{result:"WIN",indv:19,free:358,total:3451,bRank:15},"KANADE":{result:"WIN",indv:15,free:358,total:3447,bRank:16},
+"YUSEI.O":{result:"WIN",indv:59,free:347,total:3447,bRank:16},"TAKUTO.K":{result:"WIN",indv:38,free:352,total:3446,bRank:18},
+"KAICHI":{result:"WIN",indv:12,free:358,total:3444,bRank:19},"RIKUTO.I":{result:"WIN",indv:34,free:352,total:3442,bRank:20},
+"SORA.T":{result:"WIN",indv:10,free:358,total:3442,bRank:20},"SOSHI":{result:"WIN",indv:49,free:348,total:3441,bRank:22},
+"WEIZE":{result:"WIN",indv:26,free:352,total:3434,bRank:23},"DONGMIN":{result:"WIN",indv:42,free:347,total:3430,bRank:24},
+"KENTO":{result:"WIN",indv:33,free:348,total:3425,bRank:25},"KOSEI":{result:"WIN",indv:11,free:352,total:3419,bRank:26},
+"SHU.N":{result:"WIN",indv:31,free:347,total:3419,bRank:26},"JUNSEI":{result:"WIN",indv:9,free:352,total:3417,bRank:28},
+"RUI.M":{result:"WIN",indv:25,free:348,total:3417,bRank:28},"AYUMU.S":{result:"WIN",indv:28,free:347,total:3416,bRank:30},
+"REN.H":{result:"WIN",indv:27,free:347,total:3415,bRank:31},"RYOTA":{result:"WIN",indv:12,free:347,total:3400,bRank:32},
+"AOM":{result:"WIN",indv:7,free:348,total:3399,bRank:33},"RYUGA":{result:"WIN",indv:62,free:343,total:2748,bRank:34},
+"KEIJIRO":{result:"WIN",indv:45,free:343,total:2731,bRank:35},"KAIMU":{result:"WIN",indv:35,free:343,total:2721,bRank:36},
+"SEITA":{result:"WIN",indv:29,free:343,total:2715,bRank:37},"SHU.Y":{result:"WIN",indv:24,free:343,total:2710,bRank:38},
+"AYUMU.K":{result:"WIN",indv:18,free:343,total:2704,bRank:39},"HYUGO":{result:"WIN",indv:175,free:304,total:2479,bRank:40},
+"RYUJI":{result:"WIN",indv:86,free:364,total:2450,bRank:41},"OSUKE":{result:"WIN",indv:40,free:364,total:2404,bRank:42},
+"YUKI":{result:"WIN",indv:38,free:364,total:2402,bRank:43},"HIJIRI":{result:"WIN",indv:33,free:364,total:2397,bRank:44},
+"TAIGA.M":{result:"WIN",indv:14,free:364,total:2378,bRank:45},"FUMA":{result:"WIN",indv:8,free:364,total:2372,bRank:46},
+"RUI.U":{result:"WIN",indv:16,free:304,total:2320,bRank:47},"RENTO":{result:"WIN",indv:15,free:304,total:2319,bRank:48},
+"RIKUYA":{result:"WIN",indv:14,free:304,total:2318,bRank:49},"TERU":{result:"WIN",indv:11,free:304,total:2315,bRank:50},
+"MUSASHI":{result:"WIN",indv:10,free:304,total:2314,bRank:51},"RYOGA":{result:"LOSE",indv:70,free:343,total:756,bRank:52},
+"KEITO":{result:"LOSE",indv:67,free:343,total:753,bRank:53},"KOSHIRO":{result:"LOSE",indv:18,free:343,total:704,bRank:54},
+"DAIKI.I":{result:"LOSE",indv:14,free:343,total:700,bRank:55},"TOMOKI":{result:"LOSE",indv:9,free:343,total:695,bRank:56},
+"YUTA":{result:"LOSE",indv:6,free:343,total:692,bRank:57},"HYEONSEUNG":{result:"LOSE",indv:77,free:374,total:451,bRank:58},
+"SHINJI":{result:"LOSE",indv:59,free:374,total:433,bRank:59},"YURA":{result:"LOSE",indv:42,free:380,total:422,bRank:60},
+"YOSHIKI":{result:"LOSE",indv:39,free:380,total:419,bRank:61},"SIYOUNG":{result:"LOSE",indv:36,free:380,total:416,bRank:62},
+"DAIKI.K":{result:"LOSE",indv:29,free:380,total:409,bRank:63},"JAEYONG":{result:"LOSE",indv:22,free:380,total:402,bRank:64},
+"GIUSEPPE":{result:"LOSE",indv:20,free:380,total:400,bRank:65},"TOKIYA":{result:"LOSE",indv:17,free:374,total:391,bRank:66},
+"EITO":{result:"LOSE",indv:9,free:374,total:383,bRank:67},"KANTA":{result:"LOSE",indv:54,free:328,total:382,bRank:68},
+"TRISTAN":{result:"LOSE",indv:7,free:374,total:381,bRank:69},"SOGO":{result:"LOSE",indv:6,free:374,total:380,bRank:70},
+"TOWA":{result:"LOSE",indv:46,free:328,total:374,bRank:71},"KINARI":{result:"LOSE",indv:40,free:305,total:345,bRank:72},
+"TAKUMI":{result:"LOSE",indv:16,free:328,total:344,bRank:73},"TATSUYA":{result:"LOSE",indv:77,free:266,total:343,bRank:74},
+"KEISUKE":{result:"LOSE",indv:14,free:328,total:342,bRank:75},"SOTA":{result:"LOSE",indv:11,free:328,total:339,bRank:76},
+"RIKUTO.H":{result:"LOSE",indv:6,free:328,total:334,bRank:77},"SHINHAENG":{result:"LOSE",indv:22,free:305,total:327,bRank:78},
+"TAIGA.F":{result:"LOSE",indv:21,free:305,total:326,bRank:79},"HYUNJAE":{result:"LOSE",indv:12,free:305,total:317,bRank:80},
+"YUMA":{result:"LOSE",indv:10,free:305,total:315,bRank:81},"HIKARU":{result:"LOSE",indv:28,free:283,total:311,bRank:82},
+"RIKU":{result:"LOSE",indv:6,free:305,total:311,bRank:82},"ADAM":{result:"LOSE",indv:1,free:305,total:306,bRank:84},
+"YUSEI.S":{result:"LOSE",indv:22,free:283,total:305,bRank:85},"SENA":{result:"LOSE",indv:38,free:266,total:304,bRank:86},
+"TAKUTO.O":{result:"LOSE",indv:19,free:283,total:302,bRank:87},"EITA":{result:"LOSE",indv:16,free:283,total:299,bRank:88},
+"HARUKU":{result:"LOSE",indv:8,free:283,total:291,bRank:89},"SHINSUKE":{result:"LOSE",indv:8,free:283,total:291,bRank:89},
+"KEISHIN":{result:"LOSE",indv:7,free:283,total:290,bRank:91},"KOTARO":{result:"LOSE",indv:22,free:266,total:288,bRank:92},
+"HARUTO":{result:"LOSE",indv:14,free:266,total:280,bRank:93},"MEI":{result:"LOSE",indv:12,free:266,total:278,bRank:94},
+"TETORA":{result:"LOSE",indv:7,free:266,total:273,bRank:95},"RICKEY":{result:"LOSE",indv:19,free:222,total:241,bRank:96},
+"JAY":{result:"LOSE",indv:14,free:222,total:236,bRank:97},"HIROTO":{result:"LOSE",indv:13,free:222,total:235,bRank:98},
+"ARCHER":{result:"LOSE",indv:8,free:222,total:230,bRank:99},"JUNGUK":{result:"LOSE",indv:2,free:222,total:224,bRank:100},
+"YOHAN":{result:"LOSE",indv:2,free:222,total:224,bRank:100},
+};
 
 const SONGS_INFO = [
   {artist:"ENHYPEN",  song:"Bite Me",              broadcast:"前半組"},
@@ -1271,9 +1338,12 @@ const battleData = rawBattleTeam.map(r => {
   const oshi = rawOshiCam[reading] || [0,0,0];
   const votes = voteMap[name] || [];
   const cls = classMap[name] || {first:'-', eval:'-'};
+  const br = rawBattleResult[reading] || {result:null, indv:0, free:0, total:0, bRank:999};
   return {name, reading, artist, song, team, broadcast,
           oshiViews:oshi[0], oshiLikes:oshi[1], oshiComments:oshi[2],
-          votes, classFirst:cls.first, classEval:cls.eval};
+          votes, classFirst:cls.first, classEval:cls.eval,
+          battleResult:br.result, battleIndv:br.indv, battleFree:br.free,
+          battleTotal:br.total, battleRank:br.bRank};
 });
 
 let chartBattleScatter = null;
@@ -1318,25 +1388,38 @@ function renderBattleList() {
       const bv = b.votes.length ? b.votes[b.votes.length-1] : 999;
       return av - bv;
     });
+  } else if(sort==='battlerank') {
+    list.sort((a,b) => a.battleRank - b.battleRank);
   } else if(sort==='abc') {
     list.sort((a,b) => a.reading.localeCompare(b.reading));
   }
 
   let html = `<div class="tbl-wrap"><table><thead><tr>
     <th style="text-align:left;">名前</th><th>読み方</th><th>楽曲</th>
-    <th>チーム</th><th>放送</th><th>推しカメラ再生数</th><th>イイネ</th><th>コメ</th><th>投票順位</th>
+    <th>チーム</th><th>放送</th><th>勝敗</th>
+    <th>個人票</th><th>FREE PART</th><th>総得票</th><th>バトル順位</th>
+    <th>推しカメラ再生数</th><th>イイネ</th><th>コメ</th><th>投票順位</th>
   </tr></thead><tbody>`;
   list.forEach(d => {
     const sc  = SONG_COLORS[d.song] || '#888';
     const bc  = d.broadcast==='前半組' ? '#60c8e0' : '#e080c0';
     const bcBg = d.broadcast==='前半組' ? 'rgba(96,200,224,0.13)' : 'rgba(224,128,192,0.13)';
     const latestVote = d.votes.length ? d.votes[d.votes.length-1]+'位' : '-';
+    const winColor = d.battleResult==='WIN' ? '#4ec87a' : d.battleResult==='LOSE' ? '#ff5c35' : '#888';
+    const winBg   = d.battleResult==='WIN' ? 'rgba(78,200,122,0.12)' : d.battleResult==='LOSE' ? 'rgba(255,92,53,0.12)' : 'transparent';
+    const resultLabel = d.battleResult || '-';
+    const bRankStr = d.battleRank < 999 ? d.battleRank+'位' : '-';
     html += `<tr>
       <td>${d.name}</td>
       <td style="color:var(--hint);font-size:0.7rem;">${d.reading}</td>
       <td><span style="font-size:0.62rem;padding:1px 5px;border-radius:3px;background:${sc}22;color:${sc};">${d.artist} ♪${d.song}</span></td>
       <td style="text-align:center;">TEAM ${d.team}</td>
       <td style="text-align:center;"><span style="font-size:0.62rem;padding:1px 5px;border-radius:3px;background:${bcBg};color:${bc};">${d.broadcast}</span></td>
+      <td style="text-align:center;"><span style="font-size:0.62rem;padding:1px 5px;border-radius:3px;background:${winBg};color:${winColor};border:1px solid ${winColor}44;">${resultLabel}</span></td>
+      <td>${d.battleIndv || '-'}</td>
+      <td>${d.battleFree || '-'}</td>
+      <td style="color:var(--text);">${d.battleTotal ? d.battleTotal.toLocaleString() : '-'}</td>
+      <td>${bRankStr}</td>
       <td>${d.oshiViews ? d.oshiViews.toLocaleString() : '-'}</td>
       <td>${d.oshiLikes ? d.oshiLikes.toLocaleString() : '-'}</td>
       <td>${d.oshiComments ? d.oshiComments.toLocaleString() : '-'}</td>
@@ -1380,17 +1463,15 @@ function renderBattleCompare() {
       </div>`;
 
     if(yt1 || yt2) {
-      html += `<div style="margin-bottom:1rem;"><div style="font-size:0.7rem;color:var(--muted);margin-bottom:6px;font-family:monospace;">YouTube チーム動画（4/14時点）</div>
+      html += `<div style="margin-bottom:1rem;"><div style="font-size:0.7rem;color:var(--muted);margin-bottom:6px;font-family:monospace;">YouTube チーム動画（4/17時点）</div>
         ${teamBarHtml('TEAM 1', yt1?.views||0, ytMax, '#c8b8ff')}
         ${teamBarHtml('TEAM 2', yt2?.views||0, ytMax, '#f0c040')}
       </div>`;
-    } else if(broadcast==='前半組') {
-      html += `<div style="font-size:0.7rem;color:var(--hint);margin-bottom:1rem;font-family:monospace;">YouTube動画: 著作権により非公開（${artist}）</div>`;
     } else {
-      html += `<div style="font-size:0.7rem;color:var(--hint);margin-bottom:1rem;font-family:monospace;">YouTube動画: 未取得（後半放送）</div>`;
+      html += `<div style="font-size:0.7rem;color:var(--hint);margin-bottom:1rem;font-family:monospace;">YouTube動画: 著作権により非公開（${artist}）</div>`;
     }
 
-    html += `<div style="margin-bottom:1rem;"><div style="font-size:0.7rem;color:var(--muted);margin-bottom:6px;font-family:monospace;">推しカメラ 合計再生数（mnetplus 4/14）</div>
+    html += `<div style="margin-bottom:1rem;"><div style="font-size:0.7rem;color:var(--muted);margin-bottom:6px;font-family:monospace;">推しカメラ 合計再生数（mnetplus 4/16）</div>
       ${teamBarHtml('TEAM 1 計', t1total, oshiMax, '#c8b8ff')}
       ${teamBarHtml('TEAM 2 計', t2total, oshiMax, '#f0c040')}
     </div>`;
