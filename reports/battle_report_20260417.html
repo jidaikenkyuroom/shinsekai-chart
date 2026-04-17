@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>動画再生数×クラス 相関分析｜新世界 数値トラッカー</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500&display=swap');
+:root{--bg:#0a0a0c;--s1:#111115;--s2:#18181d;--border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);--text:#ededeb;--muted:#888882;--hint:#444440;--accent:#c8b8ff;--gold:#f0c040;--green:#4ec87a;--red:#ff5c35;--cyan:#60c8e0;--pink:#e080c0;--orange:#f09878;}
+*{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text);line-height:1.75;font-size:14px;}
+.wrap{max-width:860px;margin:0 auto;padding:0 1.5rem 6rem;}
+.hero{padding:3.5rem 0 2.5rem;border-bottom:1px solid var(--border);margin-bottom:3rem;}
+.hero-tag{font-family:'JetBrains Mono',monospace;font-size:0.65rem;color:var(--accent);letter-spacing:0.18em;text-transform:uppercase;margin-bottom:0.75rem;opacity:0.8;}
+.hero h1{font-size:1.55rem;font-weight:700;letter-spacing:-0.01em;line-height:1.3;margin-bottom:0.75rem;}
+.hero-meta{font-family:'JetBrains Mono',monospace;font-size:0.7rem;color:var(--muted);line-height:1.8;}
+.section{margin-bottom:3.5rem;}
+.section-head{display:flex;align-items:baseline;gap:0.75rem;margin-bottom:1.5rem;padding-bottom:0.6rem;border-bottom:1px solid var(--border);}
+.section-num{font-family:'JetBrains Mono',monospace;font-size:0.62rem;color:var(--accent);opacity:0.6;}
+.section-title{font-size:1rem;font-weight:700;letter-spacing:0.02em;}
+p{font-size:0.875rem;color:#ccc;margin-bottom:0.9rem;line-height:1.85;}
+p:last-child{margin-bottom:0;}
+strong{color:var(--text);font-weight:500;}
+.insight{background:var(--s1);border:1px solid var(--border2);border-left:3px solid var(--accent);border-radius:0 6px 6px 0;padding:1rem 1.25rem;margin:1.25rem 0;font-size:0.84rem;color:var(--text);line-height:1.75;}
+.insight.green{border-left-color:var(--green);}
+.insight.gold{border-left-color:var(--gold);}
+.insight.red{border-left-color:var(--red);}
+.insight.cyan{border-left-color:var(--cyan);}
+.insight.orange{border-left-color:var(--orange);}
+.insight.pink{border-left-color:var(--pink);}
+.tbl-wrap{overflow-x:auto;margin:1rem 0;}
+table{width:100%;border-collapse:collapse;font-size:0.78rem;}
+th{font-size:0.65rem;color:var(--muted);font-weight:400;text-align:right;padding:6px 8px;border-bottom:1px solid var(--border);white-space:nowrap;font-family:'JetBrains Mono',monospace;}
+th:first-child{text-align:left;}
+td{padding:6px 8px;border-bottom:1px solid var(--border);text-align:right;font-family:'JetBrains Mono',monospace;font-size:0.75rem;color:var(--muted);}
+td:first-child{text-align:left;color:var(--text);font-family:'Noto Sans JP',sans-serif;}
+tr:hover td{background:var(--s1);}
+.bar-section{margin:1rem 0;}
+.bar-row{display:flex;align-items:center;gap:8px;margin-bottom:7px;}
+.bar-label{width:120px;font-size:0.72rem;color:var(--muted);flex-shrink:0;font-family:'JetBrains Mono',monospace;}
+.bar-track{flex:1;background:rgba(255,255,255,0.04);border-radius:3px;height:20px;overflow:hidden;}
+.bar-fill{height:100%;border-radius:3px;min-width:2px;display:flex;align-items:center;padding-left:6px;font-size:0.6rem;font-family:'JetBrains Mono',monospace;color:rgba(255,255,255,0.6);}
+.bar-val{font-size:0.7rem;font-family:'JetBrains Mono',monospace;width:80px;text-align:right;flex-shrink:0;}
+.type-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:1.25rem 0;}
+.type-card{background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:1.1rem 1.2rem;}
+.type-title{font-size:0.82rem;font-weight:700;margin-bottom:0.4rem;}
+.type-meta{font-size:0.65rem;font-family:'JetBrains Mono',monospace;color:var(--muted);margin-bottom:0.6rem;letter-spacing:0.05em;}
+.type-desc{font-size:0.78rem;color:#ccc;line-height:1.7;margin-bottom:0.6rem;}
+.type-names{font-size:0.7rem;font-family:'JetBrains Mono',monospace;color:var(--hint);line-height:1.7;}
+.stat-row{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:1rem 0;}
+.stat-cell{background:var(--s2);border:1px solid var(--border);border-radius:6px;padding:0.75rem 0.5rem;text-align:center;}
+.stat-cls{font-size:1.1rem;font-weight:700;font-family:'JetBrains Mono',monospace;line-height:1;}
+.stat-avg{font-size:0.9rem;font-family:'JetBrains Mono',monospace;margin-top:4px;}
+.stat-label{font-size:0.6rem;color:var(--muted);margin-top:2px;font-family:'JetBrains Mono',monospace;}
+.back-link{display:inline-block;font-size:0.72rem;font-family:'JetBrains Mono',monospace;color:var(--muted);text-decoration:none;margin-bottom:2rem;padding:4px 0;}
+.back-link:hover{color:var(--text);}
+.matrix-wrap{margin:1.25rem 0;}
+.matrix-axis{display:grid;grid-template-columns:80px 1fr 1fr;gap:8px;margin-bottom:4px;font-size:0.65rem;font-family:'JetBrains Mono',monospace;color:var(--muted);text-align:center;}
+.matrix-row{display:grid;grid-template-columns:80px 1fr 1fr;gap:8px;margin-bottom:8px;align-items:stretch;}
+.matrix-label{font-size:0.68rem;font-family:'JetBrains Mono',monospace;color:var(--muted);display:flex;align-items:center;justify-content:flex-end;padding-right:6px;}
+.matrix-cell{background:var(--s2);border:1px solid var(--border);border-radius:6px;padding:0.8rem;min-height:90px;}
+.matrix-cell-title{font-size:0.72rem;font-weight:700;margin-bottom:0.3rem;}
+.matrix-cell-names{font-size:0.65rem;font-family:'JetBrains Mono',monospace;color:var(--hint);line-height:1.6;}
+.footnote{font-size:0.72rem;color:var(--hint);font-family:'JetBrains Mono',monospace;border-top:1px solid var(--border);margin-top:0.75rem;padding-top:0.6rem;line-height:1.6;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a href="../index.html" class="back-link">← ダッシュボードに戻る</a>
+
+  <div class="hero">
+    <div class="hero-tag">Analysis Report · 2026/04/17</div>
+    <h1>動画再生数×クラス<br>相関分析レポート</h1>
+    <div class="hero-meta">
+      データ基準: テーマソング推しカメラ 4/16 · グループバトル推しカメラ 4/16 · チーム動画 4/17<br>
+      対象: 101名全員 · クラス: 実力テスト初回 & 再評価（ABCDF）<br>
+      ⚠ Kenshi Yonezu / IRIS OUT のチーム動画（ハイライト・フル尺）は4/17時点で未公開のため本レポートに未反映
+    </div>
+  </div>
+
+  <!-- 00 動画指標の整理 -->
+  <div class="section">
+    <div class="section-head">
+      <span class="section-num">00</span>
+      <span class="section-title">4種類の動画指標を整理する</span>
+    </div>
+    <p>このオーディションでは複数のプラットフォームに異なる性質の動画が存在する。単純に「再生数」と言っても何を見ているかで意味が大きく異なる。</p>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr>
+          <th style="text-align:left;">指標</th><th>粒度</th><th>プラットフォーム</th><th style="text-align:left;">特性</th>
+        </tr></thead>
+        <tbody>
+          <tr><td>テーマソング推しカメラ</td><td>個人</td><td>YouTube</td><td style="text-align:left;">番組テーマソングを101名全員で披露したステージの個人カメラ動画。センターはYURA。固定ファン規模を反映し放送前から累積する</td></tr>
+          <tr><td>グループバトル推しカメラ（mnetplus）</td><td>個人</td><td>mnetplus</td><td style="text-align:left;">番組内のパフォーマンスに連動してリアルタイムで変動。番組への反応がダイレクトに出る</td></tr>
+          <tr><td>グループバトル チームハイライト動画</td><td>チーム</td><td>YouTube</td><td style="text-align:left;">チーム全員で1本。前半組は5日超先行公開のため単純比較不可</td></tr>
+          <tr><td>グループバトル チームフル尺動画</td><td>チーム</td><td>YouTube</td><td style="text-align:left;">全チーム同タイミングで公開（4/17）。楽曲知名度がそのまま出る純粋比較が可能</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="insight cyan">
+      個人との相関分析には「テーマソング推しカメラ」と「グループバトル推しカメラ」が有効。チーム動画は「楽曲・チームの人気」を見る指標として使い分ける。
+    </div>
+  </div>
+
+  <!-- 01 個人YouTube × クラス -->
+  <div class="section">
+    <div class="section-head">
+      <span class="section-num">01</span>
+      <span class="section-title">テーマソング推しカメラ再生数 × 再評価クラス</span>
+    </div>
+    <p>再評価クラス別のテーマソング推しカメラ再生数（4/16時点）を集計した。テーマソングは101名全員が出演する固定コンテンツのため、既存ファンの規模が比較的フラットに現れる指標である。</p>
+
+    <div class="stat-row">
+      <div class="stat-cell"><div class="stat-cls" style="color:#4ec87a;">A</div><div class="stat-avg" style="color:#4ec87a;">20.6万</div><div class="stat-label">平均 / 16名</div><div class="stat-label" style="color:var(--hint);">中央値 10.5万</div></div>
+      <div class="stat-cell"><div class="stat-cls" style="color:#c8b8ff;">B</div><div class="stat-avg" style="color:#c8b8ff;">6.9万</div><div class="stat-label">平均 / 19名</div><div class="stat-label" style="color:var(--hint);">中央値 5.2万</div></div>
+      <div class="stat-cell"><div class="stat-cls" style="color:#f0c040;">C</div><div class="stat-avg" style="color:#f0c040;">8.4万</div><div class="stat-label">平均 / 19名</div><div class="stat-label" style="color:var(--hint);">中央値 4.7万</div></div>
+      <div class="stat-cell"><div class="stat-cls" style="color:#f09878;">D</div><div class="stat-avg" style="color:#f09878;">4.2万</div><div class="stat-label">平均 / 21名</div><div class="stat-label" style="color:var(--hint);">中央値 3.3万</div></div>
+      <div class="stat-cell"><div class="stat-cls" style="color:#ff5c35;">F</div><div class="stat-avg" style="color:#ff5c35;">6.2万</div><div class="stat-label">平均 / 21名</div><div class="stat-label" style="color:var(--hint);">中央値 3.2万</div></div>
+    </div>
+
+    <p>Aクラスの平均20.6万はDクラスの約5倍。ただしCクラスがBを上回るのは、<strong>KANAME（32万）・KEITO（31.8万）・YUKI（23.9万）</strong>という高再生数組の引き上げによるもので、中央値（4.7万）はBの中央値（5.2万）を下回る。</p>
+    <p>Fクラスも平均6.2万とBに近いが、これは<strong>GOTEN（26.7万）・RYOGA（22.4万）・MAKI（16.4万）</strong>の3名が引き上げているためで、実態は中央値3.2万と低い。Dクラスは平均・中央値ともに最も低い水準（中央値3.3万）で、固定ファン層の薄さが数字に出ている。</p>
+
+    <div class="bar-section">
+      <div style="font-size:0.7rem;color:var(--muted);font-family:'JetBrains Mono',monospace;margin-bottom:8px;">再評価クラス別 平均テーマソング推しカメラ再生数（万回）</div>
+      <div class="bar-row"><div class="bar-label" style="color:#4ec87a;">A クラス</div><div class="bar-track"><div class="bar-fill" style="width:100%;background:#4ec87a55;border-right:2px solid #4ec87a;">20.6万</div></div><div class="bar-val" style="color:#4ec87a;">20.6</div></div>
+      <div class="bar-row"><div class="bar-label" style="color:#f0c040;">C クラス</div><div class="bar-track"><div class="bar-fill" style="width:40.8%;background:#f0c04055;border-right:2px solid #f0c040;"></div></div><div class="bar-val" style="color:#f0c040;">8.4</div></div>
+      <div class="bar-row"><div class="bar-label" style="color:#c8b8ff;">B クラス</div><div class="bar-track"><div class="bar-fill" style="width:33.5%;background:#c8b8ff55;border-right:2px solid #c8b8ff;"></div></div><div class="bar-val" style="color:#c8b8ff;">6.9</div></div>
+      <div class="bar-row"><div class="bar-label" style="color:#ff5c35;">F クラス</div><div class="bar-track"><div class="bar-fill" style="width:30.1%;background:#ff5c3555;border-right:2px solid #ff5c35;"></div></div><div class="bar-val" style="color:#ff5c35;">6.2</div></div>
+      <div class="bar-row"><div class="bar-label" style="color:#f09878;">D クラス</div><div class="bar-track"><div class="bar-fill" style="width:20.4%;background:#f0987855;border-right:2px solid #f09878;"></div></div><div class="bar-val" style="color:#f09878;">4.2</div></div>
+    </div>
+
+    <div class="insight gold">
+      テーマソング推しカメラとクラスの相関は「ゆるい正比例」。Aクラスは確かに高いが、BよりFの方が平均が上というねじれが生じている。テーマソング推しカメラだけでは実力評価は測れない。
+    </div>
+  </div>
+
+  <!-- 02 推しカメラ × クラス -->
+  <div class="section">
+    <div class="section-head">
+      <span class="section-num">02</span>
+      <span class="section-title">推しカメラ再生数 × 再評価クラス</span>
+    </div>
+    <p>推しカメラ（mnetplus）はグループバトル放映後に数字が動く指標。こちらの方がクラスとの連動性が強い。</p>
+
+    <div class="stat-row">
+      <div class="stat-cell"><div class="stat-cls" style="color:#4ec87a;">A</div><div class="stat-avg" style="color:#4ec87a;">26,971</div><div class="stat-label">平均 / 16名</div><div class="stat-label" style="color:var(--hint);">中央値 18,546</div></div>
+      <div class="stat-cell"><div class="stat-cls" style="color:#c8b8ff;">B</div><div class="stat-avg" style="color:#c8b8ff;">14,186</div><div class="stat-label">平均 / 19名</div><div class="stat-label" style="color:var(--hint);">中央値 4,388</div></div>
+      <div class="stat-cell"><div class="stat-cls" style="color:#f0c040;">C</div><div class="stat-avg" style="color:#f0c040;">10,222</div><div class="stat-label">平均 / 19名</div><div class="stat-label" style="color:var(--hint);">中央値 4,537</div></div>
+      <div class="stat-cell"><div class="stat-cls" style="color:#f09878;">D</div><div class="stat-avg" style="color:#f09878;">5,011</div><div class="stat-label">平均 / 21名</div><div class="stat-label" style="color:var(--hint);">中央値 4,176</div></div>
+      <div class="stat-cell"><div class="stat-cls" style="color:#ff5c35;">F</div><div class="stat-avg" style="color:#ff5c35;">6,249</div><div class="stat-label">平均 / 21名</div><div class="stat-label" style="color:var(--hint);">中央値 3,370</div></div>
+    </div>
+
+    <p>A→B→C→D/F と順に下がり、テーマソング推しカメラより階層がきれいに分かれる。Aクラスの中央値18,546はFクラスの中央値3,370の約<strong>5.5倍</strong>。</p>
+    <p>ただしBクラスの平均は<strong>RYUJI（88,548回）</strong>という異常値によって大きく引き上げられている。RYUJIはBクラスでありながら推しカメラは全体1位という特殊ケース（後述）。</p>
+    <p>Fクラスも<strong>RYOGA（36,134）・GOTEN（20,905）</strong>が引き上げており、中央値3,180は実態に近い。</p>
+
+    <div class="insight green">
+      「推しカメラ再生数」の方が「個人YouTube」よりクラスと強く連動している。番組内パフォーマンスがリアルタイムで評価に反映される構造が数字に出ている。
+    </div>
+  </div>
+
+  <!-- 03 チーム動画 -->
+  <div class="section">
+    <div class="section-head">
+      <span class="section-num">03</span>
+      <span class="section-title">チーム動画（ハイライト・フル尺）の特性</span>
+    </div>
+    <p>ハイライト動画は前半組が5日以上先行公開のため単純比較が難しい。同タイミングで公開されたフル尺動画（4/17）で初めてフェアな比較ができる。</p>
+
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr>
+          <th style="text-align:left;">楽曲</th><th>TEAM1</th><th>TEAM2</th><th>勝者</th><th style="text-align:left;">考察</th>
+        </tr></thead>
+        <tbody>
+          <tr><td>Wanna One / Energetic</td><td>5,458</td><td>5,434</td><td>T1(LOSE)</td><td style="text-align:left;">TEAM1はセンター特権で集結した通称「アベンジャーズ」チームvs挑戦者チームという対決構造が両チームの注目度を引き上げた</td></tr>
+          <tr><td>SEKAI NO OWARI / The Peak</td><td>2,404</td><td>5,248</td><td>T2(LOSE)</td><td style="text-align:left;">TEAM2にRYOGA（推しカメ36,134）・KEITO（同33,889）が在籍。楽曲よりも人気メンバー目当ての流入が主因の可能性</td></tr>
+          <tr><td>INI / LOUD</td><td style="color:#4ec87a;">3,932</td><td>1,404</td><td>T1(WIN) ✓</td><td style="text-align:left;">勝者がフル尺も上。一致</td></tr>
+          <tr><td>Stray Kids / CASE 143</td><td style="color:#4ec87a;">3,301</td><td>2,692</td><td>T1(WIN) ✓</td><td style="text-align:left;">勝者がフル尺も上。一致</td></tr>
+          <tr><td>ENHYPEN / Bite Me</td><td>3,171</td><td style="color:#4ec87a;">4,552</td><td>T2(WIN) ✓</td><td style="text-align:left;">勝者がフル尺も上。一致</td></tr>
+          <tr><td>JO1 / Love seeker</td><td style="color:#4ec87a;">3,830</td><td>1,070</td><td>T1(WIN) ✓</td><td style="text-align:left;">勝者がフル尺も上。最大差</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>6曲中4曲は勝者チームのフル尺再生数が上。ただし例外が2つある。Energeticはセンター特権で組まれた「アベンジャーズ」TEAM1が惜しくも敗北した特殊バトルで、再生数の拮抗はその対決構造への高い関心を示す。The Peakは勝敗よりもRYOGA・KEITOという個人人気の高い練習生を擁するTEAM2への流入が大きく働いた可能性がある。</p>
+    <div class="insight orange">
+      フル尺動画の再生数は「現場での勝敗」だけでは説明できない。チームの構成（センター特権による選抜メンバー）や、個人人気の高い練習生の配置が再生数を大きく左右することがある。楽曲知名度は一要因にすぎない。
+    </div>
+  </div>
+
+  <!-- 04 タイプ分類 -->
+  <div class="section">
+    <div class="section-head">
+      <span class="section-num">04</span>
+      <span class="section-title">タイプ分類——テーマソング推しカメラ × 再評価クラスの2軸</span>
+    </div>
+    <p>テーマソング推しカメラ再生数（ファンベースの大きさ）と再評価クラス（実力評価）の2軸で4象限に分類すると、異なる強みを持つグループが見えてくる。</p>
+
+    <div class="matrix-wrap">
+      <div class="matrix-axis"><div></div><div>高クラス（A/B）</div><div>低クラス（C〜F）</div></div>
+      <div class="matrix-row">
+        <div class="matrix-label">高推しカメ<br>≥ 15万</div>
+        <div class="matrix-cell" style="border-top:2px solid #4ec87a;">
+          <div class="matrix-cell-title" style="color:#4ec87a;">① エース型</div>
+          <div class="matrix-cell-names">KOSUKE(A)　DAIKI.K(A)<br>YURA(A・センター)　OSUKE(A)<br>TAIGA.F(A)　KINARI(A)<br>SIYOUNG(A)　YOSHIKI(B)<br>CHISATO(B)　TOWA(B)</div>
+        </div>
+        <div class="matrix-cell" style="border-top:2px solid #f0c040;">
+          <div class="matrix-cell-title" style="color:#f0c040;">② 人気先行型</div>
+          <div class="matrix-cell-names">KANAME(C)　KEITO(C)<br>YUKI(C)　GOTEN(F)<br>RYOGA(F)　MAKI(F)<br>REN.KO(F)</div>
+        </div>
+      </div>
+      <div class="matrix-row">
+        <div class="matrix-label">低推しカメ<br>&lt; 10万</div>
+        <div class="matrix-cell" style="border-top:2px solid #60c8e0;">
+          <div class="matrix-cell-title" style="color:#60c8e0;">③ 実力穴場型</div>
+          <div class="matrix-cell-names">HYUGO(A)　JAEYONG(A)<br>RIKU(A)　RYOTA(A)<br>SHINJI(A)　SHINHAENG(A)<br>ADAM(A)</div>
+        </div>
+        <div class="matrix-cell" style="border-top:2px solid var(--hint);">
+          <div class="matrix-cell-title" style="color:var(--muted);">④ これから型</div>
+          <div class="matrix-cell-names">クラスC〜F かつ YT低め<br>数名が急成長の兆し</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="type-grid" style="margin-top:1.5rem;">
+      <div class="type-card">
+        <div class="type-title" style="color:#4ec87a;">① エース型</div>
+        <div class="type-meta">高推しカメラ（≥15万） + 高クラス（A/B）</div>
+        <div class="type-desc">数字も実力評価も一致している「わかりやすい本命」。推しカメラも高く、第一回発表での上位入りが最も堅い層。</div>
+        <div class="type-names">KOSUKE · DAIKI.K · YURA · OSUKE · TAIGA.F · KINARI · SIYOUNG · YOSHIKI · CHISATO · TOWA</div>
+      </div>
+      <div class="type-card">
+        <div class="type-title" style="color:#f0c040;">② 人気先行型</div>
+        <div class="type-meta">高推しカメラ（≥15万） + 低クラス（C〜F）</div>
+        <div class="type-desc">再生数は多いが実力評価は伸び悩み、または下落。KANAMEとGOTENは初回Aクラスから再評価で大幅に下がった。バトルで評価を取り返せるかが分岐点。</div>
+        <div class="type-names">KANAME(A→C) · KEITO(D→C) · YUKI(D→C) · GOTEN(B→F) · RYOGA(C→F) · MAKI(D→F)</div>
+      </div>
+      <div class="type-card">
+        <div class="type-title" style="color:#60c8e0;">③ 実力穴場型</div>
+        <div class="type-meta">低〜中推しカメラ（＜10万） + 高クラス（A/B）</div>
+        <div class="type-desc">数字の見た目は地味だが実力評価はトップ層。HYUGOはグループバトルで個人最高票175票を獲得。バトルで爆発するタイプが多い。JAEYONG（D→A）は最大の逆転評価。</div>
+        <div class="type-names">HYUGO · JAEYONG · RIKU · RYOTA · SHINJI · SHINHAENG · ADAM · YUSEI.O</div>
+      </div>
+      <div class="type-card">
+        <div class="type-title" style="color:#e080c0;">⑤ 急成長型（特別枠）</div>
+        <div class="type-meta">最近の伸び率が突出 / 逆転評価</div>
+        <div class="type-desc">クラスは中程度だがバトルで覚醒した可能性のある層。ISSAは4/12→4/16でYT +33%・推しカメラ断トツの46,542回。KINARIはF→Aという最大の逆転評価。</div>
+        <div class="type-names">ISSA(C・推しカメラ46,542) · KINARI(F→A) · HYUGO(バトル最高個人票175)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 05 RYUJI案件 -->
+  <div class="section">
+    <div class="section-head">
+      <span class="section-num">05</span>
+      <span class="section-title">特殊ケース分析——RYUJI と 数字に出にくい人気</span>
+    </div>
+    <p>RYUJI（杉山 竜司）は全体の中で最も「指標間のズレ」が大きいケースとして特筆すべき存在。</p>
+
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th style="text-align:left;">指標</th><th>値</th><th>全体順位</th></tr></thead>
+        <tbody>
+          <tr><td>テーマソング推しカメラ（4/9時点）</td><td>11.4万回</td><td>全体25位</td></tr>
+          <tr><td>グループバトル推しカメラ（4/16）</td><td style="color:#4ec87a;">88,548回</td><td style="color:#4ec87a;">全体1位</td></tr>
+          <tr><td>再評価クラス</td><td>B クラス</td><td>—</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>ここで2つの指標の性質の違いを整理しておく必要がある。<strong>テーマソング推しカメラ</strong>は番組開始前から公開されてきた動画の累積再生数であり、開始前の知名度・期待値・既存ファン規模をすべて含む「蓄積型」の指標だ。番組が進むにつれて新たな視聴も積み重なっていくが、タイムラグを伴いながらも初期からの人気をそのまま映しやすい性質を持つ。</p>
+    <p>対して<strong>グループバトル推しカメラ</strong>は番組内のパフォーマンスへのリアルタイムな反応であり、放送後に急激に動く。RYUJIはこの2指標の乖離が全体で最も大きいケースで、テーマソング推しカメラ<strong>全体25位</strong>（蓄積型）に対し、グループバトル推しカメラは<strong>全体1位</strong>（88,548回）という跳躍を見せた。</p>
+
+    <div class="insight pink">
+      RYUJIは「事前の蓄積型人気」と「番組内での実際の輝き」が最も大きく乖離したケース。テーマソング推しカメラは開始前からの人気を忠実に映す一方、グループバトル推しカメラはそれを完全に塗り替えうる。この2指標のギャップが大きいほど「番組で覚醒したタイプ」の可能性が高く、投票順位予測においてはグループバトル推しカメラの方がより直接的な指標となりうる。
+    </div>
+  </div>
+
+  <!-- 06 示唆 -->
+  <div class="section">
+    <div class="section-head">
+      <span class="section-num">06</span>
+      <span class="section-title">第一回順位発表に向けた示唆</span>
+    </div>
+    <p>第一回発表式（来週）の最終順位は「オンライン累積投票（3/26〜4/17）＋グループバトル得票」で決まる。ここで重要なのは、<strong>バトル得票の加算によって4/9時点の投票順位が大きく覆る可能性がある</strong>という点だ。WIN組には2,000票の固定ボーナス＋FREE PARTの最大4倍加算があり、現場で票を集めた練習生が一気に浮上し、オンライン投票で上位にいた練習生が相対的に下がるケースが十分起こりうる。4/9の順位はあくまで「バトル前の暫定値」であり、これをそのまま第一回発表への予測に使うのは危険だ。</p>
+    <p>各指標が示す「強さ」を整理すると：</p>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr>
+          <th style="text-align:left;">指標</th>
+          <th style="text-align:left;">示すもの</th>
+          <th style="text-align:left;">順位への影響</th>
+        </tr></thead>
+        <tbody>
+          <tr><td>テーマソング推しカメラ（高い）</td><td>事前の固定ファン層の大きさ</td><td>オンライン投票の安定した票田</td></tr>
+          <tr><td>グループバトル推しカメラ（高い）</td><td>番組ファンからのリアルタイムの支持</td><td>直接的な投票動機になりやすい</td></tr>
+          <tr><td>バトル総得票（高い）</td><td>現場投票＋チームの強さ</td><td>発表式の得票に直接加算</td></tr>
+          <tr><td>再評価Aクラス</td><td>実力評価が高い</td><td>間接的（映像露出・印象）</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>バトル結果を踏まえると、各タイプの見通しは大きく変わる。</p>
+    <p><strong>エース型の明暗：</strong>KOSUKEはJO1 TEAM1でWIN、個人134票・総得票3,566票でバトル2位という圧倒的な結果。しかし同じエース型のYURA・DAIKI.K・SIYOUNG・YOSHIKIは、アベンジャーズ（Energetic TEAM1）の敗北を受けてLOSEとなり、総得票はYURAで422票・DAIKI.Kで409票（バトル60〜63位）と低調。オンライン投票の蓄積があっても、WIN/LOSEの差は2,000票＋FREE PART係数のぶんだけ他者と大きく開く。</p>
+    <p><strong>人気先行型の逆転：</strong>「人気はあるが実力評価が低い」と分類したKANAMEとGOTENは、実際にはバトルでWINを収めている。KANAMEは個人81票・総3,473票でバトル11位、GOTENは個人41票・総3,565票でバトル3位という高成績。この2人はバトル得票を大量に上乗せできており、4/9時点より順位を上げてくる可能性がある。</p>
+    <p><strong>穴場型の明暗：</strong>HYUGOはStray Kids TEAM1でWIN、全体最多の個人175票・総2,479票でバトル40位に浮上。一方JAEYONGはEnergetic TEAM1（アベンジャーズ）のLOSEでバトル64位（個人22票・総402票）と振るわず、エース型と同様にアベンジャーズ敗北の煽りを受けた形。バトル得票面では苦しい状況。グループバトル推しカメラ全体1位のRYUJIはEnergetic TEAM2でWINしたが、個人86票・総2,450票でバトル41位と中堅にとどまった。ただし、これらはバトル結果のみの評価であり、オンライン投票の累積との合算次第で第一回発表の順位は大きく変わりうる。</p>
+    <div class="insight red">
+      第一回発表式は、バトル得票2,000票ボーナスとFREE PART係数の存在によって、4/9時点の順位が<strong>完全に覆る可能性がある</strong>最も予測困難な発表になる。「上位にいたから安泰」という予測は成立しない。エース型でもバトル結果次第で大きく動き、穴場型がサプライズランクインするシナリオが十分ありうる。
+    </div>
+    <div class="footnote">
+      ※ 本レポートはすべて公開データに基づく個人の分析です。実際の投票数・順位とは異なる場合があります。<br>
+      ※ Kenshi Yonezu / IRIS OUT のチーム動画（ハイライト・フル尺）は本レポート作成時点（4/17）で未公開のため、Section 03のチーム動画比較に含まれていません。
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
