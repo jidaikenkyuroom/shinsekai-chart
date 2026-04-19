@@ -96,8 +96,22 @@ tr:hover td{background:var(--surface);}
 <header>
   <h1>新世界 数値トラッカー</h1>
   <p>101 trainees · updated 4/19</p>
-  <button onclick="openReportModal()" style="margin-left:auto;font-size:0.72rem;padding:4px 12px;border-radius:5px;border:1px solid var(--border2);background:transparent;color:var(--muted);cursor:pointer;font-family:monospace;white-space:nowrap;transition:color 0.15s,border-color 0.15s;" onmouseover="this.style.color='var(--text)';this.style.borderColor='rgba(200,184,255,0.4)'" onmouseout="this.style.color='var(--muted)';this.style.borderColor='var(--border2)'">📄 レポート</button>
+  <div style="margin-left:auto;display:flex;gap:6px;">
+    <button onclick="openTimelineModal()" style="font-size:0.72rem;padding:4px 12px;border-radius:5px;border:1px solid var(--border2);background:transparent;color:var(--muted);cursor:pointer;font-family:monospace;white-space:nowrap;transition:color 0.15s,border-color 0.15s;" onmouseover="this.style.color='var(--text)';this.style.borderColor='rgba(200,184,255,0.4)'" onmouseout="this.style.color='var(--muted)';this.style.borderColor='var(--border2)'">📅 タイムライン</button>
+    <button onclick="openReportModal()" style="font-size:0.72rem;padding:4px 12px;border-radius:5px;border:1px solid var(--border2);background:transparent;color:var(--muted);cursor:pointer;font-family:monospace;white-space:nowrap;transition:color 0.15s,border-color 0.15s;" onmouseover="this.style.color='var(--text)';this.style.borderColor='rgba(200,184,255,0.4)'" onmouseout="this.style.color='var(--muted)';this.style.borderColor='var(--border2)'">📄 レポート</button>
+  </div>
 </header>
+
+<!-- タイムライン モーダル -->
+<div id="timeline-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:1000;align-items:center;justify-content:center;" onclick="if(event.target===this)closeTimelineModal()">
+  <div style="background:#17171a;border:1px solid rgba(255,255,255,0.13);border-radius:10px;width:min(560px,92vw);max-height:82vh;display:flex;flex-direction:column;overflow:hidden;">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:0.9rem 1.25rem;border-bottom:1px solid rgba(255,255,255,0.07);flex-shrink:0;">
+      <span style="font-size:0.8rem;font-weight:500;font-family:monospace;color:var(--accent);">📅 番組タイムライン</span>
+      <button onclick="closeTimelineModal()" style="background:transparent;border:none;color:var(--muted);cursor:pointer;font-size:1.1rem;line-height:1;padding:2px 6px;" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">✕</button>
+    </div>
+    <div style="overflow-y:auto;flex:1;padding:0.5rem 0;" id="timeline-body"></div>
+  </div>
+</div>
 
 <!-- レポートアーカイブ モーダル -->
 <div id="report-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:1000;align-items:center;justify-content:center;" onclick="if(event.target===this)closeReportModal()">
@@ -1895,6 +1909,57 @@ const REPORTS = [
   { date:'2026/04/14', title:'グループバトル 推しカメラ数値分析', file:'reports/battle_report_20260414.html' },
 ];
 
+// type: 'vote'=投票, 'broadcast'=配信, 'release'=公開, 'record'=収録, 'announce'=発表
+const TIMELINE = [
+  { date:'2026-04-24', label:'第2回現場評価 番組収録', type:'record', note:'この辺でようやく配信と現場収録のタイミングが合ってくる' },
+  { date:'2026-04-23', label:'第一回順位発表式（配信第五話）', type:'broadcast', note:'50位まで生存、51位以下は脱落' },
+  { date:'2026-04-17', label:'SHINSEKAI 投票締め切り', type:'vote', note:'3/26〜4/17の積算が第一回順位に反映' },
+  { date:'2026-04-16', label:'グループバトル後半組（配信第四話）', type:'broadcast', note:'投票締め切りの1日前のため影響は小さい可能性' },
+  { date:'2026-04-12', label:'グループバトル推しカメラ Mnetplusで公開', type:'release', note:'投票締め切り5日前。個人票の最後の押し上げ要因の可能性' },
+  { date:'2026-04-10', label:'3週目 練習生順位発表（途中経過）', type:'announce' },
+  { date:'2026-04-09', label:'グループバトル前半組（配信第三話）', type:'broadcast' },
+  { date:'2026-04-02', label:'クラス分けテスト後半組＋再評価＋センター決定（配信第二話）', type:'broadcast' },
+  { date:'2026-04-02', label:'2週目 練習生順位発表（途中経過）', type:'announce' },
+  { date:'2026-03-26', label:'【番組スタート】初顔合わせ＋クラス分けテスト前半組（配信第一話）', type:'broadcast' },
+  { date:'2026-03-26', label:'SHINSEKAI 投票スタート', type:'vote', note:'1日1回、毎日投票可能。期間：3/26〜4/17' },
+  { date:'2026-02-24', label:'練習生お披露目イベント開催', type:'release', note:'練習生候補は不参加' },
+  { date:'2026-02-23', label:'第1回現場評価 番組収録', type:'record' },
+  { date:'2026-02-22', label:'テーマソング推しカメラ YouTubeで公開', type:'release' },
+  { date:'2026-02-19', label:'テーマソング（新世界）YouTubeで公開', type:'release', note:'練習生＋投票で昇格した練習生候補全員によるパフォーマンス' },
+  { date:'2026-02-03', label:'全練習生・練習生候補の1分PR動画 YouTubeで公開', type:'release' },
+  { date:'2026-02-01', label:'38名の練習生候補を公式サイトで公開', type:'announce', note:'2/2〜2/4の投票で練習生昇格が決定' },
+  { date:'2026-01-30', label:'練習生82名を公式サイトで公開', type:'announce' },
+];
+
+const TYPE_STYLE = {
+  vote:      { color:'#f0c040', bg:'rgba(240,192,64,0.12)',  border:'rgba(240,192,64,0.35)',  icon:'🗳' },
+  broadcast: { color:'#c8b8ff', bg:'rgba(200,184,255,0.1)', border:'rgba(200,184,255,0.3)',  icon:'📺' },
+  release:   { color:'#4ec87a', bg:'rgba(78,200,122,0.1)',  border:'rgba(78,200,122,0.3)',   icon:'▶' },
+  record:    { color:'#ff5c35', bg:'rgba(255,92,53,0.1)',   border:'rgba(255,92,53,0.28)',   icon:'🎬' },
+  announce:  { color:'#888884', bg:'rgba(136,136,132,0.1)', border:'rgba(136,136,132,0.25)', icon:'📢' },
+};
+
+function openTimelineModal(){
+  const body = document.getElementById('timeline-body');
+  body.innerHTML = TIMELINE.map(ev => {
+    const s = TYPE_STYLE[ev.type] || TYPE_STYLE.announce;
+    const d = ev.date.replace(/^\d{4}-/,'').replace('-','/');
+    return `<div style="display:flex;gap:10px;padding:0.6rem 1.25rem;border-bottom:1px solid rgba(255,255,255,0.04);">
+      <div style="flex-shrink:0;width:36px;font-size:0.65rem;font-family:monospace;color:var(--muted);padding-top:3px;text-align:right;">${d}</div>
+      <div style="flex-shrink:0;width:18px;font-size:0.75rem;padding-top:2px;">${s.icon}</div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:0.78rem;color:var(--text);line-height:1.4;">${ev.label}</div>
+        ${ev.note ? `<div style="font-size:0.68rem;color:var(--muted);margin-top:2px;line-height:1.4;">${ev.note}</div>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+  document.getElementById('timeline-modal').style.display = 'flex';
+}
+
+function closeTimelineModal(){
+  document.getElementById('timeline-modal').style.display = 'none';
+}
+
 function openReportModal(){
   const list = document.getElementById('report-list');
   list.innerHTML = REPORTS.length ? REPORTS.map(r => `
@@ -1904,15 +1969,14 @@ function openReportModal(){
       <span style="margin-left:auto;font-size:0.65rem;color:var(--hint);flex-shrink:0;">↗</span>
     </a>`).join('') :
     '<p style="padding:1.5rem;font-size:0.78rem;color:var(--muted);text-align:center;">レポートはまだありません</p>';
-  const modal = document.getElementById('report-modal');
-  modal.style.display = 'flex';
+  document.getElementById('report-modal').style.display = 'flex';
 }
 
 function closeReportModal(){
   document.getElementById('report-modal').style.display = 'none';
 }
 
-document.addEventListener('keydown', e => { if(e.key==='Escape') closeReportModal(); });
+document.addEventListener('keydown', e => { if(e.key==='Escape'){ closeReportModal(); closeTimelineModal(); } });
 
 loadSelection();
 document.getElementById('pick-count').textContent=selected.length+' / 12 選択中';
