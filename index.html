@@ -283,6 +283,7 @@ tr:hover td{background:var(--surface);}
       <button class="g-tab" onclick="switchBattleTab('classscatter')">クラス×動画分析</button>
       <button class="g-tab" onclick="switchBattleTab('trends')">動画推移グラフ</button>
       <button class="g-tab" onclick="switchBattleTab('scatter')">推しカメラ散布図</button>
+      <button class="g-tab" onclick="switchBattleTab('votescatter')">個人票×推しカメラ</button>
     </div>
 
     <div style="background:var(--surface);border-radius:6px;padding:0.65rem 1rem;margin-bottom:1rem;border-left:3px solid var(--accent);font-size:0.7rem;color:var(--muted);font-family:monospace;line-height:1.8;">
@@ -321,6 +322,16 @@ tr:hover td{background:var(--surface);}
       <p class="sub-label">テーマソング個人動画再生数（4/19）× 推しカメラ再生数（4/19）の散布図。点の色は再評価クラス。右上ほど「実力も動画人気も高い」エース型、左上ほど「動画より実力評価が高い穴場型」。</p>
       <div class="scatter-legend" id="cs-legend"></div>
       <div class="chart-wrap" style="height:520px;"><canvas id="chartClassScatter"></canvas></div>
+      <div style="margin-top:1.5rem;">
+        <div class="g-tabs">
+          <button class="g-tab active" onclick="switchCsQuad('tr')" id="csq-tr">エース型</button>
+          <button class="g-tab" onclick="switchCsQuad('tl')" id="csq-tl">穴場型</button>
+          <button class="g-tab" onclick="switchCsQuad('br')" id="csq-br">動画先行型</button>
+          <button class="g-tab" onclick="switchCsQuad('bl')" id="csq-bl">埋もれ型</button>
+        </div>
+        <p class="sub-label" id="csq-desc" style="margin-bottom:0.75rem;"></p>
+        <div class="cards" id="csq-cards"></div>
+      </div>
     </div>
 
     <div id="btab-timing" class="b-section">
@@ -370,6 +381,31 @@ tr:hover td{background:var(--surface);}
         </select>
       </div>
       <div class="chart-wrap" style="height:480px;"><canvas id="chartBattleScatter"></canvas></div>
+      <div style="margin-top:1.5rem;">
+        <div class="g-tabs">
+          <button class="g-tab active" onclick="switchBsQuad('tr')" id="bsq-tr">全方位人気</button>
+          <button class="g-tab" onclick="switchBsQuad('tl')" id="bsq-tl">動画先行型</button>
+          <button class="g-tab" onclick="switchBsQuad('br')" id="bsq-br">票先行型</button>
+          <button class="g-tab" onclick="switchBsQuad('bl')" id="bsq-bl">埋もれ型</button>
+        </div>
+        <p class="sub-label" id="bsq-desc" style="margin-bottom:0.75rem;"></p>
+        <div class="cards" id="bsq-cards"></div>
+      </div>
+    </div>
+
+    <div id="btab-votescatter" class="b-section">
+      <p class="sub-label">個人票＋FREE PART票の合計順位（加算ボーナス除く）× 推しカメラ再生数の四象限分析。右上＝個人票も動画再生数も高い二冠型。</p>
+      <div class="chart-wrap" style="height:480px;"><canvas id="chartVoteScatter"></canvas></div>
+      <div style="margin-top:1.5rem;">
+        <div class="g-tabs">
+          <button class="g-tab active" onclick="switchVsQuad('tr')" id="vsq-tr">二冠型</button>
+          <button class="g-tab" onclick="switchVsQuad('tl')" id="vsq-tl">動画先行型</button>
+          <button class="g-tab" onclick="switchVsQuad('br')" id="vsq-br">票先行型</button>
+          <button class="g-tab" onclick="switchVsQuad('bl')" id="vsq-bl">埋もれ型</button>
+        </div>
+        <p class="sub-label" id="vsq-desc" style="margin-bottom:0.75rem;"></p>
+        <div class="cards" id="vsq-cards"></div>
+      </div>
     </div>
 
   </div>
@@ -1402,11 +1438,11 @@ let currentBattleTab = 'list';
 
 function switchBattleTab(tab) {
   currentBattleTab = tab;
-  ['list','compare','scatter','classscatter','timing','trends'].forEach(t => {
+  ['list','compare','scatter','classscatter','timing','trends','votescatter'].forEach(t => {
     document.getElementById('btab-'+t).classList.toggle('active', t===tab);
   });
   document.querySelectorAll('#battle-tabs .g-tab').forEach((el,i) => {
-    el.classList.toggle('active', ['list','compare','timing','classscatter','trends','scatter'][i]===tab);
+    el.classList.toggle('active', ['list','compare','timing','classscatter','trends','scatter','votescatter'][i]===tab);
   });
   if(tab==='list')         renderBattleList();
   if(tab==='compare')      renderBattleCompare();
@@ -1414,6 +1450,7 @@ function switchBattleTab(tab) {
   if(tab==='timing')       renderBattleTiming();
   if(tab==='classscatter') renderClassScatter();
   if(tab==='trends')       renderBattleTrends();
+  if(tab==='votescatter')  renderVoteScatter();
 }
 
 // ── 動画推移グラフ ─────────────────────────────────────────────
@@ -1702,11 +1739,303 @@ function renderBattleCompare() {
   document.getElementById('bc-content').innerHTML = html;
 }
 
+// ── 個人票データ（個人獲得票数＋FREE PART獲得票数の合計順位）──
+// [reading, 個人票, FREEpart票, 合計, 純粋順位]
+const rawBattleVotes = [
+  ["KOSUKE",134,358,492,1],["HYUGO",175,304,479,2],["MAKI",84,381,465,3],
+  ["ISSA",102,352,454,4],["HYEONSEUNG",77,374,451,5],["RYUJI",86,364,450,6],
+  ["CHISATO",87,347,434,7],["SHINJI",59,374,433,8],["KANAME",81,348,429,9],
+  ["GOTEN",41,381,422,10],["YURA",42,380,422,11],["TAKUTO.M",72,348,420,12],
+  ["YOSHIKI",39,380,419,13],["KYOHEI",35,381,416,14],["SIYOUNG",36,380,416,15],
+  ["AKIRA",66,348,414,16],["RYOGA",70,343,413,17],["JINICHIRO",31,381,412,18],
+  ["REN.KO",58,352,410,19],["KEITO",67,343,410,20],["DAIKI.K",29,380,409,21],
+  ["AJU",25,381,406,22],["YUSEI.O",59,347,406,23],["RINTO",47,358,405,24],
+  ["RYUGA",62,343,405,25],["OSUKE",40,364,404,26],["YUKI",38,364,402,27],
+  ["JAEYONG",22,380,402,28],["GIUSEPPE",20,380,400,29],["SOSHI",49,348,397,30],
+  ["HIJIRI",33,364,397,31],["SORA.S",14,381,395,32],["TOKIYA",17,374,391,33],
+  ["TAKUTO.K",38,352,390,34],["DONGMIN",42,347,389,35],["KEIJIRO",45,343,388,36],
+  ["RIKUTO.I",34,352,386,37],["EITO",9,374,383,38],["KANTA",54,328,382,39],
+  ["KENTO",33,348,381,40],["TRISTAN",7,374,381,41],["SOGO",6,374,380,42],
+  ["WEIZE",26,352,378,43],["SHU.N",31,347,378,44],["KAIMU",35,343,378,45],
+  ["TAIGA.M",14,364,378,46],["JOE",19,358,377,47],["AYUMU.S",28,347,375,48],
+  ["REN.H",27,347,374,49],["TOWA",46,328,374,50],["KANADE",15,358,373,51],
+  ["RUI.M",25,348,373,52],["FUMA",8,364,372,53],["SEITA",29,343,372,54],
+  ["KAICHI",12,358,370,55],["SORA.T",10,358,368,56],["SHU.Y",24,343,367,57],
+  ["KOSEI",11,352,363,58],["JUNSEI",9,352,361,59],["AYUMU.K",18,343,361,60],
+  ["KOSHIRO",18,343,361,61],["RYOTA",12,347,359,62],["DAIKI.I",14,343,357,63],
+  ["AOM",7,348,355,64],["TOMOKI",9,343,352,65],["YUTA",6,343,349,66],
+  ["KINARI",40,305,345,67],["TAKUMI",16,328,344,68],["TATSUYA",77,266,343,69],
+  ["KEISUKE",14,328,342,70],["SOTA",11,328,339,71],["RIKUTO.H",6,328,334,72],
+  ["SHINHAENG",22,305,327,73],["TAIGA.F",21,305,326,74],["RUI.U",16,304,320,75],
+  ["RENTO",15,304,319,76],["RIKUYA",14,304,318,77],["HYUNJAE",12,305,317,78],
+  ["TERU",11,304,315,79],["YUMA",10,305,315,80],["MUSASHI",10,304,314,81],
+  ["HIKARU",28,283,311,82],["RIKU",6,305,311,83],["ADAM",1,305,306,84],
+  ["YUSEI.S",22,283,305,85],["SENA",38,266,304,86],["TAKUTO.O",19,283,302,87],
+  ["EITA",16,283,299,88],["HARUKU",8,283,291,89],["SHINSUKE",8,283,291,90],
+  ["KEISHIN",7,283,290,91],["KOTARO",22,266,288,92],["HARUTO",14,266,280,93],
+  ["MEI",12,266,278,94],["TETORA",7,266,273,95],["RICKEY",19,222,241,96],
+  ["JAY",14,222,236,97],["HIROTO",13,222,235,98],["ARCHER",8,222,230,99],
+  ["JUNGUK",2,222,224,100],["YOHAN",2,222,224,101],
+];
+
+// ── 象限カード（個人票×推しカメラ） ──
+let vsQuadData = {tr:[],tl:[],br:[],bl:[]};
+let currentVsQuad = 'tr';
+const VS_QUAD_DEFS = {
+  tr:{label:'二冠型',    desc:'個人票上位・推しカメラ◎'},
+  tl:{label:'動画先行型',desc:'個人票下位・推しカメラ◎'},
+  br:{label:'票先行型',  desc:'個人票上位・推しカメラ少'},
+  bl:{label:'埋もれ型',  desc:'個人票下位・推しカメラ少'},
+};
+function switchVsQuad(q){
+  currentVsQuad = q;
+  ['tr','tl','br','bl'].forEach(id => document.getElementById('vsq-'+id).classList.toggle('active', id===q));
+  renderVsQuadCards();
+}
+function renderVsQuadCards(){
+  const q = currentVsQuad;
+  const list = vsQuadData[q] || [];
+  document.getElementById('vsq-desc').textContent = VS_QUAD_DEFS[q].desc + `（${list.length}名）`;
+  const color = SONG_COLORS;
+  const cards = list.map(d => {
+    const c = color[d.song] || '#888';
+    return `<div class="card">
+      <div class="card-name">${d.name} <span style="font-size:0.6rem;color:var(--hint);font-family:monospace;">${d.reading}</span></div>
+      <div class="card-val" style="color:${c}">${d.oshiViews.toLocaleString()}</div>
+      <div class="card-sub">
+        <span>${d.voteRank}位</span>
+        <span>${d.voteTotal}票</span>
+        <span style="font-size:0.63rem;">${d.broadcast}</span>
+      </div>
+    </div>`;
+  }).join('');
+  document.getElementById('vsq-cards').innerHTML = cards || '<p style="font-size:0.78rem;color:var(--muted);">該当なし</p>';
+}
+
+// ── 個人票×推しカメラ 散布図 ──
+let chartVoteScatter = null;
+function renderVoteScatter(){
+  if(chartVoteScatter){ chartVoteScatter.destroy(); chartVoteScatter=null; }
+  const ctx = document.getElementById('chartVoteScatter');
+
+  // rawBattleVotes を reading→{rank,total} のマップに
+  const voteMap = {};
+  rawBattleVotes.forEach(([reading, ind, free, total, rank]) => {
+    voteMap[reading] = {rank, total, ind, free};
+  });
+
+  // battleData と結合
+  const pts = [];
+  battleData.forEach(d => {
+    const v = voteMap[d.reading];
+    if(!v) return;
+    pts.push({
+      x: v.rank,
+      y: d.oshiViews,
+      name: d.name, reading: d.reading, song: d.song,
+      artist: d.artist, team: d.team, broadcast: d.broadcast,
+      voteRank: v.rank, voteTotal: v.total, oshiViews: d.oshiViews,
+    });
+  });
+
+  // 楽曲ごとにdataset
+  const datasets = SONGS_INFO.map(({artist, song, broadcast}) => {
+    const color = SONG_COLORS[song] || '#888';
+    return {
+      label:`${artist} ♪${song}`,
+      data: pts.filter(p => p.song===song),
+      backgroundColor: color+'bb', borderColor: color, borderWidth:1,
+      pointRadius:6, pointHoverRadius:9,
+      pointStyle: broadcast==='前半組' ? 'circle' : 'triangle',
+    };
+  }).filter(d => d.data.length > 0);
+
+  const medY = arrMedian(pts.map(p=>p.y));
+
+  // 象限分類（x=順位reversed: x<=51が上位=右）
+  vsQuadData = {tr:[],tl:[],br:[],bl:[]};
+  pts.forEach(p => {
+    const q = p.x<=51 ? (p.y>=medY?'tr':'br') : (p.y>=medY?'tl':'bl');
+    vsQuadData[q].push(p);
+  });
+  vsQuadData.tr.sort((a,b)=>a.x-b.x);
+  vsQuadData.tl.sort((a,b)=>b.y-a.y);
+  vsQuadData.br.sort((a,b)=>a.x-b.x);
+  vsQuadData.bl.sort((a,b)=>b.y-a.y);
+  currentVsQuad = 'tr';
+  ['tr','tl','br','bl'].forEach(id => document.getElementById('vsq-'+id).classList.toggle('active', id==='tr'));
+  renderVsQuadCards();
+
+  chartVoteScatter = new Chart(ctx, {
+    type:'scatter',
+    data:{datasets},
+    plugins:[quadrantPlugin],
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{
+        quadrant:{ tx:51, ty:medY, labels:['二冠型','動画先行型','埋もれ型','票先行型'] },
+        legend:{display:true, position:'bottom', labels:{color:'#888', font:{size:10}, boxWidth:10, padding:8}},
+        tooltip:{
+          callbacks:{
+            label: c => {
+              const p=c.raw;
+              return [
+                `${p.name}（${p.reading}）`,
+                `推しカメラ: ${p.oshiViews.toLocaleString()}回`,
+                `個人票順位: ${p.voteRank}位（${p.voteTotal}票）`,
+                `TEAM ${p.team} / ${p.broadcast}`,
+              ];
+            }
+          },
+          backgroundColor:'#1f1f24', borderColor:'rgba(255,255,255,0.13)', borderWidth:1,
+          bodyColor:'#f0f0ee', bodyFont:{family:'monospace',size:12}, padding:10, displayColors:false,
+        }
+      },
+      scales:{
+        x:{
+          reverse:true, min:0, max:102,
+          title:{display:true, text:'個人票順位（個人票＋FREE PART / 右が1位）', color:'#888', font:{size:11}},
+          ticks:{color:'#888', font:{size:11}, callback:v=>v===0||v===102?'':v+'位'},
+          grid:{color:'rgba(255,255,255,0.04)'},
+        },
+        y:{
+          title:{display:true, text:'推しカメラ再生数', color:'#888', font:{size:11}},
+          ticks:{color:'#888', font:{size:11}, callback:v=>v>=1000?(v/1000).toFixed(0)+'k':v},
+          grid:{color:'rgba(255,255,255,0.04)'},
+        }
+      }
+    }
+  });
+}
+
+// ── 象限カード（クラス×動画分析） ──
+let csQuadData = {tr:[],tl:[],br:[],bl:[]};
+let currentCsQuad = 'tr';
+const CS_QUAD_DEFS = {
+  tr:{label:'エース型',    desc:'テーマソング◎・推しカメラ◎'},
+  tl:{label:'穴場型',     desc:'テーマソング少・推しカメラ◎'},
+  br:{label:'動画先行型', desc:'テーマソング◎・推しカメラ少'},
+  bl:{label:'埋もれ型',   desc:'テーマソング少・推しカメラ少'},
+};
+function switchCsQuad(q){
+  currentCsQuad = q;
+  ['tr','tl','br','bl'].forEach(id => document.getElementById('csq-'+id).classList.toggle('active', id===q));
+  renderCsQuadCards();
+}
+function renderCsQuadCards(){
+  const q = currentCsQuad;
+  const list = csQuadData[q] || [];
+  const def = CS_QUAD_DEFS[q];
+  document.getElementById('csq-desc').textContent = def.desc + `（${list.length}名）`;
+  const clsCfg = {A:'#4ec87a',B:'#c8b8ff',C:'#f0c040',D:'#f09878',F:'#ff5c35'};
+  const cards = list.map(d => `
+    <div class="card">
+      <div class="card-name">${d.name} <span style="font-size:0.6rem;color:var(--hint);font-family:monospace;">${d.reading}</span></div>
+      <div class="card-val" style="color:${clsCfg[d.cls]||'#888'}">${d.firstCls}→${d.cls}</div>
+      <div class="card-sub">
+        <span>${d.x.toFixed(1)}万</span>
+        <span>${d.y>=1000?(d.y/1000).toFixed(1)+'k':d.y}推し</span>
+      </div>
+    </div>`).join('');
+  document.getElementById('csq-cards').innerHTML = cards || '<p style="font-size:0.78rem;color:var(--muted);">該当なし</p>';
+}
+
+// ── 象限カード（推しカメラ散布図） ──
+let bsQuadData = {tr:[],tl:[],br:[],bl:[]};
+let currentBsQuad = 'tr';
+const BS_QUAD_DEFS = {
+  tr:{label:'全方位人気', desc:'投票上位・推しカメラ◎'},
+  tl:{label:'動画先行型', desc:'投票下位・推しカメラ◎'},
+  br:{label:'票先行型',   desc:'投票上位・推しカメラ少'},
+  bl:{label:'埋もれ型',   desc:'投票下位・推しカメラ少'},
+};
+function switchBsQuad(q){
+  currentBsQuad = q;
+  ['tr','tl','br','bl'].forEach(id => document.getElementById('bsq-'+id).classList.toggle('active', id===q));
+  renderBsQuadCards();
+}
+function renderBsQuadCards(){
+  const q = currentBsQuad;
+  const list = bsQuadData[q] || [];
+  const def = BS_QUAD_DEFS[q];
+  document.getElementById('bsq-desc').textContent = def.desc + `（${list.length}名）`;
+  const cards = list.map(d => {
+    const color = SONG_COLORS[d.song] || '#888';
+    return `<div class="card">
+      <div class="card-name">${d.name} <span style="font-size:0.6rem;color:var(--hint);font-family:monospace;">${d.reading}</span></div>
+      <div class="card-val" style="color:${color}">${d.oshiViews.toLocaleString()}</div>
+      <div class="card-sub">
+        <span>${d.x}位</span>
+        <span style="font-size:0.63rem;">${d.broadcast}</span>
+      </div>
+    </div>`;
+  }).join('');
+  document.getElementById('bsq-cards').innerHTML = cards || '<p style="font-size:0.78rem;color:var(--muted);">該当なし</p>';
+}
+
+// ── 四象限プラグイン ──
+function arrMedian(arr) {
+  if(!arr.length) return 0;
+  const s = [...arr].sort((a,b)=>a-b);
+  const m = Math.floor(s.length/2);
+  return s.length%2 ? s[m] : (s[m-1]+s[m])/2;
+}
+
+const quadrantPlugin = {
+  id:'quadrant',
+  beforeDraw(chart) {
+    const cfg = chart.options.plugins.quadrant;
+    if(!cfg) return;
+    const {ctx, chartArea:{left,right,top,bottom}} = chart;
+    const xs = chart.scales.x, ys = chart.scales.y;
+    const cx = Math.max(left+1, Math.min(right-1, xs.getPixelForValue(cfg.tx)));
+    const cy = Math.max(top+1,  Math.min(bottom-1, ys.getPixelForValue(cfg.ty)));
+
+    // 背景色（右上=緑、左上=紫、左下=グレー、右下=赤）
+    const fills = [
+      {x:cx,   y:top,  w:right-cx, h:cy-top,    c:'rgba(78,200,122,0.05)'},
+      {x:left, y:top,  w:cx-left,  h:cy-top,    c:'rgba(200,184,255,0.04)'},
+      {x:left, y:cy,   w:cx-left,  h:bottom-cy, c:'rgba(255,255,255,0.02)'},
+      {x:cx,   y:cy,   w:right-cx, h:bottom-cy, c:'rgba(255,92,53,0.04)'},
+    ];
+    fills.forEach(f => { ctx.fillStyle=f.c; ctx.fillRect(f.x,f.y,f.w,f.h); });
+
+    // 分割線
+    ctx.save();
+    ctx.strokeStyle='rgba(255,255,255,0.18)';
+    ctx.setLineDash([5,5]);
+    ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(cx,top);   ctx.lineTo(cx,bottom); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(left,cy);  ctx.lineTo(right,cy);  ctx.stroke();
+    ctx.restore();
+
+    // 象限ラベル
+    const labels = cfg.labels || ['','','',''];
+    const positions = [
+      {x:right-10, y:top+12,    ax:'right', ay:'top'},
+      {x:left+10,  y:top+12,    ax:'left',  ay:'top'},
+      {x:left+10,  y:bottom-10, ax:'left',  ay:'bottom'},
+      {x:right-10, y:bottom-10, ax:'right', ay:'bottom'},
+    ];
+    ctx.save();
+    ctx.font='bold 10px monospace';
+    positions.forEach((p,i) => {
+      if(!labels[i]) return;
+      ctx.fillStyle='rgba(255,255,255,0.22)';
+      ctx.textAlign=p.ax; ctx.textBaseline=p.ay;
+      ctx.fillText(labels[i], p.x, p.y);
+    });
+    ctx.restore();
+  }
+};
+
 function renderBattleScatter() {
   if(chartBattleScatter){ chartBattleScatter.destroy(); chartBattleScatter=null; }
   const filter = document.getElementById('bs-song').value;
   const ctx = document.getElementById('chartBattleScatter');
   const songList = filter==='all' ? SONGS_INFO : SONGS_INFO.filter(s => s.broadcast===filter);
+
+  const allPts = [];
   const datasets = songList.map(({artist, song, broadcast}) => {
     const color = SONG_COLORS[song] || '#888';
     const pts = battleData
@@ -1716,6 +2045,7 @@ function renderBattleScatter() {
         name:d.name, reading:d.reading, song:d.song, team:d.team, broadcast:d.broadcast,
         oshiViews:d.oshiViews,
       }));
+    allPts.push(...pts);
     return {
       label:`${artist} ♪${song}`,
       data: pts,
@@ -1725,12 +2055,30 @@ function renderBattleScatter() {
     };
   });
 
+  const medY = arrMedian(allPts.map(p=>p.y));
+
+  // 象限分類（x=順位・reversed: x<=51が上位=右側）
+  bsQuadData = {tr:[],tl:[],br:[],bl:[]};
+  allPts.forEach(p => {
+    const q = p.x<=51 ? (p.y>=medY?'tr':'br') : (p.y>=medY?'tl':'bl');
+    bsQuadData[q].push(p);
+  });
+  bsQuadData.tr.sort((a,b)=>a.x-b.x);
+  bsQuadData.tl.sort((a,b)=>b.y-a.y);
+  bsQuadData.br.sort((a,b)=>a.x-b.x);
+  bsQuadData.bl.sort((a,b)=>b.y-a.y);
+  currentBsQuad = 'tr';
+  ['tr','tl','br','bl'].forEach(id => document.getElementById('bsq-'+id).classList.toggle('active', id==='tr'));
+  renderBsQuadCards();
+
   chartBattleScatter = new Chart(ctx, {
     type:'scatter',
     data:{datasets},
+    plugins:[quadrantPlugin],
     options:{
       responsive:true, maintainAspectRatio:false,
       plugins:{
+        quadrant:{ tx:51, ty:medY, labels:['全方位人気','動画先行型','埋もれ型','票先行型'] },
         legend:{display:true, position:'bottom', labels:{color:'#888', font:{size:10}, boxWidth:10, padding:8}},
         tooltip:{
           callbacks:{
@@ -1808,12 +2156,32 @@ function renderClassScatter() {
   ).join('');
   document.getElementById('cs-legend').innerHTML = legendHtml;
 
+  const allCsPts = datasets.flatMap(d=>d.data);
+  const medX = arrMedian(allCsPts.map(p=>p.x));
+  const medY = arrMedian(allCsPts.map(p=>p.y));
+
+  // 象限分類
+  csQuadData = {tr:[],tl:[],br:[],bl:[]};
+  allCsPts.forEach(p => {
+    const q = p.x>=medX ? (p.y>=medY?'tr':'br') : (p.y>=medY?'tl':'bl');
+    csQuadData[q].push(p);
+  });
+  csQuadData.tr.sort((a,b)=>b.y-a.y);
+  csQuadData.tl.sort((a,b)=>b.y-a.y);
+  csQuadData.br.sort((a,b)=>b.x-a.x);
+  csQuadData.bl.sort((a,b)=>b.y-a.y);
+  currentCsQuad = 'tr';
+  ['tr','tl','br','bl'].forEach(id => document.getElementById('csq-'+id).classList.toggle('active', id==='tr'));
+  renderCsQuadCards();
+
   chartClassScatter = new Chart(ctx, {
     type: 'scatter',
     data: {datasets},
+    plugins:[quadrantPlugin],
     options: {
       responsive: true, maintainAspectRatio: false,
       plugins: {
+        quadrant:{ tx:medX, ty:medY, labels:['エース型','穴場型','埋もれ型','動画先行型'] },
         legend: {display:false},
         tooltip: {
           callbacks: {
@@ -1915,6 +2283,7 @@ const TIMELINE = [
   { date:'2026-04-23', label:'第一回順位発表式（配信第五話）', type:'broadcast', note:'50位まで生存、51位以下は脱落' },
   { date:'2026-04-17', label:'SHINSEKAI 投票締め切り', type:'vote', note:'3/26〜4/17の積算が第一回順位に反映' },
   { date:'2026-04-16', label:'グループバトル後半組（配信第四話）', type:'broadcast', note:'投票締め切りの1日前のため影響は小さい可能性' },
+  { date:'2026-04-19', label:'グループバトル推しカメラ YouTubeで公開', type:'release', note:'Mnetplus先行公開から1週間後にYouTubeでも公開（101名分）' },
   { date:'2026-04-12', label:'グループバトル推しカメラ Mnetplusで公開', type:'release', note:'投票締め切り5日前。個人票の最後の押し上げ要因の可能性' },
   { date:'2026-04-10', label:'3週目 練習生順位発表（途中経過）', type:'announce' },
   { date:'2026-04-09', label:'グループバトル前半組（配信第三話）', type:'broadcast' },
