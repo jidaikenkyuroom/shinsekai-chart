@@ -911,9 +911,9 @@ function renderTrend(){
     chartTrend=new Chart(ctx,{
       type:'line',
       data:{
-        labels:PLAY_DATES,
+        labels:hmKeepIdx.map(i=>PLAY_DATES[i]),
         datasets:items.map((d,i)=>({
-          label:d.name, data:d.vals,
+          label:d.name, data:hmKeepIdx.map(i=>d.vals[i]),
           borderColor:palette[i%palette.length], backgroundColor:'transparent',
           tension:0.3, pointRadius:4, spanGaps:true,
         }))
@@ -931,18 +931,16 @@ function renderTrend(){
       }
     });
   } else if(currentGraph==='growth'){
-    const growthLabels=PLAY_DATES.slice(1).map((d,i)=>PLAY_DATES[i].replace('月','/').replace('日','')+' → '+d.replace('月','/').replace('日',''));
+    const growthLabels=hmIntervals.map(([a,b])=>PLAY_DATES[a].replace('月','/').replace('日','')+' → '+PLAY_DATES[b].replace('月','/').replace('日',''));
     chartTrend=new Chart(ctx,{
       type:'line',
       data:{
         labels:growthLabels,
         datasets:items.map((d,i)=>{
-          const growthVals=[];
-          for(let j=1;j<d.vals.length;j++){
-            const cur=d.vals[j], prev=d.vals[j-1];
-            if(cur!=null&&prev!=null&&prev>0) growthVals.push(+((cur-prev)/prev*100).toFixed(1));
-            else growthVals.push(null);
-          }
+          const growthVals=hmIntervals.map(([a,b])=>{
+            const cur=d.vals[b], prev=d.vals[a];
+            return (cur!=null&&prev!=null&&prev>0) ? +((cur-prev)/prev*100).toFixed(1) : null;
+          });
           return {
             label:d.name, data:growthVals,
             borderColor:palette[i%palette.length], backgroundColor:'transparent',
