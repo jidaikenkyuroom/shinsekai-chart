@@ -1,0 +1,39 @@
+name: Update & Generate Charts
+
+on:
+  schedule:
+    - cron: "0 11 * * 6"  # 毎週土曜 20:00 JST (= 11:00 UTC)
+  workflow_dispatch:       # 手動実行も可能
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Update CSV (YouTube API)
+        env:
+          YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
+        run: python update_views.py
+
+      - name: Generate index.html
+        run: python generate_charts.py
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/新世界_再生数.csv index.html
+          git diff --cached --quiet || git commit -m "auto: update $(date +'%-m月%-d日')"
+          git push
