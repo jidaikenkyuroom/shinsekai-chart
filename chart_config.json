@@ -4,5 +4,6 @@
     "play": "新世界_再生数.csv",
     "vote": "新世界_順位.csv",
     "broadcast": "新世界_前後半放送.csv"
-  }
+  },
+  "heatmap_skip_dates": ["4月16日"]
 }

@@ -124,11 +124,15 @@ def generate():
 
     last_date = play_dates[-1] if play_dates else "?"
 
+    skip_dates = config.get("heatmap_skip_dates", [])
+    skip_js = "const HM_SKIP_DATES = [" + ",".join(f'"{d}"' for d in skip_dates) + "];"
+
     auto_data = "\n".join([
         play_dates_js,
         vote_dates_js,
         CLASS_ORDER_JS,
         PALETTE_JS,
+        skip_js,
         "",
         rawplay_js,
         "",

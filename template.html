@@ -211,7 +211,8 @@ tr:hover td{background:var(--surface);}
         <option value="1">3/14→3/21</option>
         <option value="2">3/21→3/28</option>
         <option value="3">3/28→4/4</option>
-        <option value="4" selected>4/4→4/12</option>
+        <option value="4">4/4→4/12</option>
+        <option value="5" selected>4/12→4/19</option>
       </select>
     </div>
     <div id="heatmap-wrap"></div>
@@ -415,6 +416,10 @@ tr:hover td{background:var(--surface);}
 <script>
 // {{AUTO_DATA}}
 
+// スキップ日付を除いたヒートマップ用インデックスペア
+const hmKeepIdx = PLAY_DATES.reduce((acc,d,i)=>{ if(!HM_SKIP_DATES.includes(d)) acc.push(i); return acc; }, []);
+const hmIntervals = hmKeepIdx.slice(1).map((idx,k)=>[hmKeepIdx[k], idx]);
+
 // ── クラスデータ ──
 const rawClass = [
 ["アダム・ナガイ","ADAM","A","A"],["中丸 晏寿","AJU","D","B"],["本荘 晃","AKIRA","F","B"],
@@ -535,11 +540,10 @@ function sortList(list, sort, weekIdx){
   else if(sort==='cur') list.sort((a,b)=>b.cur-a.cur);
   else if(sort==='growth'){
     // weekIdxが指定されていればその週の伸び率、なければ最新週
-    const wi = weekIdx!=null ? weekIdx : (d=>d.vals.length-2);
     list.sort((a,b)=>{
       const getRate=(d)=>{
-        const idx = typeof wi==='function' ? wi(d) : wi;
-        const cur=d.vals[idx+1], prev=d.vals[idx];
+        const [ia,ib] = weekIdx!=null ? hmIntervals[weekIdx] : [d.vals.length-2, d.vals.length-1];
+        const cur=d.vals[ib], prev=d.vals[ia];
         return (cur!=null&&prev!=null&&prev>0) ? (cur-prev)/prev*100 : 0;
       };
       return getRate(b)-getRate(a);
@@ -663,16 +667,12 @@ function renderHeatmap(){
   weekSel.style.display=isGrowth?'':'none';
   const weekIdx=isGrowth ? parseInt(weekSel.value) : null;
 
-  const diffLabels=PLAY_DATES.slice(1).map((d,i)=>PLAY_DATES[i].replace('月','/').replace('日','')+' → '+d.replace('月','/').replace('日',''));
+  const diffLabels=hmIntervals.map(([a,b])=>PLAY_DATES[a].replace('月','/').replace('日','')+' → '+PLAY_DATES[b].replace('月','/').replace('日',''));
   const sorted=[...data];
   sortList(sorted, sort, weekIdx);
-  const allDiffs=sorted.flatMap(d=>{
-    const diffs=[];
-    for(let i=1;i<d.vals.length;i++){
-      if(d.vals[i]!=null&&d.vals[i-1]!=null) diffs.push(d.vals[i]-d.vals[i-1]);
-    }
-    return diffs;
-  }).filter(v=>v!=null);
+  const allDiffs=sorted.flatMap(d=>
+    hmIntervals.map(([a,b])=>(d.vals[b]!=null&&d.vals[a]!=null)?d.vals[b]-d.vals[a]:null)
+  ).filter(v=>v!=null);
   const maxD=Math.max(...allDiffs)||1;
 
   let html=`<div class="hm-wrap"><div class="hm-header-row">`;
@@ -696,8 +696,8 @@ function renderHeatmap(){
 
 function heatRow(d, maxD){
   let html=`<div class="hm-row"><div class="hm-name" title="${d.name}">${d.name}<span style="display:block;font-size:0.58rem;color:var(--hint);">${d.cur.toFixed(1)}万 ${d.classFirst}→${d.classEval}</span></div>`;
-  for(let i=1;i<d.vals.length;i++){
-    const cur=d.vals[i], prev=d.vals[i-1];
+  for(const [a,b] of hmIntervals){
+    const cur=d.vals[b], prev=d.vals[a];
     if(cur==null||prev==null){
       html+=`<div class="hm-cell" style="background:rgba(128,128,128,0.06);color:var(--hint);">-</div>`;
     } else {
