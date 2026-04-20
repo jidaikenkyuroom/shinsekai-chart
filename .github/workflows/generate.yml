@@ -3,7 +3,7 @@ name: Update & Generate Charts
 on:
   schedule:
     - cron: "0 11 * * 6"  # 毎週土曜 20:00 JST (= 11:00 UTC)
-  workflow_dispatch:       # 手動実行も可能
+  workflow_dispatch:       # 手動実行（HTML再生成のみ、CSV更新なし）
 
 permissions:
   contents: write
@@ -22,7 +22,8 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: Update CSV (YouTube API)
+      - name: Update CSV (YouTube API) ※スケジュール実行のみ
+        if: github.event_name == 'schedule'
         env:
           YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
         run: python update_views.py
