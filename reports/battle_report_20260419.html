@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>グループバトル 数値分析｜新世界 数値トラッカー</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500&display=swap');
+:root{--bg:#0a0a0c;--s1:#111115;--s2:#18181d;--border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);--text:#ededeb;--muted:#888882;--hint:#444440;--accent:#c8b8ff;--gold:#f0c040;--green:#4ec87a;--red:#ff5c35;--cyan:#60c8e0;--pink:#e080c0;--orange:#f09878;}
+*{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text);line-height:1.75;font-size:14px;}
+.wrap{max-width:860px;margin:0 auto;padding:0 1.5rem 6rem;}
+.hero{padding:3.5rem 0 2.5rem;border-bottom:1px solid var(--border);margin-bottom:3rem;}
+.hero-tag{font-family:'JetBrains Mono',monospace;font-size:0.65rem;color:var(--accent);letter-spacing:0.18em;text-transform:uppercase;margin-bottom:0.75rem;opacity:0.8;}
+.hero h1{font-size:1.55rem;font-weight:700;letter-spacing:-0.01em;line-height:1.3;margin-bottom:0.75rem;}
+.hero-meta{font-family:'JetBrains Mono',monospace;font-size:0.7rem;color:var(--muted);line-height:1.8;}
+.section{margin-bottom:3.5rem;}
+.section-head{display:flex;align-items:baseline;gap:0.75rem;margin-bottom:1.5rem;padding-bottom:0.6rem;border-bottom:1px solid var(--border);}
+.section-num{font-family:'JetBrains Mono',monospace;font-size:0.62rem;color:var(--accent);opacity:0.6;}
+.section-title{font-size:1rem;font-weight:700;letter-spacing:0.02em;}
+p{font-size:0.875rem;color:#ccc;margin-bottom:0.9rem;line-height:1.85;}
+p:last-child{margin-bottom:0;}
+strong{color:var(--text);font-weight:500;}
+.insight{background:var(--s1);border:1px solid var(--border2);border-left:3px solid var(--accent);border-radius:0 6px 6px 0;padding:1rem 1.25rem;margin:1.25rem 0;font-size:0.84rem;color:var(--text);line-height:1.75;}
+.insight.green{border-left-color:var(--green);}
+.insight.gold{border-left-color:var(--gold);}
+.insight.red{border-left-color:var(--red);}
+.insight.cyan{border-left-color:var(--cyan);}
+.insight.orange{border-left-color:var(--orange);}
+.insight.pink{border-left-color:var(--pink);}
+.tbl-wrap{overflow-x:auto;margin:1rem 0;}
+table{width:100%;border-collapse:collapse;font-size:0.78rem;}
+th{font-size:0.65rem;color:var(--muted);font-weight:400;text-align:right;padding:6px 8px;border-bottom:1px solid var(--border);white-space:nowrap;font-family:'JetBrains Mono',monospace;}
+th:first-child{text-align:left;}
+td{padding:6px 8px;border-bottom:1px solid var(--border);text-align:right;font-family:'JetBrains Mono',monospace;font-size:0.75rem;color:var(--muted);}
+td:first-child{text-align:left;color:var(--text);font-family:'Noto Sans JP',sans-serif;}
+tr:hover td{background:var(--s1);}
+.tag{display:inline-block;font-family:'JetBrains Mono',monospace;font-size:0.6rem;padding:2px 6px;border-radius:3px;letter-spacing:0.05em;}
+.tag-win{background:rgba(78,200,122,0.15);color:var(--green);border:1px solid rgba(78,200,122,0.3);}
+.tag-lose{background:rgba(255,92,53,0.1);color:var(--red);border:1px solid rgba(255,92,53,0.2);}
+.tag-x4{background:rgba(240,192,64,0.15);color:var(--gold);border:1px solid rgba(240,192,64,0.3);}
+.tag-x2{background:rgba(96,200,224,0.15);color:var(--cyan);border:1px solid rgba(96,200,224,0.3);}
+.tag-none{background:rgba(255,255,255,0.05);color:var(--muted);border:1px solid var(--border);}
+.tag-global{background:rgba(200,184,255,0.1);color:var(--accent);border:1px solid rgba(200,184,255,0.2);}
+.tag-jp{background:rgba(255,255,255,0.05);color:var(--muted);border:1px solid var(--border);}
+/* タイムライン */
+.timeline{position:relative;padding-left:1.5rem;margin:1.5rem 0;}
+.timeline::before{content:'';position:absolute;left:0;top:0;bottom:0;width:1px;background:var(--border2);}
+.tl-item{position:relative;margin-bottom:1.25rem;}
+.tl-item::before{content:'';position:absolute;left:-1.5rem;top:0.5rem;width:7px;height:7px;border-radius:50%;background:var(--hint);transform:translateX(-3px);}
+.tl-item.accent::before{background:var(--accent);}
+.tl-item.gold::before{background:var(--gold);}
+.tl-item.green::before{background:var(--green);}
+.tl-item.cyan::before{background:var(--cyan);}
+.tl-date{font-family:'JetBrains Mono',monospace;font-size:0.65rem;color:var(--muted);margin-bottom:0.2rem;}
+.tl-label{font-size:0.82rem;color:var(--text);font-weight:500;}
+.tl-note{font-size:0.75rem;color:var(--muted);margin-top:0.2rem;line-height:1.6;}
+/* バトル勝敗カード */
+.battle-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:1.25rem 0;}
+.battle-card{background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:1rem 1.1rem;}
+.bc-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:0.6rem;}
+.bc-artist{font-size:0.72rem;font-weight:700;color:var(--text);}
+.bc-broadcast{font-family:'JetBrains Mono',monospace;font-size:0.6rem;color:var(--muted);}
+.bc-score{display:flex;gap:6px;align-items:center;margin-bottom:0.5rem;font-family:'JetBrains Mono',monospace;font-size:0.72rem;}
+.bc-t1{color:var(--cyan);}
+.bc-t2{color:var(--pink);}
+.bc-vs{color:var(--hint);}
+.bc-winner{font-size:0.65rem;color:var(--muted);}
+.bc-bonus{margin-top:0.5rem;}
+/* 2カラムテキスト */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin:1.25rem 0;}
+.col-card{background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:1rem 1.1rem;}
+.col-title{font-size:0.75rem;font-weight:700;margin-bottom:0.75rem;padding-bottom:0.4rem;border-bottom:1px solid var(--border);}
+.col-row{display:flex;justify-content:space-between;align-items:baseline;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.03);font-size:0.75rem;}
+.col-name{color:var(--text);}
+.col-val{font-family:'JetBrains Mono',monospace;color:var(--muted);font-size:0.7rem;}
+/* Energeticバトル専用 */
+.vs-block{display:grid;grid-template-columns:1fr auto 1fr;gap:1rem;align-items:start;margin:1.25rem 0;}
+.vs-team{background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:1rem 1.1rem;}
+.vs-team.winner{border-color:rgba(78,200,122,0.3);}
+.vs-team.loser{border-color:rgba(255,92,53,0.2);}
+.vs-label{font-family:'JetBrains Mono',monospace;font-size:0.6rem;color:var(--muted);margin-bottom:0.5rem;letter-spacing:0.1em;}
+.vs-title{font-size:0.8rem;font-weight:700;margin-bottom:0.75rem;}
+.vs-stat{display:flex;justify-content:space-between;font-size:0.72rem;padding:3px 0;border-bottom:1px solid rgba(255,255,255,0.04);}
+.vs-stat-label{color:var(--muted);}
+.vs-stat-val{font-family:'JetBrains Mono',monospace;color:var(--text);}
+.vs-divider{display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-size:0.9rem;color:var(--hint);font-weight:700;}
+.vs-member{font-size:0.72rem;padding:3px 0;display:flex;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,0.03);}
+.vs-member-name{color:var(--text);}
+.vs-member-val{font-family:'JetBrains Mono',monospace;color:var(--muted);font-size:0.68rem;}
+@media(max-width:600px){
+  .battle-grid{grid-template-columns:1fr;}
+  .two-col{grid-template-columns:1fr;}
+  .vs-block{grid-template-columns:1fr;}.vs-divider{display:none;}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="hero">
+  <div class="hero-tag">Analysis Report — Group Battle</div>
+  <h1>グループバトル 数値分析<br><span style="font-size:0.9rem;font-weight:400;color:var(--muted);">「現場の評価」と「ファンの支持」は別軸で動いていた</span></h1>
+  <div class="hero-meta">
+    2026.04.19 更新 ／ 対象：101名 ／ バトル収録：2026.02.23<br>
+    投票期間：3/26〜4/17 ／ 参照順位：4/2（二週目途中経過）・4/9（三週目途中経過）
+  </div>
+</div>
+
+<!-- 0. タイムライン -->
+<div class="section">
+  <div class="section-head">
+    <span class="section-num">00</span>
+    <span class="section-title">まず時系列を整理する</span>
+  </div>
+  <p>グループバトルのデータを読む前に、「いつの数字が何を測っているか」を把握しておく必要がある。バトル収録と投票の間には大きなギャップがあり、これを混同すると分析が崩れる。</p>
+
+  <div class="timeline">
+    <div class="tl-item">
+      <div class="tl-date">2026.02.23</div>
+      <div class="tl-label">🎬 グループバトル収録（第1回現場評価）</div>
+      <div class="tl-note">個人票・FREE PART票・バトル個人順位はすべてここで確定。番組放送前のため認知度はあまりない状況での収録。</div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-date">2026.03.26</div>
+      <div class="tl-label">📺 番組配信スタート・投票開始</div>
+      <div class="tl-note">第1話配信（初顔合わせ＋クラス分けテスト前半組）。1日1回投票可能、期間は4/17まで。</div>
+    </div>
+    <div class="tl-item accent">
+      <div class="tl-date">2026.04.02</div>
+      <div class="tl-label">📢 二週目途中経過順位発表 ＝ vote_r1</div>
+      <div class="tl-note">投票開始から約1週間の積算。第2話（クラス分けテスト後半＋再評価）配信日。</div>
+    </div>
+    <div class="tl-item gold">
+      <div class="tl-date">2026.04.09</div>
+      <div class="tl-label">📺 グループバトル前半組放送（第3話）／ 三週目途中経過順位発表 ＝ vote_r2</div>
+      <div class="tl-note">投票開始から約2週間の積算。<strong>vote_r2はこの放送の影響をほぼ受けていない。</strong></div>
+    </div>
+    <div class="tl-item cyan">
+      <div class="tl-date">2026.04.12</div>
+      <div class="tl-label">▶ 推しカメラ公開（mnelplus）</div>
+      <div class="tl-note">投票締め切り5日前。後半組放送（4/16）の4日前。バトル投票とは無関係で、<strong>4/17締め切りのオンライン投票への押し上げ要因</strong>として機能した可能性がある。</div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-date">2026.04.16</div>
+      <div class="tl-label">📺 グループバトル後半組放送（第4話）</div>
+      <div class="tl-note">投票締め切りの前日。後半組にとっては事実上1日しか放送効果が出ない。</div>
+    </div>
+    <div class="tl-item green">
+      <div class="tl-date">2026.04.17</div>
+      <div class="tl-label">🗳 投票締め切り</div>
+      <div class="tl-note">3/26〜4/17の積算が第1回順位発表（4/24）に反映。バトル放送が投票に与えた影響はあるのか要検証。</div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-date">2026.04.24</div>
+      <div class="tl-label">📺 第1回順位発表式（第5話）50位以内が生存</div>
+    </div>
+  </div>
+
+  <div class="insight gold">
+    現在持っているvote_r1・vote_r2はどちらも<strong>バトル放送前後の途中経過</strong>であり、バトル結果と投票順位の因果関係は「傾向として読める」程度に留めるのが誠実。バトル放送が投票を本当に動かしたかどうかは、4/24の順位発表データが出て初めて検証できる。
+  </div>
+</div>
+
+<!-- 1. 投票ルールの構造 -->
+<div class="section">
+  <div class="section-head">
+    <span class="section-num">01</span>
+    <span class="section-title">グループバトルの票数構造</span>
+  </div>
+  <p>バトルの勝敗判定と個人の総得票数の計算は、まったく別のロジックで動いている。ここを整理しないと数字の読み違いが起きる。</p>
+
+  <div class="two-col">
+    <div class="col-card">
+      <div class="col-title" style="color:var(--cyan)">チーム勝敗の判定</div>
+      <p style="font-size:0.78rem;color:#ccc;line-height:1.8;">チーム全員の<strong>個人獲得票数の合計</strong>＋<strong>FREE PART票数の合計</strong>（×1のまま）を相手チームと比較。多い方が勝ち。FREE PARTの倍率はここでは関係ない。</p>
+    </div>
+    <div class="col-card">
+      <div class="col-title" style="color:var(--gold)">個人の総得票数（バトル個人順位に使用）</div>
+      <p style="font-size:0.78rem;color:#ccc;line-height:1.8;">
+        <strong>勝利 ＋ FREE勝ち：</strong>個人票 ＋ FREE×4 ＋ 2000<br>
+        <strong>勝利 ＋ FREE負け：</strong>個人票 ＋ FREE×1 ＋ 2000<br>
+        <strong>引き分け（FREE同数）：</strong>個人票 ＋ FREE×2 ＋ 2000<br>
+        <strong>敗北：</strong>個人票 ＋ FREE×1
+      </p>
+    </div>
+  </div>
+
+  <p>FREE PART票の×4 ベネフィットは「バトルに勝った」かつ「FREE PART得票数でも相手を上回った」の両条件が必要。どちらか一方では4倍にならない。</p>
+
+  <div class="tbl-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>バトル</th>
+          <th>放送</th>
+          <th>T1 スコア<br><span style="font-size:0.58rem;opacity:0.6">個人票計+FREE票計</span></th>
+          <th>T2 スコア<br><span style="font-size:0.58rem;opacity:0.6">個人票計+FREE票計</span></th>
+          <th>勝者</th>
+          <th>FREE PART ベネフィット</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>ENHYPEN「Bite Me」</td>
+          <td style="text-align:right">前半</td>
+          <td>417</td>
+          <td><strong style="color:var(--green)">630</strong></td>
+          <td><span class="tag tag-win">TEAM2</span></td>
+          <td><span class="tag tag-x4">×4 ベネフィット</span></td>
+        </tr>
+        <tr>
+          <td>JO1「Love seeker」</td>
+          <td style="text-align:right">前半</td>
+          <td><strong style="color:var(--green)">595</strong></td>
+          <td>436</td>
+          <td><span class="tag tag-win">TEAM1</span></td>
+          <td><span class="tag tag-x4">×4 ベネフィット</span></td>
+        </tr>
+        <tr>
+          <td>Ado「Show」</td>
+          <td style="text-align:right">前半</td>
+          <td>280</td>
+          <td><strong style="color:var(--green)">681</strong></td>
+          <td><span class="tag tag-win">TEAM2</span></td>
+          <td><span class="tag tag-x4">×4 ベネフィット</span></td>
+        </tr>
+        <tr>
+          <td>米津玄師「IRIS OUT」</td>
+          <td style="text-align:right">前半</td>
+          <td>549</td>
+          <td><strong style="color:var(--green)">611</strong></td>
+          <td><span class="tag tag-win">TEAM2</span></td>
+          <td><span class="tag tag-x4">×4 ベネフィット</span></td>
+        </tr>
+        <tr>
+          <td>INI「LOUD」</td>
+          <td style="text-align:right">後半</td>
+          <td><strong style="color:var(--green)">633</strong></td>
+          <td>391</td>
+          <td><span class="tag tag-win">TEAM1</span></td>
+          <td><span class="tag tag-x4">×4 ベネフィット</span></td>
+        </tr>
+        <tr>
+          <td>SEKAI NO OWARI「The Peak」</td>
+          <td style="text-align:right">後半</td>
+          <td><strong style="color:var(--green)">556</strong></td>
+          <td>527</td>
+          <td><span class="tag tag-win">TEAM1</span></td>
+          <td><span class="tag tag-x2">×2 引分</span></td>
+        </tr>
+        <tr>
+          <td>Stray Kids「CASE 143」</td>
+          <td style="text-align:right">後半</td>
+          <td><strong style="color:var(--green)">545</strong></td>
+          <td>475</td>
+          <td><span class="tag tag-win">TEAM1</span></td>
+          <td><span class="tag tag-none">なし</span></td>
+        </tr>
+        <tr>
+          <td>Wanna One「Energetic」</td>
+          <td style="text-align:right">後半</td>
+          <td>568</td>
+          <td><strong style="color:var(--green)">583</strong></td>
+          <td><span class="tag tag-win">TEAM2</span></td>
+          <td><span class="tag tag-none">なし</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="insight">
+    8バトル中、勝者が×4 FREE PART ベネフィットを得たのは5つ。SEKAI NO OWARIはFREE同数で×2。Stray KidsとWanna Oneは<strong>勝者でもFREEで負けていたためベネフィットなし</strong>というレアケース。この2バトルはどちらのチームもFREE PART ベネフィットを得られなかった唯一のケースになっている。
+  </div>
+</div>
+
+<!-- 2. 現場評価とファン支持の乖離 -->
+<div class="section">
+  <div class="section-head">
+    <span class="section-num">02</span>
+    <span class="section-title">「現場の目」と「ファンの票」は別軸だった</span>
+  </div>
+  <p>バトル収録は2/23——番組スタート(3/26)の約1ヶ月前で、番組放送前のため練習生の認知度はあまりない状況。現場観覧者はフラットな目で見ており、「ビジュアルやパフォーマンスの瞬発力」が評価されやすい条件だったと考えられる。</p>
+  <p>結果として、現場での個人票が多い人と、投票順位が高い人の顔ぶれがかなり異なる。</p>
+
+  <div class="two-col">
+    <div class="col-card">
+      <div class="col-title" style="color:var(--orange)">現場高評価 → 投票低迷</div>
+      <div class="col-row" style="font-size:0.65rem;color:var(--muted);padding-bottom:5px;">(個人票50以上 かつ 投票30位以下)</div>
+      <div class="col-row"><span class="col-name">岡田 彪吾</span><span class="col-val">個人票175 / 投票75位</span></div>
+      <div class="col-row"><span class="col-name">柳谷 伊冴</span><span class="col-val">個人票102 / 投票37位</span></div>
+      <div class="col-row"><span class="col-name">南平 達矢</span><span class="col-val">個人票77 / 投票47位</span></div>
+      <div class="col-row"><span class="col-name">宮里 拓利</span><span class="col-val">個人票72 / 投票95位</span></div>
+      <div class="col-row"><span class="col-name">本荘 晃</span><span class="col-val">個人票66 / 投票52位</span></div>
+      <div class="col-row"><span class="col-name">岡戸 竜芽</span><span class="col-val">個人票62 / 投票84位</span></div>
+      <div class="col-row"><span class="col-name">岩城 慎二</span><span class="col-val">個人票59 / 投票66位</span></div>
+      <div class="col-row"><span class="col-name">黒﨑 貫汰</span><span class="col-val">個人票54 / 投票56位</span></div>
+      <p style="font-size:0.72rem;color:var(--muted);margin-top:0.6rem;">全員日本人。</p>
+    </div>
+    <div class="col-card">
+      <div class="col-title" style="color:var(--cyan)">投票上位 → 現場低評価</div>
+      <div class="col-row" style="font-size:0.65rem;color:var(--muted);padding-bottom:5px;">(個人票15未満 かつ 投票20位以内)</div>
+      <div class="col-row"><span class="col-name">アダム・ナガイ</span><span class="col-val">個人票1 / 投票7位</span></div>
+      <div class="col-row"><span class="col-name">アーチャー・ウイ</span><span class="col-val">個人票8 / 投票18位</span></div>
+      <div class="col-row"><span class="col-name">板倉 悠太</span><span class="col-val">個人票6 / 投票19位</span></div>
+      <p style="font-size:0.72rem;color:var(--muted);margin-top:0.6rem;">グローバル2名＋日本人1名。</p>
+    </div>
+  </div>
+
+  <div class="insight cyan">
+    投票TOP10のうち、バトル個人順位が20位以内なのは<strong>照井 康祐（バトル2位）のみ</strong>。残り9名はバトルで60〜84位という下位に集中している。この段階では「ファンの支持」と「現場の評価」はほぼ別物として動いていた。
+  </div>
+</div>
+
+<!-- 3. 国籍と評価の乖離 -->
+<div class="section">
+  <div class="section-head">
+    <span class="section-num">03</span>
+    <span class="section-title">グローバル参加者の逆転現象</span>
+  </div>
+  <p>101名のうち18名（17.8%）がグローバル参加者（カタカナ表記の名前）。この2グループで、バトル個人順位と投票順位の関係がはっきり逆転している。</p>
+
+  <div class="tbl-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>グループ</th>
+          <th>人数</th>
+          <th>バトル個人順位（平均）</th>
+          <th>投票順位 4/9（平均）</th>
+          <th>乖離（投票−バトル）</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>日本人</td>
+          <td>83</td>
+          <td>47.7位</td>
+          <td>53.7位</td>
+          <td style="color:var(--muted)">+5.9（バトルの方が上）</td>
+        </tr>
+        <tr>
+          <td><span class="tag tag-global">グローバル</span></td>
+          <td>18</td>
+          <td>65.6位</td>
+          <td><strong style="color:var(--green)">38.7位</strong></td>
+          <td style="color:var(--green)">−26.9（投票の方が上）</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>グローバル参加者は投票順位がバトル個人順位より平均で約27位も上。日本人はその逆。これには複数の要因が考えられる。</p>
+
+  <div class="insight">
+    <strong>要因の候補として考えられること：</strong><br>
+    ① 番組放送前のため認知度はあまりない状況での収録 → 現場観覧者が日本人中心で、日本人練習生を評価しやすかった可能性<br>
+    ② グローバル参加者のファン層が番組配信で認知を広げ、投票に繋がった可能性<br>
+    ③ グローバル参加者のファンが海外在住で現場に来づらい構造<br><br>
+    いずれも「可能性」の話であり、これだけで断定はできない。傾向として興味深い、という程度に留めておく。
+  </div>
+
+  <div class="tbl-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>名前</th>
+          <th>国籍</th>
+          <th>バトル個人順位</th>
+          <th>投票順位（4/9）</th>
+          <th>乖離</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>オ・シンヘン</td><td><span class="tag tag-global">G</span></td><td>78位</td><td style="color:var(--green)">6位</td><td style="color:var(--green)">−72</td></tr>
+        <tr><td>アダム・ナガイ</td><td><span class="tag tag-global">G</span></td><td>84位</td><td style="color:var(--green)">7位</td><td style="color:var(--green)">−77</td></tr>
+        <tr><td>アーチャー・ウイ</td><td><span class="tag tag-global">G</span></td><td>99位</td><td style="color:var(--green)">18位</td><td style="color:var(--green)">−81</td></tr>
+        <tr><td>パク・シヨン</td><td><span class="tag tag-global">G</span></td><td>62位</td><td style="color:var(--green)">5位</td><td style="color:var(--green)">−57</td></tr>
+        <tr><td>ユ・ヒョンスン</td><td><span class="tag tag-global">G</span></td><td>58位</td><td>10位</td><td style="color:var(--green)">−48</td></tr>
+        <tr><td>リュウ・カイチ</td><td><span class="tag tag-global">G</span></td><td>19位</td><td>73位</td><td style="color:var(--red)">+54</td></tr>
+        <tr><td>シン・ジョンウク</td><td><span class="tag tag-global">G</span></td><td>100位</td><td>101位</td><td style="color:var(--muted)">+1</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- 4. Energeticバトル -->
+<div class="section">
+  <div class="section-head">
+    <span class="section-num">04</span>
+    <span class="section-title">Wanna One「Energetic」— 最も複雑な構造</span>
+  </div>
+  <p>8バトルの中でもっとも見応えのある結果になったのがこのバトル。実力者が集まったTEAM1と、中堅どころのTEAM2の対戦で、勝敗・FREE・ベネフィットのすべてが絡み合っている。</p>
+
+  <div class="vs-block">
+    <div class="vs-team loser">
+      <div class="vs-label">TEAM 1 — LOSE</div>
+      <div class="vs-title">実力者集団</div>
+      <div class="vs-stat"><span class="vs-stat-label">個人票合計</span><span class="vs-stat-val">188</span></div>
+      <div class="vs-stat"><span class="vs-stat-label">FREE PART得票数</span><span class="vs-stat-val" style="color:var(--green)">380 ✓多</span></div>
+      <div class="vs-stat"><span class="vs-stat-label">合計スコア</span><span class="vs-stat-val">568</span></div>
+      <div style="margin-top:0.75rem;font-size:0.65rem;color:var(--muted);margin-bottom:0.4rem;letter-spacing:0.05em;">MEMBER / 個人票 / 投票順位</div>
+      <div class="vs-member"><span class="vs-member-name">安部 結蘭</span><span class="vs-member-val">42票 / 4位</span></div>
+      <div class="vs-member"><span class="vs-member-name">矢田 佳暉</span><span class="vs-member-val">39票 / 3位</span></div>
+      <div class="vs-member"><span class="vs-member-name">パク・シヨン</span><span class="vs-member-val">36票 / 5位</span></div>
+      <div class="vs-member"><span class="vs-member-name">加藤 大樹</span><span class="vs-member-val">29票 / 2位</span></div>
+      <div class="vs-member"><span class="vs-member-name">ユン・ジェヨン</span><span class="vs-member-val">22票 / 33位</span></div>
+      <div class="vs-member"><span class="vs-member-name">小笠原 ジュゼッペ 慧</span><span class="vs-member-val">20票 / 20位</span></div>
+    </div>
+    <div class="vs-divider">VS</div>
+    <div class="vs-team winner">
+      <div class="vs-label">TEAM 2 — WIN</div>
+      <div class="vs-title">中堅〜下位層</div>
+      <div class="vs-stat"><span class="vs-stat-label">個人票合計</span><span class="vs-stat-val" style="color:var(--green)">219 ✓多</span></div>
+      <div class="vs-stat"><span class="vs-stat-label">FREE PART得票数</span><span class="vs-stat-val">364</span></div>
+      <div class="vs-stat"><span class="vs-stat-label">合計スコア</span><span class="vs-stat-val">583</span></div>
+      <div style="margin-top:0.75rem;font-size:0.65rem;color:var(--muted);margin-bottom:0.4rem;letter-spacing:0.05em;">MEMBER / 個人票 / 投票順位</div>
+      <div class="vs-member"><span class="vs-member-name">杉山 竜司</span><span class="vs-member-val" style="color:var(--gold)">86票 / 25位</span></div>
+      <div class="vs-member"><span class="vs-member-name">土田 央修</span><span class="vs-member-val">40票 / 14位</span></div>
+      <div class="vs-member"><span class="vs-member-name">後藤 結</span><span class="vs-member-val">38票 / 17位</span></div>
+      <div class="vs-member"><span class="vs-member-name">堀尾 聖</span><span class="vs-member-val">33票 / 63位</span></div>
+      <div class="vs-member"><span class="vs-member-name">松田 太雅</span><span class="vs-member-val">14票 / 32位</span></div>
+      <div class="vs-member"><span class="vs-member-name">櫻井 楓真</span><span class="vs-member-val">8票 / 59位</span></div>
+    </div>
+  </div>
+
+  <div class="insight red">
+    TEAM1の個人票は42・39・36・29…と均等にばらけている。実力者が揃っているのに票が集中しない——これは「現場観覧者がフラットに見た」ことで票がばらけた、という仮説と整合する。<br><br>
+    対してTEAM2は杉山竜司の86票が突出。観覧者の目に「一番目立った人」が明確だったことを示している可能性がある。
+  </div>
+
+  <div class="insight orange">
+    TEAM1の視点で整理すると：FREE PART得票数では相手を上回った（380 vs 364）→ でも個人票で31票差で負けた → 敗北チームなのでFREE PART ベネフィットなし。<strong>チームへの支持（FREE PART）は多かったのに、3つの条件がすべて裏目に出た</strong>バトルだった。Stray Kidsも同様に、どちらもFREE PART ベネフィットを得られなかった唯一のケースになっている。
+  </div>
+</div>
+
+<!-- 5. 推しカメラと投票の関係 -->
+<div class="section">
+  <div class="section-head">
+    <span class="section-num">05</span>
+    <span class="section-title">推しカメラ（4/12公開）の位置づけ</span>
+  </div>
+  <p>推しカメラ（mnelplus）の公開は4/12で、グループバトルの現場収録(2/23)からは約7週間後。バトルの投票（個人票・FREE票）はすでに2/23に確定しているため、推しカメラ再生数がバトル結果に影響することはありえない。</p>
+  <p>推しカメラ再生数が測っているのは「放送後の注目度・人気」であり、<strong>4/17投票締め切りに向けたオンライン投票の押し上げ要因</strong>として機能した可能性がある指標として読む。</p>
+
+  <div class="insight cyan">
+    後半組の推しカメラ上位には、Energeticバトル（注目対戦カード）のメンバーが集中している。杉山竜司・土田央修・後藤結はEnergetic TEAM2として話題を集め、その注目が推しカメラの再生数に波及したと見るのが自然。<br><br>
+    「もともとの人気」＋「注目カードによる認知の波及」の2つが再生数を押し上げた。
+  </div>
+
+  <div class="tbl-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>名前</th>
+          <th>バトル</th>
+          <th>推しカメラ 4/12</th>
+          <th>推しカメラ 4/14</th>
+          <th>2日間伸び</th>
+          <th>投票順位（4/9）</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>杉山 竜司</td><td style="text-align:right;font-size:0.68rem">Energetic T2</td><td>26,878</td><td>69,871</td><td style="color:var(--green)">+42,993</td><td>25位</td></tr>
+        <tr><td>加藤 大樹</td><td style="text-align:right;font-size:0.68rem">Energetic T1</td><td>21,713</td><td>44,967</td><td style="color:var(--green)">+23,254</td><td>2位</td></tr>
+        <tr><td>パク・シヨン</td><td style="text-align:right;font-size:0.68rem">Energetic T1</td><td>18,378</td><td>42,536</td><td style="color:var(--green)">+24,158</td><td>5位</td></tr>
+        <tr><td>土田 央修</td><td style="text-align:right;font-size:0.68rem">Energetic T2</td><td>17,610</td><td>40,224</td><td style="color:var(--green)">+22,614</td><td>14位</td></tr>
+        <tr><td>安部 結蘭</td><td style="text-align:right;font-size:0.68rem">Energetic T1</td><td>14,248</td><td>35,373</td><td style="color:var(--green)">+21,125</td><td>4位</td></tr>
+        <tr><td>濱田 永遠</td><td style="text-align:right;font-size:0.68rem">Stray Kids T2</td><td>15,182</td><td>34,038</td><td style="color:var(--green)">+18,856</td><td>16位</td></tr>
+        <tr><td>矢田 佳暉</td><td style="text-align:right;font-size:0.68rem">Energetic T1</td><td>14,256</td><td>31,141</td><td style="color:var(--green)">+16,885</td><td>3位</td></tr>
+        <tr><td>飯塚 亮賀</td><td style="text-align:right;font-size:0.68rem">SEKAI NO T2</td><td>14,805</td><td>29,558</td><td style="color:var(--green)">+14,753</td><td>11位</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- 6. まとめ -->
+<div class="section">
+  <div class="section-head">
+    <span class="section-num">06</span>
+    <span class="section-title">まとめ：グループバトルが示した構造</span>
+  </div>
+
+  <div class="insight green">
+    <strong>① バトル収録（2/23）は認知度があまりない状況だった</strong><br>
+    番組スタートの1ヶ月前、投票開始の約1ヶ月前という時点での収録。番組放送前のため認知度はあまりない状況であり、現場観覧者はフラットな目で見ており、ファン人気とは独立した評価が行われた可能性がある。
+  </div>
+  <div class="insight gold">
+    <strong>② 「現場の票」と「ファンの投票」は別軸で動いている</strong><br>
+    バトル個人票で上位の練習生と、投票順位で上位の練習生はほぼ重ならない。投票TOP10のうちバトル20位以内は照井康祐のみ。この2つのデータは「別の何か」を測っている。
+  </div>
+  <div class="insight cyan">
+    <strong>③ グローバル参加者は投票でバトルを逆転している</strong><br>
+    バトル個人順位は平均65.6位（日本人47.7位）だが、投票順位は平均38.7位（日本人53.7位）。約27位の乖離が生じている。現場での評価軸と、配信・投票での評価軸がグループによって異なる。
+  </div>
+  <div class="insight orange">
+    <strong>④ Energetic TEAM1は「構造的な不運」を引いた</strong><br>
+    FREE PART得票数では上回りながら個人票の31票差で敗北、かつ敗北チームなのでFREE PART ベネフィットなし。投票最上位層が集まったチームが最も点数上の恩恵を受けられなかった。
+  </div>
+  <div class="insight pink">
+    <strong>⑤ バトル放送が投票を動かしたかは、まだわからない</strong><br>
+    vote_r2（4/9）はグループバトル前半放送当日の数字であり、放送効果はほぼ反映されていない。バトル結果と投票の因果関係は4/24の第1回順位発表データが出て初めて検証できる。
+  </div>
+</div>
+
+<div style="border-top:1px solid var(--border);padding-top:1.5rem;margin-top:2rem;">
+  <p style="font-size:0.72rem;color:var(--hint);line-height:1.8;">
+    新世界 数値トラッカー / 時代研究所<br>
+    本レポートは公開データをもとにした分析であり、番組の公式見解ではありません。<br>
+    数値の断定的な解釈は避け、「傾向として読める」範囲での考察を心がけています。
+  </p>
+</div>
+
+</div>
+</body>
+</html>
