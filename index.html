@@ -49,6 +49,8 @@ input[type=text]::placeholder{color:var(--hint);}
 .badge-cls-keep{background:rgba(136,136,132,0.15);color:var(--cls-keep);border:1px solid rgba(136,136,132,0.3);}
 .badge-cls-down{background:rgba(255,92,53,0.12);color:var(--cls-down);border:1px solid rgba(255,92,53,0.25);}
 .badge-cls-aa{background:rgba(240,192,64,0.15);color:var(--cls-aa);border:1px solid rgba(240,192,64,0.4);}
+.badge-elim{background:rgba(128,128,128,0.15);color:#777;border:1px solid rgba(128,128,128,0.3);}
+tr.elim-row{opacity:0.45;}
 .td-cls-aa{color:var(--cls-aa)!important;}
 .td-cls-up{color:var(--cls-up)!important;}
 .td-cls-keep{color:var(--cls-keep)!important;}
@@ -227,6 +229,14 @@ tr:hover td{background:var(--surface);}
       再生数の週間伸び率（注目度）と投票順位（人気）の関係を2軸で可視化します。左上＝注目されているのに票が入っていない「埋もれた逸材」ゾーン、右上＝再生も票も伸びている最注目ゾーン。点の色はクラス変動を表し、金色はA→Aのトップ維持。
     </blockquote>
     <p class="sub-label" id="scatter-sublabel" style="margin-top:-0.4rem;">縦軸: 週間伸び率　横軸: 投票順位（右が1位）　点の色: クラス変動</p>
+    <div class="row" style="margin-bottom:0.5rem;">
+      <span class="label">通過状況:</span>
+      <select id="scatter-survival" onchange="renderScatter()">
+        <option value="all">脱落含む全員</option>
+        <option value="survived">通過者のみ（〜50位）</option>
+        <option value="elim">脱落者のみ（51位〜）</option>
+      </select>
+    </div>
     <div class="row">
       <span class="label">クラス絞り込み:</span>
       <select id="scatter-filter" onchange="renderScatter()">
@@ -797,8 +807,10 @@ function renderWatch(){
     const spark=sparkline(d.vals, tierColor[d.tier]);
     const br = rawBattleResult[d.reading];
     const battleBadge = br ? (br.result==='WIN' ? '<span class="badge badge-rise">G：WIN</span>' : '<span class="badge badge-hot">G：LOSE</span>') : '';
+    const latestRank = d.votes.length ? d.votes[d.votes.length-1] : null;
+    const elimBadge = (latestRank != null && latestRank >= 51) ? ' <span class="badge badge-elim">脱落</span>' : '';
     return `<div class="card">
-      <div class="card-name">${d.name} <span style="font-size:0.6rem;color:var(--hint);font-family:monospace;">${d.reading}</span></div>
+      <div class="card-name">${d.name} <span style="font-size:0.6rem;color:var(--hint);font-family:monospace;">${d.reading}</span>${elimBadge}</div>
       <div class="card-val" style="color:${tierColor[d.tier]}">${gStr}</div>
       <div class="card-sub">${gAbsStr} &nbsp;${d.cur.toFixed(1)}万 <span class="badge badge-${d.tier}">${tierLabel[d.tier]}</span> ${clsBadgeHtml(d)} ${battleBadge}</div>
       ${spark}
@@ -887,8 +899,12 @@ function renderAll(){
     const lcColor = d.level==='前半組' ? 'color:var(--accent)' : 'color:var(--muted)';
     const bcBg = d.broadcast==='前半組' ? 'rgba(96,200,224,0.15)' : 'rgba(224,128,192,0.15)';
     const bcTxt = d.broadcast==='前半組' ? '#60c8e0' : '#e080c0';
-    html+=`<tr>
-      <td>${d.name}</td>
+    const latestRankAll = d.votes.length ? d.votes[d.votes.length-1] : null;
+    const isElim = latestRankAll != null && latestRankAll >= 51;
+    const elimBadgeAll = isElim ? ' <span class="badge badge-elim">脱落</span>' : '';
+    const elimRowCls = isElim ? ' class="elim-row"' : '';
+    html+=`<tr${elimRowCls}>
+      <td>${d.name}${elimBadgeAll}</td>
       <td style="color:var(--hint);font-size:0.7rem;">${d.reading}</td>
       <td style="text-align:center;">${d.classFirst}</td>
       <td style="text-align:center;" class="${cc}">${d.classEval}${arrow}</td>
@@ -1119,6 +1135,9 @@ function renderScatter(){
 
   // 絞り込み
   let list = [...scatterAllList];
+  const survival = document.getElementById('scatter-survival').value;
+  if(survival==='survived') list = list.filter(d => d.votes[d.votes.length-1] <= 50);
+  else if(survival==='elim') list = list.filter(d => d.votes[d.votes.length-1] >= 51);
   if(filter==='aa') list = list.filter(d => d.clsLabel==='aa');
   else if(filter==='up') list = list.filter(d => d.clsLabel==='up');
   else if(filter==='keep') list = list.filter(d => d.clsLabel==='keep');
