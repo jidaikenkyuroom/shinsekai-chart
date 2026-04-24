@@ -92,6 +92,7 @@ tr:hover td{background:var(--surface);}
 .team-bar-val{font-size:0.68rem;font-family:monospace;width:88px;text-align:right;flex-shrink:0;}
 .song-card{margin-bottom:1.5rem;padding:1rem;background:var(--surface);border-radius:8px;border:1px solid var(--border);}
 .member-chip{display:inline-block;font-size:0.67rem;padding:2px 6px;border-radius:4px;margin:2px;color:var(--muted);}
+.asec{display:none}.asec.active{display:block}
 </style>
 </head>
 <body>
@@ -130,7 +131,7 @@ tr:hover td{background:var(--surface);}
   <button class="tab" onclick="switchTab('all')">全員テーブル</button>
   <button class="tab" onclick="switchTab('trend')">推移グラフ</button>
   <button class="tab" onclick="switchTab('heat')">ヒートマップ</button>
-  <button class="tab" onclick="switchTab('scatter')">散布図</button>
+  <button class="tab" onclick="switchTab('analysis')">背景分析</button>
   <button class="tab" onclick="switchTab('battle')">グループバトル</button>
 </div>
 <div class="main">
@@ -220,77 +221,122 @@ tr:hover td{background:var(--surface);}
     <div id="heatmap-wrap"></div>
   </div>
 
-  <div id="tab-scatter" class="section">
+  <div id="tab-analysis" class="section">
     <div class="g-tabs" style="margin-bottom:0.75rem;">
-      <button class="g-tab active" id="smtab-note" onclick="switchScatterMode('note')">注目度 vs 順位</button>
-      <button class="g-tab" id="smtab-skill" onclick="switchScatterMode('skill')">実力 vs 順位</button>
+      <button class="g-tab active" id="atab-vote" onclick="switchAnalysisTab('vote')">国民 vs SEKAI</button>
+      <button class="g-tab" id="atab-class" onclick="switchAnalysisTab('class')">クラス vs 順位</button>
+      <button class="g-tab" id="atab-timing" onclick="switchAnalysisTab('timing')">放送タイミング</button>
+      <button class="g-tab" id="atab-scatter" onclick="switchAnalysisTab('scatter')">再生数 vs 順位</button>
     </div>
-    <blockquote id="scatter-bq" style="border-left:3px solid var(--border2);background:var(--surface);padding:0.8rem 1.1rem;margin-bottom:1.25rem;border-radius:0 5px 5px 0;font-size:0.76rem;color:var(--text);opacity:0.75;line-height:1.8;">
-      再生数の週間伸び率（注目度）と投票順位（人気）の関係を2軸で可視化します。左上＝注目されているのに票が入っていない「埋もれた逸材」ゾーン、右上＝再生も票も伸びている最注目ゾーン。点の色はクラス変動を表し、金色はA→Aのトップ維持。
-    </blockquote>
-    <p class="sub-label" id="scatter-sublabel" style="margin-top:-0.4rem;">縦軸: 週間伸び率　横軸: 投票順位（右が1位）　点の色: クラス変動</p>
-    <div class="row" style="margin-bottom:0.5rem;">
-      <span class="label">通過状況:</span>
-      <select id="scatter-survival" onchange="renderScatter()">
-        <option value="all">脱落含む全員</option>
-        <option value="survived">通過者のみ（〜50位）</option>
-        <option value="elim">脱落者のみ（51位〜）</option>
-      </select>
-    </div>
-    <div class="row">
-      <span class="label">クラス絞り込み:</span>
-      <select id="scatter-filter" onchange="renderScatter()">
-        <option value="all">全員</option>
-        <option value="aa">A→Aのみ</option>
-        <option value="up">クラスUPのみ</option>
-        <option value="keep">クラス維持のみ</option>
-        <option value="down">クラスDOWNのみ</option>
-        <optgroup label="── 初回クラス ──">
-          <option value="first-A">初回Aクラスのみ</option>
-          <option value="first-B">初回Bクラスのみ</option>
-          <option value="first-C">初回Cクラスのみ</option>
-          <option value="first-D">初回Dクラスのみ</option>
-          <option value="first-F">初回Fクラスのみ</option>
-        </optgroup>
-        <optgroup label="── 再評価クラス ──">
-          <option value="eval-A">再評価Aクラスのみ</option>
-          <option value="eval-B">再評価Bクラスのみ</option>
-          <option value="eval-C">再評価Cクラスのみ</option>
-          <option value="eval-D">再評価Dクラスのみ</option>
-          <option value="eval-F">再評価Fクラスのみ</option>
-        </optgroup>
-      </select>
-    </div>
-    <div class="scatter-legend">
-      <span class="scatter-leg"><span class="scatter-dot" style="background:#f0c040"></span>A→A（トップ維持）</span>
-      <span class="scatter-leg"><span class="scatter-dot" style="background:#4ec87a"></span>クラスUP</span>
-      <span class="scatter-leg"><span class="scatter-dot" style="background:#888884"></span>クラス維持</span>
-      <span class="scatter-leg"><span class="scatter-dot" style="background:#ff5c35"></span>クラスDOWN</span>
-    </div>
-    <div style="margin-bottom:0.5rem;">
-      <button id="btn-compare" class="g-tab" onclick="toggleCompare()" style="font-size:0.72rem;">前後比較: OFF</button>
-    </div>
-    <div id="compare-legend" style="display:none;font-size:0.7rem;color:var(--muted);margin-bottom:0.75rem;line-height:2.2;">
-      ○ <span id="compare-prev-label"></span>（前回）&nbsp;→&nbsp;● <span id="compare-curr-label"></span>（今回）&nbsp;&nbsp;
-      <span style="color:rgba(78,200,122,0.9);">▶ 順位アップ（緑）</span>&nbsp;&nbsp;
-      <span style="color:rgba(255,92,53,0.9);">◀ 順位ダウン（赤）</span>
-    </div>
-    <div class="chart-wrap" style="height:460px;">
-      <canvas id="chartScatter"></canvas>
-    </div>
-    <p class="sub-label" style="margin-top:0.25rem;">※ 投票順位がない練習生は表示されません</p>
 
-    <!-- 象限カード -->
-    <div style="margin-top:1.5rem;">
-      <div class="g-tabs" id="quadrant-tabs">
-        <button class="g-tab active" onclick="switchQuadrant('tl')" id="qtab-tl"></button>
-        <button class="g-tab" onclick="switchQuadrant('tr')" id="qtab-tr"></button>
-        <button class="g-tab" onclick="switchQuadrant('bl')" id="qtab-bl"></button>
-        <button class="g-tab" onclick="switchQuadrant('br')" id="qtab-br"></button>
+    <!-- 国民 vs SEKAI票 -->
+    <div id="asec-vote" class="asec active">
+      <blockquote style="border-left:3px solid var(--border2);background:var(--surface);padding:0.8rem 1.1rem;margin-bottom:1.25rem;border-radius:0 5px 5px 0;font-size:0.76rem;color:var(--text);opacity:0.75;line-height:1.8;">
+        国民票とSEKAI票の分布を可視化します。右上＝両方から支持、上方＝SEKAI重視型、右方＝国民票型。グローバルランカーは枠線で強調。SEKAI比率が高いほどグローバルランカー選考で有利になります（SEKAI70%・国民30%）。
+      </blockquote>
+      <div class="chart-wrap" style="height:460px;"><canvas id="chartVoteBreakdown"></canvas></div>
+      <div style="margin-top:0.75rem;font-size:0.7rem;color:var(--muted);display:flex;gap:1rem;flex-wrap:wrap;">
+        <span><span style="color:#f0c040;">●</span> 固定ファン強(high)</span>
+        <span><span style="color:#4ec87a;">●</span> 固定ファン中(mid)</span>
+        <span><span style="color:#888884;">●</span> 固定ファン弱(low)</span>
+        <span style="color:var(--muted);">枠あり = グローバルランカー</span>
       </div>
-      <p class="sub-label" id="quadrant-desc" style="margin-bottom:0.75rem;"></p>
-      <div class="cards" id="quadrant-cards"></div>
     </div>
+
+    <!-- クラス vs 順位 -->
+    <div id="asec-class" class="asec">
+      <blockquote style="border-left:3px solid var(--border2);background:var(--surface);padding:0.8rem 1.1rem;margin-bottom:1.25rem;border-radius:0 5px 5px 0;font-size:0.76rem;color:var(--text);opacity:0.75;line-height:1.8;">
+        再評価クラス（実力）と第一回投票順位（人気）の関係を可視化します。「Aクラスなのに低順位」現象の構造的証明を試みます。縦軸上方が1位（人気）、横軸左がAクラス（実力）。同クラスは左右にランダム散布しています。
+      </blockquote>
+      <div class="chart-wrap" style="height:460px;"><canvas id="chartClassRank"></canvas></div>
+      <div style="margin-top:0.75rem;font-size:0.7rem;color:var(--muted);display:flex;gap:1rem;flex-wrap:wrap;">
+        <span><span style="color:#4ec87a;">●</span> 通過（1〜50位）</span>
+        <span><span style="color:rgba(100,100,100,0.6);">●</span> 脱落（51位〜）</span>
+      </div>
+    </div>
+
+    <!-- 放送タイミング × 順位 -->
+    <div id="asec-timing" class="asec">
+      <blockquote style="border-left:3px solid var(--border2);background:var(--surface);padding:0.8rem 1.1rem;margin-bottom:1.25rem;border-radius:0 5px 5px 0;font-size:0.76rem;color:var(--text);opacity:0.75;line-height:1.8;">
+        グループバトルの放送タイミング（前半・後半）と第一回投票順位の関係を可視化します。後半組は投票期間が1日しかなく、固定ファンが弱い練習生ほど不利とされています。破線は各グループの中央値順位。
+      </blockquote>
+      <div id="timing-stats" style="display:flex;gap:0.75rem;margin-bottom:1rem;flex-wrap:wrap;"></div>
+      <div class="chart-wrap" style="height:460px;"><canvas id="chartBroadcastTiming"></canvas></div>
+      <p class="sub-label" style="margin-top:0.25rem;">点の色: 再評価クラス（金=A, 緑=B, 水=C, 橙=D, 赤=F）　各グループ内で左右にランダム散布</p>
+    </div>
+
+    <!-- 再生数 vs 順位（既存散布図） -->
+    <div id="asec-scatter" class="asec">
+      <div class="g-tabs" style="margin-bottom:0.75rem;">
+        <button class="g-tab active" id="smtab-note" onclick="switchScatterMode('note')">注目度 vs 順位</button>
+        <button class="g-tab" id="smtab-skill" onclick="switchScatterMode('skill')">実力 vs 順位</button>
+      </div>
+      <blockquote id="scatter-bq" style="border-left:3px solid var(--border2);background:var(--surface);padding:0.8rem 1.1rem;margin-bottom:1.25rem;border-radius:0 5px 5px 0;font-size:0.76rem;color:var(--text);opacity:0.75;line-height:1.8;">
+        再生数の週間伸び率（注目度）と投票順位（人気）の関係を2軸で可視化します。左上＝注目されているのに票が入っていない「埋もれた逸材」ゾーン、右上＝再生も票も伸びている最注目ゾーン。点の色はクラス変動を表し、金色はA→Aのトップ維持。
+      </blockquote>
+      <p class="sub-label" id="scatter-sublabel" style="margin-top:-0.4rem;">縦軸: 週間伸び率　横軸: 投票順位（右が1位）　点の色: クラス変動</p>
+      <div class="row" style="margin-bottom:0.5rem;">
+        <span class="label">通過状況:</span>
+        <select id="scatter-survival" onchange="renderScatter()">
+          <option value="all">脱落含む全員</option>
+          <option value="survived">通過者のみ（〜50位）</option>
+          <option value="elim">脱落者のみ（51位〜）</option>
+        </select>
+      </div>
+      <div class="row">
+        <span class="label">クラス絞り込み:</span>
+        <select id="scatter-filter" onchange="renderScatter()">
+          <option value="all">全員</option>
+          <option value="aa">A→Aのみ</option>
+          <option value="up">クラスUPのみ</option>
+          <option value="keep">クラス維持のみ</option>
+          <option value="down">クラスDOWNのみ</option>
+          <optgroup label="── 初回クラス ──">
+            <option value="first-A">初回Aクラスのみ</option>
+            <option value="first-B">初回Bクラスのみ</option>
+            <option value="first-C">初回Cクラスのみ</option>
+            <option value="first-D">初回Dクラスのみ</option>
+            <option value="first-F">初回Fクラスのみ</option>
+          </optgroup>
+          <optgroup label="── 再評価クラス ──">
+            <option value="eval-A">再評価Aクラスのみ</option>
+            <option value="eval-B">再評価Bクラスのみ</option>
+            <option value="eval-C">再評価Cクラスのみ</option>
+            <option value="eval-D">再評価Dクラスのみ</option>
+            <option value="eval-F">再評価Fクラスのみ</option>
+          </optgroup>
+        </select>
+      </div>
+      <div class="scatter-legend">
+        <span class="scatter-leg"><span class="scatter-dot" style="background:#f0c040"></span>A→A（トップ維持）</span>
+        <span class="scatter-leg"><span class="scatter-dot" style="background:#4ec87a"></span>クラスUP</span>
+        <span class="scatter-leg"><span class="scatter-dot" style="background:#888884"></span>クラス維持</span>
+        <span class="scatter-leg"><span class="scatter-dot" style="background:#ff5c35"></span>クラスDOWN</span>
+      </div>
+      <div style="margin-bottom:0.5rem;">
+        <button id="btn-compare" class="g-tab" onclick="toggleCompare()" style="font-size:0.72rem;">前後比較: OFF</button>
+      </div>
+      <div id="compare-legend" style="display:none;font-size:0.7rem;color:var(--muted);margin-bottom:0.75rem;line-height:2.2;">
+        ○ <span id="compare-prev-label"></span>（前回）&nbsp;→&nbsp;● <span id="compare-curr-label"></span>（今回）&nbsp;&nbsp;
+        <span style="color:rgba(78,200,122,0.9);">▶ 順位アップ（緑）</span>&nbsp;&nbsp;
+        <span style="color:rgba(255,92,53,0.9);">◀ 順位ダウン（赤）</span>
+      </div>
+      <div class="chart-wrap" style="height:460px;">
+        <canvas id="chartScatter"></canvas>
+      </div>
+      <p class="sub-label" style="margin-top:0.25rem;">※ 投票順位がない練習生は表示されません</p>
+      <div style="margin-top:1.5rem;">
+        <div class="g-tabs" id="quadrant-tabs">
+          <button class="g-tab active" onclick="switchQuadrant('tl')" id="qtab-tl"></button>
+          <button class="g-tab" onclick="switchQuadrant('tr')" id="qtab-tr"></button>
+          <button class="g-tab" onclick="switchQuadrant('bl')" id="qtab-bl"></button>
+          <button class="g-tab" onclick="switchQuadrant('br')" id="qtab-br"></button>
+        </div>
+        <p class="sub-label" id="quadrant-desc" style="margin-bottom:0.75rem;"></p>
+        <div class="cards" id="quadrant-cards"></div>
+      </div>
+    </div>
+
   </div>
 
   <!-- ========== グループバトル ========== -->
@@ -477,10 +523,110 @@ const rawClass = [
 ["板倉 悠太","YUTA","B","F"],
 ];
 
+// ── 第一回順位発表式データ ──
+// [reading, rank, grRank|null, natPt|null, sekaiPt|null, totalPt|null]
+const rawRank1 = [
+["DAIKI.K",1,2,1296479,488603,1785492],["KINARI",2,6,1372025,392007,1764377],
+["YURA",3,3,1051560,501072,1553054],["YOSHIKI",4,1,939786,590728,1530933],
+["SHINHAENG",5,5,939330,472529,1412187],["SIYOUNG",6,4,897732,513636,1411784],
+["KOSUKE",7,10,981058,209766,1194391],["HYEONSEUNG",8,7,634710,426353,1061514],
+["TAKUTO.K",9,12,904298,147917,1055661],["ADAM",10,8,749512,298131,1047949],
+["GOTEN",11,null,804763,120893,929221],["RYOGA",12,null,783434,142348,926196],
+["OSUKE",13,null,714427,166755,883587],["REN.KO",14,9,565502,297370,866339],
+["TOWA",15,11,515483,268686,784543],["KEITO",16,null,577221,193555,771187],
+["YUKI",17,null,493758,180964,677125],["KOTARO",18,null,485986,188343,674618],
+["ISSA",19,null,554421,93744,651675],["HYUNJAE",20,null,491405,152334,644057],
+["KANAME",21,null,489111,147710,640295],["ARCHER",22,null,418956,215873,635060],
+["RYUJI",23,null,517442,107469,627362],["YUSEI.O",24,null,491658,123081,618187],
+["RICKEY",25,null,480239,116014,596495],["KOSHIRO",26,null,384186,203900,588448],
+["CHISATO",27,null,342390,232804,578670],["GIUSEPPE",28,null,413742,149834,563977],
+["YUTA",29,null,402896,156487,559733],["MAKI",30,null,454479,73019,531106],
+["RIKUTO.I",31,null,410634,48771,462848],["AYUMU.S",32,null,307665,135249,446330],
+["JAEYONG",33,null,224307,197307,422017],["SHU.Y",34,null,251103,156737,410550],
+["TAIGA.M",35,null,209257,194627,406263],["TAIGA.F",36,null,274222,102710,377259],
+["DONGMIN",37,null,259411,113469,376311],["RYOTA",38,null,285753,35288,324441],
+["YUMA",39,null,237995,63227,301538],["SENA",40,null,235534,56097,291936],
+["TATSUYA",41,null,210577,60123,271044],["SORA.T",42,null,200773,64374,268589],
+["KAICHI",43,null,199855,57688,260987],["WEIZE",44,null,133326,120464,257224],
+["MEI",45,null,211739,40894,252911],["RINTO",46,null,198103,48609,250191],
+["JAY",47,null,146040,103620,249896],["KAIMU",48,null,215997,30000,248719],
+["SHU.N",49,null,178864,66133,248417],["JUNSEI",50,null,203906,31643,238966],
+["REN.H",51,null,null,null,null],["JINICHIRO",52,null,null,null,null],
+["HIKARU",53,null,null,null,null],["YOHAN",54,null,null,null,null],
+["HIJIRI",55,null,null,null,null],["AKIRA",56,null,null,null,null],
+["EITO",57,null,null,null,null],["TAKUTO.O",58,null,null,null,null],
+["KYOHEI",59,null,null,null,null],["SHINJI",60,null,null,null,null],
+["SORA.S",61,null,null,null,null],["FUMA",62,null,null,null,null],
+["TAKUTO.M",63,null,null,null,null],["AJU",64,null,null,null,null],
+["RIKU",65,null,null,null,null],["DAIKI.I",66,null,null,null,null],
+["SOSHI",67,null,null,null,null],["YUSEI.S",68,null,null,null,null],
+["KANTA",69,null,null,null,null],["HARUTO",70,null,null,null,null],
+["SEITA",71,null,null,null,null],["RUI.M",72,null,null,null,null],
+["TOMOKI",73,null,null,null,null],["TRISTAN",74,null,null,null,null],
+["KOSEI",75,null,null,null,null],["HIROTO",76,null,null,null,null],
+["HYUGO",77,null,null,null,null],["TOKIYA",78,null,null,null,null],
+["MUSASHI",79,null,null,null,null],["RENTO",80,null,null,null,null],
+["AOM",81,null,null,null,null],["TETORA",82,null,null,null,null],
+["SOTA",83,null,null,null,null],["SOGO",84,null,null,null,null],
+["KANADE",85,null,null,null,null],["SHINSUKE",86,null,null,null,null],
+["HARUKU",87,null,null,null,null],["KEISHIN",88,null,null,null,null],
+["EITA",89,null,null,null,null],["TAKUMI",90,null,null,null,null],
+["RYUGA",91,null,null,null,null],["KENTO",92,null,null,null,null],
+["JUNGUK",93,null,null,null,null],["AYUMU.K",94,null,null,null,null],
+["KEIJIRO",94,null,null,null,null],["TERU",96,null,null,null,null],
+["RIKUTO.H",97,null,null,null,null],["RIKUYA",98,null,null,null,null],
+["JOE",99,null,null,null,null],["KEISUKE",100,null,null,null,null],
+["RUI.U",101,null,null,null,null],
+];
+
+// ── 練習生属性データ ── [reading, senseType, fanStr]
+const rawAttr = [
+["ADAM","performer","low"],["AJU","未経験","low"],["AKIRA","未経験","low"],
+["AOM","audition","high"],["ARCHER","未経験","low"],["AYUMU.K","未経験","low"],
+["AYUMU.S","audition","high"],["CHISATO","celeb_fam","mid"],["DAIKI.I","未経験","low"],
+["DAIKI.K","audition","high"],["DONGMIN","trainee","mid"],["EITA","未経験","low"],
+["EITO","audition","high"],["FUMA","未経験","low"],["GIUSEPPE","未経験","low"],
+["GOTEN","audition","high"],["HARUKU","未経験","low"],["HARUTO","未経験","low"],
+["HIJIRI","debut,audition","high"],["HIKARU","未経験","low"],["HIROTO","audition","high"],
+["HYEONSEUNG","debut,audition","high"],["HYUGO","performer","low"],["HYUNJAE","未経験","low"],
+["ISSA","未経験","low"],["JAEYONG","audition","high"],["JAY","未経験","low"],
+["JINICHIRO","未経験","low"],["JOE","未経験","low"],["JUNGUK","未経験","low"],
+["JUNSEI","未経験","low"],["KAICHI","未経験","low"],["KAIMU","未経験","low"],
+["KANADE","未経験","low"],["KANAME","未経験","low"],["KANTA","未経験","low"],
+["KEIJIRO","未経験","low"],["KEISHIN","未経験","low"],["KEISUKE","未経験","low"],
+["KEITO","reality","mid"],["KENTO","未経験","low"],["KINARI","未経験","low"],
+["KOSEI","未経験","low"],["KOSHIRO","未経験","low"],["KOSUKE","trainee","mid"],
+["KOTARO","debut,audition","high"],["KYOHEI","未経験","low"],["MAKI","未経験","low"],
+["MEI","未経験","low"],["MUSASHI","未経験","low"],["OSUKE","audition","high"],
+["REN.H","未経験","low"],["REN.KO","未経験","low"],["RENTO","未経験","low"],
+["RICKEY","audition","high"],["RIKU","未経験","low"],["RIKUTO.H","未経験","low"],
+["RIKUTO.I","celeb_fam","mid"],["RIKUYA","未経験","low"],["RINTO","未経験","low"],
+["RUI.M","未経験","low"],["RUI.U","未経験","low"],["RYOGA","未経験","low"],
+["RYOTA","trainee","mid"],["RYUGA","未経験","low"],["RYUJI","trainee","mid"],
+["SEITA","audition","high"],["SENA","audition","high"],["SHINHAENG","未経験","low"],
+["SHINJI","performer","low"],["SHINSUKE","未経験","low"],["SHU.N","未経験","low"],
+["SHU.Y","未経験","low"],["SIYOUNG","debut","high"],["SOGO","未経験","low"],
+["SORA.S","audition","high"],["SORA.T","未経験","low"],["SOSHI","未経験","low"],
+["SOTA","未経験","low"],["TAIGA.F","audition","high"],["TAIGA.M","audition","high"],
+["TAKUMI","未経験","low"],["TAKUTO.K","未経験","low"],["TAKUTO.M","未経験","low"],
+["TAKUTO.O","未経験","low"],["TATSUYA","reality","mid"],["TERU","未経験","low"],
+["TETORA","未経験","low"],["TOKIYA","audition","high"],["TOMOKI","未経験","low"],
+["TOWA","未経験","low"],["TRISTAN","未経験","low"],["WEIZE","未経験","low"],
+["YOHAN","未経験","low"],["YOSHIKI","audition","high"],["YUKI","reality","mid"],
+["YUMA","未経験","low"],["YURA","debut,audition","high"],["YUSEI.O","audition","high"],
+["YUSEI.S","未経験","low"],["YUTA","未経験","low"],
+];
+
 const voteMap = {};
 rawVote.forEach(r => { voteMap[r[0]] = r.slice(2); });
 const classMap = {};
 rawClass.forEach(r => { classMap[r[0]] = {first:r[2], eval:r[3]}; });
+const readingClassMap = {};
+rawClass.forEach(r => { readingClassMap[r[1]] = {first:r[2], eval:r[3], name:r[0]}; });
+const rank1Map = {};
+rawRank1.forEach(r => { rank1Map[r[0]] = {rank:r[1],grRank:r[2],natPt:r[3],sekaiPt:r[4],totalPt:r[5]}; });
+const attrMap = {};
+rawAttr.forEach(r => { attrMap[r[0]] = {sensei:r[1],fanStr:r[2]}; });
 
 function getClassDiff(first, eval_){
   return CLASS_ORDER[first] - CLASS_ORDER[eval_];
@@ -522,6 +668,7 @@ const tierColor={hot:'#ff5c35',rise:'#4ec87a',steady:'#555552'};
 const clsColor={up:'#4ec87a',keep:'#888884',down:'#ff5c35'};
 
 let selected=[], chartTrend=null, chartScatter=null, currentGraph='play';
+let chartVoteBreakdown=null, chartClassRank=null, chartBroadcastTiming=null;
 
 function saveSelection(){
   try{ localStorage.setItem('shinsekai_selected', JSON.stringify(selected)); }catch(e){}
@@ -535,14 +682,14 @@ function loadSelection(){
 }
 
 function switchTab(t){
-  ['watch','all','trend','heat','scatter','battle'].forEach((id,i)=>{
+  ['watch','all','trend','heat','analysis','battle'].forEach((id,i)=>{
     document.getElementById('tab-'+id).classList.toggle('active',id===t);
     document.querySelectorAll('.tab')[i].classList.toggle('active',id===t);
   });
   if(t==='all') renderAll();
   if(t==='trend') renderTrend();
   if(t==='heat') renderHeatmap();
-  if(t==='scatter') renderScatter();
+  if(t==='analysis') renderVoteBreakdown();
   if(t==='battle') renderBattle();
 }
 
@@ -2287,6 +2434,206 @@ function openTimelineModal(){
 
 function closeTimelineModal(){
   document.getElementById('timeline-modal').style.display = 'none';
+}
+
+function switchAnalysisTab(t){
+  ['vote','class','timing','scatter'].forEach(id=>{
+    document.getElementById('asec-'+id).classList.toggle('active',id===t);
+    document.getElementById('atab-'+id).classList.toggle('active',id===t);
+  });
+  if(t==='vote') renderVoteBreakdown();
+  if(t==='class') renderClassRank();
+  if(t==='timing') renderBroadcastTiming();
+  if(t==='scatter') setTimeout(renderScatter,0);
+}
+
+function renderVoteBreakdown(){
+  const colorByFan = {high:'#f0c040', mid:'#4ec87a', low:'#888884'};
+  const tooltipCfg = {
+    backgroundColor:'#1f1f24',borderColor:'rgba(255,255,255,0.13)',borderWidth:1,
+    bodyColor:'#f0f0ee',bodyFont:{family:'monospace',size:12},padding:10,displayColors:false,
+    callbacks:{label:ctx=>{
+      const p=ctx.raw;
+      const ratio=p.x+p.y>0?Math.round(p.y/(p.x+p.y)*100):0;
+      const gr=p.grRank?` GR${p.grRank}位`:'';
+      return[`${p.name}（${p.reading}）`,`順位: ${p.rank}位${gr}`,`国民: ${p.x.toFixed(1)}万 / SEKAI: ${p.y.toFixed(1)}万`,`SEKAI比率: ${ratio}%`];
+    }}
+  };
+  const points=rawRank1.filter(r=>r[3]!=null).map(r=>{
+    const rd=r[0],info=readingClassMap[rd]||{};
+    return{x:r[3]/10000,y:r[4]/10000,rank:r[1],grRank:r[2],reading:rd,
+      fanStr:(attrMap[rd]||{fanStr:'low'}).fanStr,isGR:r[2]!=null,name:info.name||rd};
+  });
+  const ctx=document.getElementById('chartVoteBreakdown').getContext('2d');
+  if(chartVoteBreakdown){chartVoteBreakdown.destroy();chartVoteBreakdown=null;}
+  chartVoteBreakdown=new Chart(ctx,{
+    type:'scatter',
+    data:{datasets:[{
+      data:points,
+      pointRadius:points.map(p=>p.isGR?7:5),
+      borderColor:points.map(p=>p.isGR?'#c8b8ff':'transparent'),
+      borderWidth:points.map(p=>p.isGR?2:0),
+      backgroundColor:points.map(p=>colorByFan[p.fanStr]||'#888884'),
+      hoverRadius:9,
+    }]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:tooltipCfg},
+      scales:{
+        x:{title:{display:true,text:'国民投票pt（万）',color:'#888',font:{size:11}},
+           grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#888'}},
+        y:{title:{display:true,text:'SEKAI投票pt（万）',color:'#888',font:{size:11}},
+           grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#888'}},
+      }
+    },
+    plugins:[{
+      id:'voteLabels',
+      afterDatasetsDraw(chart){
+        const c=chart.ctx,ds=chart.data.datasets[0];
+        ds.data.forEach((p,i)=>{
+          const m=chart.getDatasetMeta(0).data[i];
+          c.save();c.font='8px monospace';c.fillStyle='rgba(240,240,238,0.55)';
+          c.textAlign='center';c.fillText(p.reading,m.x,m.y-8);c.restore();
+        });
+      }
+    },{
+      id:'voteDiag',
+      beforeDatasetsDraw(chart){
+        const c=chart.ctx,sx=chart.scales.x,sy=chart.scales.y;
+        const x0=sx.getPixelForValue(0),x1=sx.getPixelForValue(sx.max);
+        const y0=sy.getPixelForValue(0),y1=sy.getPixelForValue(sy.max);
+        c.save();c.strokeStyle='rgba(200,184,255,0.2)';c.lineWidth=1;c.setLineDash([4,4]);
+        c.beginPath();c.moveTo(x0,y0);c.lineTo(Math.min(x1,y1+x0),Math.min(y1,x1-x0+y0));c.stroke();
+        c.setLineDash([]);c.restore();
+      }
+    }]
+  });
+}
+
+function renderClassRank(){
+  const clsX={A:0,B:1,C:2,D:3,F:4};
+  const tooltipCfg={
+    backgroundColor:'#1f1f24',borderColor:'rgba(255,255,255,0.13)',borderWidth:1,
+    bodyColor:'#f0f0ee',bodyFont:{family:'monospace',size:12},padding:10,displayColors:false,
+    callbacks:{label:ctx=>{
+      const p=ctx.raw;
+      return[`${p.name}（${p.reading}）`,`再評価クラス: ${p.evalCls}　順位: ${p.rank}位`,p.survived?'通過（〜50位）':'脱落（51位〜）'];
+    }}
+  };
+  const points=rawRank1.map(r=>{
+    const rd=r[0],info=readingClassMap[rd];
+    if(!info)return null;
+    const ec=info.eval;
+    if(!(ec in clsX))return null;
+    return{x:clsX[ec]+(Math.random()-0.5)*0.55,y:102-r[1],rank:r[1],reading:rd,
+      evalCls:ec,survived:r[1]<=50,name:info.name||rd};
+  }).filter(Boolean);
+  const ctx=document.getElementById('chartClassRank').getContext('2d');
+  if(chartClassRank){chartClassRank.destroy();chartClassRank=null;}
+  chartClassRank=new Chart(ctx,{
+    type:'scatter',
+    data:{datasets:[{
+      data:points,
+      backgroundColor:points.map(p=>p.survived?'rgba(78,200,122,0.75)':'rgba(100,100,100,0.35)'),
+      borderColor:points.map(p=>p.survived?'rgba(78,200,122,0.9)':'rgba(100,100,100,0.25)'),
+      borderWidth:1,
+      pointRadius:points.map(p=>p.survived?6:4),
+      hoverRadius:9,
+    }]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:tooltipCfg},
+      scales:{
+        x:{min:-0.5,max:4.5,
+           title:{display:true,text:'再評価クラス（左=高評価）',color:'#888',font:{size:11}},
+           grid:{color:'rgba(255,255,255,0.04)'},
+           ticks:{color:'#888',callback:v=>['A','B','C','D','F'][Math.round(v)]||''}},
+        y:{title:{display:true,text:'投票順位（上=1位）',color:'#888',font:{size:11}},
+           grid:{color:'rgba(255,255,255,0.04)'},
+           ticks:{color:'#888',callback:v=>v>0&&v<=101?(102-v)+'位':''}},
+      }
+    },
+    plugins:[{
+      id:'classLabels',
+      afterDatasetsDraw(chart){
+        const c=chart.ctx;
+        chart.data.datasets[0].data.forEach((p,i)=>{
+          if(!p.survived)return;
+          const m=chart.getDatasetMeta(0).data[i];
+          c.save();c.font='8px monospace';c.fillStyle='rgba(240,240,238,0.5)';
+          c.textAlign='center';c.fillText(p.reading,m.x,m.y-8);c.restore();
+        });
+      }
+    }]
+  });
+}
+
+function renderBroadcastTiming(){
+  const clsColor={A:'#f0c040',B:'#4ec87a',C:'#64c8e0',D:'#e8894e',F:'#ff5c35'};
+  const readingToBC={};
+  rawClass.forEach(r=>{const bc=broadcastMap[r[0]];if(bc)readingToBC[r[1]]=bc;});
+  const median=arr=>{const s=[...arr].sort((a,b)=>a-b);return s[Math.floor(s.length/2)];};
+  const tooltipCfg={
+    backgroundColor:'#1f1f24',borderColor:'rgba(255,255,255,0.13)',borderWidth:1,
+    bodyColor:'#f0f0ee',bodyFont:{family:'monospace',size:12},padding:10,displayColors:false,
+    callbacks:{label:ctx=>{
+      const p=ctx.raw;
+      return[`${p.name}（${p.reading}）`,`${p.bc}　${p.rank}位`,`再評価クラス: ${p.evalCls}`];
+    }}
+  };
+  const points=rawRank1.map(r=>{
+    const rd=r[0],bc=readingToBC[rd],info=readingClassMap[rd];
+    if(!bc||!info)return null;
+    const xBase=bc==='前半組'?0:1;
+    return{x:xBase+(Math.random()-0.5)*0.5,y:102-r[1],rank:r[1],reading:rd,
+      bc,evalCls:info.eval,name:info.name||rd};
+  }).filter(Boolean);
+  const zen=points.filter(p=>p.bc==='前半組'),ko=points.filter(p=>p.bc==='後半組');
+  const mz=median(zen.map(p=>p.rank)),mk=median(ko.map(p=>p.rank));
+  const statsEl=document.getElementById('timing-stats');
+  const card=(label,val,sub)=>`<div style="background:var(--surface);border-radius:7px;padding:0.75rem 1rem;min-width:115px;">
+    <div style="font-size:0.62rem;color:var(--muted);margin-bottom:3px;">${label}</div>
+    <div style="font-size:1.25rem;font-weight:500;font-family:monospace;">${val}</div>
+    <div style="font-size:0.62rem;color:var(--muted);">${sub}</div></div>`;
+  statsEl.innerHTML=
+    card('前半組 中央値',mz+'位',`${zen.length}名中 通過${zen.filter(p=>p.rank<=50).length}名`)+
+    card('後半組 中央値',mk+'位',`${ko.length}名中 通過${ko.filter(p=>p.rank<=50).length}名`)+
+    card('前半 Top10',zen.filter(p=>p.rank<=10).length+'名',`Top30: ${zen.filter(p=>p.rank<=30).length}名`)+
+    card('後半 Top10',ko.filter(p=>p.rank<=10).length+'名',`Top30: ${ko.filter(p=>p.rank<=30).length}名`);
+  const ctx=document.getElementById('chartBroadcastTiming').getContext('2d');
+  if(chartBroadcastTiming){chartBroadcastTiming.destroy();chartBroadcastTiming=null;}
+  chartBroadcastTiming=new Chart(ctx,{
+    type:'scatter',
+    data:{datasets:[{
+      data:points,
+      backgroundColor:points.map(p=>(clsColor[p.evalCls]||'#888884')+'bb'),
+      borderColor:'transparent',pointRadius:5,hoverRadius:9,
+    }]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:tooltipCfg},
+      scales:{
+        x:{min:-0.5,max:1.5,
+           title:{display:true,text:'放送タイミング',color:'#888',font:{size:11}},
+           grid:{color:'rgba(255,255,255,0.04)'},
+           ticks:{color:'#888',callback:v=>v===0?'前半組':v===1?'後半組':''}},
+        y:{title:{display:true,text:'投票順位（上=1位）',color:'#888',font:{size:11}},
+           grid:{color:'rgba(255,255,255,0.04)'},
+           ticks:{color:'#888',callback:v=>v>0&&v<=101?(102-v)+'位':''}},
+      }
+    },
+    plugins:[{
+      id:'timingMedian',
+      afterDatasetsDraw(chart){
+        const c=chart.ctx,sx=chart.scales.x,sy=chart.scales.y;
+        [[0,mz],[1,mk]].forEach(([xBase,med])=>{
+          const yPx=sy.getPixelForValue(102-med);
+          const xL=sx.getPixelForValue(xBase-0.3),xR=sx.getPixelForValue(xBase+0.3);
+          c.save();c.strokeStyle='rgba(200,184,255,0.55)';c.lineWidth=1.5;c.setLineDash([4,4]);
+          c.beginPath();c.moveTo(xL,yPx);c.lineTo(xR,yPx);c.stroke();
+          c.setLineDash([]);c.font='9px monospace';c.fillStyle='rgba(200,184,255,0.7)';
+          c.textAlign='left';c.fillText(med+'位',xR+4,yPx+3);c.restore();
+        });
+      }
+    }]
+  });
 }
 
 function openReportModal(){
