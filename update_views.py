@@ -14,7 +14,7 @@ from pathlib import Path
 from googleapiclient.discovery import build
 
 BASE_DIR    = Path(__file__).parent
-CSV_PATH    = BASE_DIR / "data" / "新世界_再生数.csv"
+CSV_PATH    = BASE_DIR / "data" / "新世界テーマ曲_推しカメラ再生数.csv"
 API_KEY     = os.environ["YOUTUBE_API_KEY"]
 PLAYLIST_ID = "PL3fCPdnAFT0YNA-DdjkWikiwcsct0vow0"
 
