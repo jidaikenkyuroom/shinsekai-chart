@@ -5,5 +5,5 @@
     "vote": "新世界_順位.csv",
     "broadcast": "新世界_前後半放送.csv"
   },
-  "heatmap_skip_dates": ["4月16日"]
+  "heatmap_skip_dates": ["4月16日","4月22日","4月24日"]
 }
