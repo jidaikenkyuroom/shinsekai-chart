@@ -2651,18 +2651,26 @@ function renderVoteGap(){
       }
     }
   });
-  // ボーダー周辺詳細
-  const border=ranked.slice(-8);
-  const rows=border.map(r=>{
+  // 全50名テーブル（グループ別）
+  const groups=[
+    {label:'12〜1位（デビュー圏内）',min:1,max:12},
+    {label:'20〜13位',min:13,max:20},
+    {label:'30〜21位',min:21,max:30},
+    {label:'40〜31位',min:31,max:40},
+    {label:'50〜41位',min:41,max:50},
+  ];
+  const mkRow=r=>{
     const sekaiPct=Math.round(r[4]/(r[3]+r[4])*100);
-    return`<tr><td>${r[1]}位</td><td>${readingClassMap[r[0]]?.name||r[0]}</td><td style="font-family:monospace">${r[5].toLocaleString()}</td><td style="font-family:monospace">${r[3].toLocaleString()}</td><td style="font-family:monospace">${r[4].toLocaleString()}</td><td style="font-family:monospace">${sekaiPct}%</td></tr>`;
+    return`<tr><td>${r[1]}位</td><td style="text-align:left">${readingClassMap[r[0]]?.name||r[0]}</td><td style="font-family:monospace">${r[5].toLocaleString()}</td><td style="font-family:monospace">${r[3].toLocaleString()}</td><td style="font-family:monospace">${r[4].toLocaleString()}</td><td style="font-family:monospace">${sekaiPct}%</td></tr>`;
+  };
+  const thead=`<thead><tr><th>順位</th><th style="text-align:left">名前</th><th>総獲得票</th><th>国民票</th><th>SEKAI票</th><th>SEKAI比率</th></tr></thead>`;
+  const sections=groups.map(g=>{
+    const inGroup=ranked.filter(r=>r[1]>=g.min&&r[1]<=g.max);
+    const accentColor=g.max===12?'var(--accent)':'#888';
+    return`<p style="font-size:0.72rem;color:${accentColor};font-family:monospace;margin:1rem 0 0.4rem;">▼ ${g.label}</p>
+    <div class="tbl-wrap"><table>${thead}<tbody>${inGroup.map(mkRow).join('')}</tbody></table></div>`;
   }).join('');
-  document.getElementById('gap-border-detail').innerHTML=`
-    <p style="font-size:0.72rem;color:var(--accent);font-family:monospace;margin-bottom:0.5rem;">▼ ボーダー周辺（43〜50位）詳細</p>
-    <div class="tbl-wrap"><table>
-      <thead><tr><th>順位</th><th style="text-align:left">読み方</th><th>総獲得票</th><th>国民票</th><th>SEKAI票</th><th>SEKAI比率</th></tr></thead>
-      <tbody>${rows}</tbody>
-    </table></div>`;
+  document.getElementById('gap-border-detail').innerHTML=sections;
 }
 
 function switchAnalysisTab(t){
