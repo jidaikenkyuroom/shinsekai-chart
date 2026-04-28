@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第一回順位発表式 票差・票構造 分析｜新世界 数値トラッカー</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500&display=swap');
+:root{--bg:#0a0a0c;--s1:#111115;--s2:#18181d;--border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);--text:#ededeb;--muted:#888882;--hint:#444440;--accent:#c8b8ff;--gold:#f0c040;--green:#4ec87a;--red:#ff5c35;--cyan:#60c8e0;--pink:#e080c0;--orange:#f09878;}
+*{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text);line-height:1.75;font-size:14px;}
+.wrap{max-width:860px;margin:0 auto;padding:0 1.5rem 6rem;}
+.hero{padding:3.5rem 0 2.5rem;border-bottom:1px solid var(--border);margin-bottom:3rem;}
+.hero-tag{font-family:'JetBrains Mono',monospace;font-size:0.65rem;color:var(--accent);letter-spacing:0.18em;text-transform:uppercase;margin-bottom:0.75rem;opacity:0.8;}
+.hero h1{font-size:1.55rem;font-weight:700;letter-spacing:-0.01em;line-height:1.3;margin-bottom:0.75rem;}
+.hero-meta{font-family:'JetBrains Mono',monospace;font-size:0.7rem;color:var(--muted);line-height:1.8;}
+.section{margin-bottom:3.5rem;}
+.section-head{display:flex;align-items:baseline;gap:0.75rem;margin-bottom:1.5rem;padding-bottom:0.6rem;border-bottom:1px solid var(--border);}
+.section-num{font-family:'JetBrains Mono',monospace;font-size:0.62rem;color:var(--accent);opacity:0.6;}
+.section-title{font-size:1rem;font-weight:700;letter-spacing:0.02em;}
+p{font-size:0.875rem;color:#ccc;margin-bottom:0.9rem;line-height:1.85;}
+p:last-child{margin-bottom:0;}
+strong{color:var(--text);font-weight:500;}
+.insight{background:var(--s1);border:1px solid var(--border2);border-left:3px solid var(--accent);border-radius:0 6px 6px 0;padding:1rem 1.25rem;margin:1.25rem 0;font-size:0.84rem;color:var(--text);line-height:1.75;}
+.insight.green{border-left-color:var(--green);}
+.insight.gold{border-left-color:var(--gold);}
+.insight.red{border-left-color:var(--red);}
+.insight.cyan{border-left-color:var(--cyan);}
+.insight.orange{border-left-color:var(--orange);}
+.insight.pink{border-left-color:var(--pink);}
+.tbl-wrap{overflow-x:auto;margin:1rem 0;}
+table{width:100%;border-collapse:collapse;font-size:0.78rem;}
+th{font-size:0.65rem;color:var(--muted);font-weight:400;text-align:right;padding:6px 8px;border-bottom:1px solid var(--border);white-space:nowrap;font-family:'JetBrains Mono',monospace;}
+th:first-child,th.left{text-align:left;}
+td{padding:6px 8px;border-bottom:1px solid var(--border);text-align:right;font-family:'JetBrains Mono',monospace;font-size:0.75rem;color:var(--muted);}
+td:first-child{text-align:left;color:var(--text);font-family:'Noto Sans JP',sans-serif;}
+td.left{text-align:left;}
+tr:hover td{background:var(--s1);}
+.bar-section{margin:1rem 0;}
+.bar-row{display:flex;align-items:center;gap:8px;margin-bottom:7px;}
+.bar-label{width:140px;font-size:0.72rem;color:var(--muted);flex-shrink:0;font-family:'JetBrains Mono',monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.bar-track{flex:1;background:rgba(255,255,255,0.04);border-radius:3px;height:20px;overflow:hidden;}
+.bar-fill{height:100%;border-radius:3px;min-width:2px;display:flex;align-items:center;padding-left:6px;font-size:0.6rem;font-family:'JetBrains Mono',monospace;color:rgba(255,255,255,0.6);}
+.bar-val{font-size:0.7rem;font-family:'JetBrains Mono',monospace;width:80px;text-align:right;flex-shrink:0;}
+.back-link{display:inline-block;font-size:0.72rem;font-family:'JetBrains Mono',monospace;color:var(--muted);text-decoration:none;margin-bottom:2rem;padding:4px 0;}
+.back-link:hover{color:var(--text);}
+.footnote{font-size:0.72rem;color:var(--hint);font-family:'JetBrains Mono',monospace;border-top:1px solid var(--border);margin-top:0.75rem;padding-top:0.6rem;line-height:1.6;}
+.gap-badge{display:inline-block;padding:1px 7px;border-radius:3px;font-size:0.65rem;font-family:'JetBrains Mono',monospace;margin-left:6px;vertical-align:middle;}
+.gap-dansou{background:rgba(255,92,53,0.18);color:#ff9070;}
+.gap-kiwadosa{background:rgba(78,200,122,0.18);color:#4ec87a;}
+.stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:1.25rem 0;}
+.stat-card{background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:1rem 1.1rem;}
+.stat-card-label{font-size:0.62rem;font-family:'JetBrains Mono',monospace;color:var(--muted);margin-bottom:4px;}
+.stat-card-val{font-size:1.15rem;font-weight:500;font-family:'JetBrains Mono',monospace;line-height:1.2;}
+.stat-card-sub{font-size:0.62rem;color:var(--muted);margin-top:3px;font-family:'JetBrains Mono',monospace;}
+.type-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:1.25rem 0;}
+.type-card{background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:1.1rem 1.2rem;}
+.type-title{font-size:0.82rem;font-weight:700;margin-bottom:0.4rem;}
+.type-meta{font-size:0.65rem;font-family:'JetBrains Mono',monospace;color:var(--muted);margin-bottom:0.6rem;letter-spacing:0.05em;}
+.type-desc{font-size:0.78rem;color:#ccc;line-height:1.7;margin-bottom:0.6rem;}
+.type-names{font-size:0.7rem;font-family:'JetBrains Mono',monospace;color:var(--hint);line-height:1.7;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a href="../index.html" class="back-link">← ダッシュボードに戻る</a>
+
+  <div class="hero">
+    <div class="hero-tag">Analysis Report · 2026/04/23</div>
+    <h1>第一回順位発表式<br>票差・票構造 分析レポート</h1>
+    <div class="hero-meta">
+      データ基準: 第一回順位発表式（2026/04/23）公式発表値<br>
+      対象: 得票あり50名 · 投票期間: 2026/04/09〜04/23<br>
+      投票ルール: 国民プロデューサー票（重み70%）+ SEKAIプロデューサー票（重み30%）→ 合算で順位決定
+    </div>
+  </div>
+
+  <!-- 00 全体像 -->
+  <div class="section">
+    <div class="section-head">
+      <span class="section-num">00</span>
+      <span class="section-title">票数分布の全体像</span>
+    </div>
+    <p>得票のある50名の総票数は1位 DAIKI.K（178.5万票）〜 50位 JUNSEI（23.9万票）で、1位と50位の差は約<strong>7.5倍</strong>。トップ層に票が集中し、下位になるほど急速に票が減少する構造になっている。</p>
+
+    <div class="stat-grid">
+      <div class="stat-card">
+        <div class="stat-card-label">1位 総獲得票</div>
+        <div class="stat-card-val" style="color:var(--accent);">178.5万</div>
+        <div class="stat-card-sub">DAIKI.K</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-label">12位（ボーダー）総獲得票</div>
+        <div class="stat-card-val" style="color:var(--gold);">92.6万</div>
+        <div class="stat-card-sub">RYOGA</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-label">50位 総獲得票</div>
+        <div class="stat-card-val" style="color:var(--muted);">23.9万</div>
+        <div class="stat-card-sub">JUNSEI</div>
+      </div>
+    </div>
+
+    <div class="bar-section">
+      <div style="font-size:0.7rem;color:var(--muted);font-family:'JetBrains Mono',monospace;margin-bottom:8px;">デビュー圏内 上位12名 総獲得票（万票）</div>
+      <div class="bar-row"><div class="bar-label">1 DAIKI.K</div><div class="bar-track"><div class="bar-fill" style="width:100%;background:rgba(200,184,255,0.3);border-right:2px solid var(--accent);">178.5万</div></div><div class="bar-val" style="color:var(--accent);">178.5</div></div>
+      <div class="bar-row"><div class="bar-label">2 KINARI</div><div class="bar-track"><div class="bar-fill" style="width:98.8%;background:rgba(200,184,255,0.25);border-right:2px solid var(--accent);"></div></div><div class="bar-val" style="color:var(--accent);">176.4</div></div>
+      <div class="bar-row"><div class="bar-label">3 YURA</div><div class="bar-track"><div class="bar-fill" style="width:87.0%;background:rgba(200,184,255,0.2);border-right:2px solid var(--accent);"></div></div><div class="bar-val" style="color:var(--accent);">155.3</div></div>
+      <div class="bar-row"><div class="bar-label">4 YOSHIKI</div><div class="bar-track"><div class="bar-fill" style="width:85.8%;background:rgba(200,184,255,0.2);border-right:2px solid var(--accent);"></div></div><div class="bar-val" style="color:var(--accent);">153.1</div></div>
+      <div class="bar-row"><div class="bar-label">5 SHINHAENG</div><div class="bar-track"><div class="bar-fill" style="width:79.1%;background:rgba(200,184,255,0.18);border-right:2px solid var(--accent);"></div></div><div class="bar-val" style="color:var(--accent);">141.2</div></div>
+      <div class="bar-row"><div class="bar-label">6 SIYOUNG</div><div class="bar-track"><div class="bar-fill" style="width:79.1%;background:rgba(200,184,255,0.18);border-right:2px solid var(--accent);"></div></div><div class="bar-val" style="color:var(--accent);">141.2</div></div>
+      <div class="bar-row"><div class="bar-label" style="color:var(--muted);">7 KOSUKE</div><div class="bar-track"><div class="bar-fill" style="width:66.9%;background:rgba(255,255,255,0.06);border-right:2px solid rgba(255,255,255,0.2);"></div></div><div class="bar-val">119.4</div></div>
+      <div class="bar-row"><div class="bar-label" style="color:var(--muted);">8 HYEONSEUNG</div><div class="bar-track"><div class="bar-fill" style="width:59.5%;background:rgba(255,255,255,0.05);border-right:2px solid rgba(255,255,255,0.15);"></div></div><div class="bar-val">106.2</div></div>
+      <div class="bar-row"><div class="bar-label" style="color:var(--muted);">9 TAKUTO.K</div><div class="bar-track"><div class="bar-fill" style="width:59.1%;background:rgba(255,255,255,0.05);border-right:2px solid rgba(255,255,255,0.15);"></div></div><div class="bar-val">105.6</div></div>
+      <div class="bar-row"><div class="bar-label" style="color:var(--muted);">10 ADAM</div><div class="bar-track"><div class="bar-fill" style="width:58.7%;background:rgba(255,255,255,0.05);border-right:2px solid rgba(255,255,255,0.15);"></div></div><div class="bar-val">104.8</div></div>
+      <div class="bar-row"><div class="bar-label" style="color:var(--gold);">11 GOTEN</div><div class="bar-track"><div class="bar-fill" style="width:52.1%;background:rgba(240,192,64,0.1);border-right:2px solid var(--gold);"></div></div><div class="bar-val" style="color:var(--gold);">92.9</div></div>
+      <div class="bar-row"><div class="bar-label" style="color:var(--gold);">12 RYOGA</div><div class="bar-track"><div class="bar-fill" style="width:51.9%;background:rgba(240,192,64,0.1);border-right:2px solid var(--gold);"></div></div><div class="bar-val" style="color:var(--gold);">92.6</div></div>
+    </div>
+    <div class="footnote">バーは1位（178.5万）を100%として相対表示。5位SHINHAENG・6位SIYOUNGはほぼ同票のため同じ長さで表示。</div>
+  </div>
+
+  <!-- 01 断層マップ -->
+  <div class="section">
+    <div class="section-head">
+      <span class="section-num">01</span>
+      <span class="section-title">断層マップ — どこに「壁」があるか</span>
+    </div>
+    <p>連続する順位間の票差を「前の順位の総票に対する比率」で評価した。10%超を断層（大きな壁）、1%未満を超僅差として分類する。</p>
+
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr>
+          <th class="left">区間</th>
+          <th class="left">前位（票）</th>
+          <th class="left">後位（票）</th>
+          <th>票差</th>
+          <th>比率</th>
+          <th class="left">分類</th>
+        </tr></thead>
+        <tbody>
+          <tr><td>1位→2位（DAIKI.K / KINARI）</td><td class="left" style="color:var(--muted);">1,785,492</td><td class="left" style="color:var(--muted);">1,764,377</td><td>21,115</td><td>1.2%</td><td class="left"><span class="gap-badge" style="background:rgba(78,200,122,0.18);color:#4ec87a;">僅差</span></td></tr>
+          <tr style="background:rgba(255,92,53,0.04)"><td><strong>2位→3位（KINARI / YURA）</strong></td><td class="left" style="color:var(--muted);">1,764,377</td><td class="left" style="color:var(--muted);">1,553,054</td><td><strong style="color:#ff9070;">211,323</strong></td><td style="color:#ff9070;"><strong>12.0%</strong></td><td class="left"><span class="gap-badge gap-dansou">断層</span></td></tr>
+          <tr><td>3位→4位（YURA / YOSHIKI）</td><td class="left" style="color:var(--muted);">1,553,054</td><td class="left" style="color:var(--muted);">1,530,933</td><td>22,121</td><td>1.4%</td><td></td></tr>
+          <tr><td>4位→5位（YOSHIKI / SHINHAENG）</td><td class="left" style="color:var(--muted);">1,530,933</td><td class="left" style="color:var(--muted);">1,412,187</td><td>118,746</td><td>7.8%</td><td></td></tr>
+          <tr style="background:rgba(78,200,122,0.03)"><td><strong>5位→6位（SHINHAENG / SIYOUNG）</strong></td><td class="left" style="color:var(--muted);">1,412,187</td><td class="left" style="color:var(--muted);">1,411,784</td><td><strong style="color:#4ec87a;">403</strong></td><td style="color:#4ec87a;"><strong>0.03%</strong></td><td class="left"><span class="gap-badge gap-kiwadosa">超僅差</span></td></tr>
+          <tr style="background:rgba(255,92,53,0.06)"><td><strong>6位→7位（SIYOUNG / KOSUKE）</strong></td><td class="left" style="color:var(--muted);">1,411,784</td><td class="left" style="color:var(--muted);">1,194,391</td><td><strong style="color:#ff9070;">217,393</strong></td><td style="color:#ff9070;"><strong>15.4%</strong></td><td class="left"><span class="gap-badge gap-dansou">断層 最大</span></td></tr>
+          <tr style="background:rgba(255,92,53,0.04)"><td><strong>7位→8位（KOSUKE / HYEONSEUNG）</strong></td><td class="left" style="color:var(--muted);">1,194,391</td><td class="left" style="color:var(--muted);">1,061,514</td><td><strong style="color:#ff9070;">132,877</strong></td><td style="color:#ff9070;"><strong>11.1%</strong></td><td class="left"><span class="gap-badge gap-dansou">断層</span></td></tr>
+          <tr style="background:rgba(78,200,122,0.03)"><td>8位→9位（HYEONSEUNG / TAKUTO.K）</td><td class="left" style="color:var(--muted);">1,061,514</td><td class="left" style="color:var(--muted);">1,055,661</td><td style="color:#4ec87a;">5,853</td><td style="color:#4ec87a;">0.6%</td><td class="left"><span class="gap-badge gap-kiwadosa">僅差</span></td></tr>
+          <tr style="background:rgba(78,200,122,0.03)"><td>9位→10位（TAKUTO.K / ADAM）</td><td class="left" style="color:var(--muted);">1,055,661</td><td class="left" style="color:var(--muted);">1,047,949</td><td style="color:#4ec87a;">7,712</td><td style="color:#4ec87a;">0.7%</td><td class="left"><span class="gap-badge gap-kiwadosa">僅差</span></td></tr>
+          <tr style="background:rgba(255,92,53,0.04)"><td><strong>10位→11位（ADAM / GOTEN）</strong></td><td class="left" style="color:var(--muted);">1,047,949</td><td class="left" style="color:var(--muted);">929,221</td><td><strong style="color:#ff9070;">118,728</strong></td><td style="color:#ff9070;"><strong>11.3%</strong></td><td class="left"><span class="gap-badge gap-dansou">断層</span></td></tr>
+          <tr style="background:rgba(78,200,122,0.03)"><td><strong>11位→12位（GOTEN / RYOGA）</strong></td><td class="left" style="color:var(--muted);">929,221</td><td class="left" style="color:var(--muted);">926,196</td><td><strong style="color:#4ec87a;">3,025</strong></td><td style="color:#4ec87a;"><strong>0.3%</strong></td><td class="left"><span class="gap-badge gap-kiwadosa">超僅差</span></td></tr>
+          <tr><td>12位→13位（RYOGA / OSUKE）</td><td class="left" style="color:var(--muted);">926,196</td><td class="left" style="color:var(--muted);">883,587</td><td>42,609</td><td>4.6%</td><td></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="insight red">
+      <strong>最大の断層は6〜7位間（15.4%、21.7万票差）。</strong>6位 SIYOUNG までのトップ6と、7位 KOSUKE 以下では票の「層」が明確に分かれている。さらに7〜8位間にも11%超の断層があり、7位 KOSUKE は上（6位）にも下（8位）にも大きな壁を持つ孤立した位置にいる。
+    </div>
+    <div class="insight gold">
+      <strong>デビュー圏ボーダー（12〜13位間）は4.6%。</strong>イメージほど「高い壁」ではない。むしろ10〜11位間（11.3%）の方が大きな断層で、11位 GOTEN・12位 RYOGA は10位 ADAM から票数で大きく引き離された位置にいた。
+    </div>
+  </div>
+
+  <!-- 02 超僅差ゾーン -->
+  <div class="section">
+    <div class="section-head">
+      <span class="section-num">02</span>
+      <span class="section-title">超僅差ゾーン — 入れ替わりが起きていた可能性</span>
+    </div>
+    <p>1%未満の超僅差区間は、投票最終盤の数時間でも入れ替わりが起きうる接戦だった。</p>
+
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr>
+          <th class="left">区間</th><th>票差</th><th>比率</th><th class="left">注目ポイント</th>
+        </tr></thead>
+        <tbody>
+          <tr style="background:rgba(78,200,122,0.05)">
+            <td><strong>5位↔6位（SHINHAENG / SIYOUNG）</strong></td>
+            <td style="color:#4ec87a;font-size:0.9rem;"><strong>403票</strong></td>
+            <td style="color:#4ec87a;"><strong>0.03%</strong></td>
+            <td class="left" style="font-size:0.72rem;">全区間中最小。投票数換算では数十人規模の差。両者のSEKAI票も近く（SHINHAENG 47.2万 / SIYOUNG 51.4万）、純粋に国民票で決着した。</td>
+          </tr>
+          <tr style="background:rgba(78,200,122,0.03)">
+            <td>11位↔12位（GOTEN / RYOGA）</td>
+            <td style="color:#4ec87a;">3,025票</td>
+            <td style="color:#4ec87a;">0.3%</td>
+            <td class="left" style="font-size:0.72rem;">どちらがボーダー圏内に残るかが終盤まで拮抗。SEKAI比率はGOTEN 13%・RYOGA 15%でともに国民票型。</td>
+          </tr>
+          <tr>
+            <td>8位↔9位（HYEONSEUNG / TAKUTO.K）</td>
+            <td style="color:#4ec87a;">5,853票</td>
+            <td style="color:#4ec87a;">0.6%</td>
+            <td class="left" style="font-size:0.72rem;">SEKAI型（HYEONSEUNG 40%）と国民票型（TAKUTO.K 14%）の対決。総票ではほぼ並んだ。</td>
+          </tr>
+          <tr>
+            <td>9位↔10位（TAKUTO.K / ADAM）</td>
+            <td style="color:#4ec87a;">7,712票</td>
+            <td style="color:#4ec87a;">0.7%</td>
+            <td class="left" style="font-size:0.72rem;">8〜10位の3名は5,853票・7,712票の僅差で3位まとめて密集しており、順位は最後まで流動的だった。</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="insight cyan">
+      5位↔6位の403票差は、単純計算で<strong>1人あたり約0.5票分の差</strong>（1回の投票で1〜複数票行使できるため実際の人数はさらに少ない可能性）。投票期間中のどこかで順位が入れ替わっていても不思議ではない数字。
+    </div>
+  </div>
+
+  <!-- 03 グローバルランカーとの関係 -->
+  <div class="section">
+    <div class="section-head">
+      <span class="section-num">03</span>
+      <span class="section-title">グローバルランカーとの関係</span>
+    </div>
+    <p>投票はメイン投票（国民70% / SEKAI30%）と独立して、SEKAI票のみで決まるグローバルランカー（GR）枠が設定されている。GR上位12名と全体上位12名の重複を確認した。</p>
+
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr>
+          <th>全体順位</th><th class="left">名前</th><th>GR順位</th><th>総票</th><th>国民票</th><th>SEKAI票</th><th>SEKAI比率</th>
+        </tr></thead>
+        <tbody>
+          <tr><td>1位</td><td class="left">DAIKI.K</td><td style="color:var(--accent);">GR 2位</td><td>1,785,492</td><td>1,296,479</td><td>488,603</td><td>27%</td></tr>
+          <tr><td>2位</td><td class="left">KINARI</td><td style="color:var(--accent);">GR 6位</td><td>1,764,377</td><td>1,372,025</td><td>392,007</td><td>22%</td></tr>
+          <tr><td>3位</td><td class="left">YURA</td><td style="color:var(--accent);">GR 3位</td><td>1,553,054</td><td>1,051,560</td><td>501,072</td><td>32%</td></tr>
+          <tr><td>4位</td><td class="left">YOSHIKI</td><td style="color:var(--accent);">GR 1位</td><td>1,530,933</td><td>939,786</td><td>590,728</td><td>39%</td></tr>
+          <tr><td>5位</td><td class="left">SHINHAENG</td><td style="color:var(--accent);">GR 5位</td><td>1,412,187</td><td>939,330</td><td>472,529</td><td>33%</td></tr>
+          <tr><td>6位</td><td class="left">SIYOUNG</td><td style="color:var(--accent);">GR 4位</td><td>1,411,784</td><td>897,732</td><td>513,636</td><td>36%</td></tr>
+          <tr><td>7位</td><td class="left">KOSUKE</td><td style="color:var(--accent);">GR 10位</td><td>1,194,391</td><td>981,058</td><td>209,766</td><td>18%</td></tr>
+          <tr><td>8位</td><td class="left">HYEONSEUNG</td><td style="color:var(--accent);">GR 7位</td><td>1,061,514</td><td>634,710</td><td>426,353</td><td>40%</td></tr>
+          <tr><td>9位</td><td class="left">TAKUTO.K</td><td style="color:var(--accent);">GR 12位</td><td>1,055,661</td><td>904,298</td><td>147,917</td><td>14%</td></tr>
+          <tr><td>10位</td><td class="left">ADAM</td><td style="color:var(--accent);">GR 8位</td><td>1,047,949</td><td>749,512</td><td>298,131</td><td>28%</td></tr>
+          <tr style="background:rgba(240,192,64,0.05)"><td style="color:var(--gold);">11位</td><td class="left" style="color:var(--gold);">GOTEN</td><td style="color:var(--muted);">GR圏外</td><td style="color:var(--gold);">929,221</td><td style="color:var(--gold);">804,763</td><td style="color:var(--gold);">120,893</td><td style="color:var(--gold);">13%</td></tr>
+          <tr style="background:rgba(240,192,64,0.05)"><td style="color:var(--gold);">12位</td><td class="left" style="color:var(--gold);">RYOGA</td><td style="color:var(--muted);">GR圏外</td><td style="color:var(--gold);">926,196</td><td style="color:var(--gold);">783,434</td><td style="color:var(--gold);">142,348</td><td style="color:var(--gold);">15%</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="footnote">GR圏外から全体トップ12入りはGOTEN・RYOGAの2名のみ。</div>
+
+    <p style="margin-top:1rem;">GRに入りながらデビュー圏外になったのは <strong>REN.KO（GR9位→全体14位）</strong> と <strong>TOWA（GR11位→全体15位）</strong> の2名。どちらも SEKAI票は稼げたが国民票が足りなかった。</p>
+
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr>
+          <th>全体順位</th><th class="left">名前</th><th>GR順位</th><th>総票</th><th>国民票</th><th>SEKAI票</th><th>SEKAI比率</th>
+        </tr></thead>
+        <tbody>
+          <tr style="background:rgba(255,92,53,0.05)">
+            <td style="color:#ff9070;">14位</td><td class="left" style="color:#ff9070;">REN.KO</td><td style="color:var(--accent);">GR 9位</td><td style="color:#ff9070;">866,339</td><td style="color:#ff9070;">565,502</td><td style="color:#ff9070;">297,370</td><td style="color:#ff9070;">34%</td>
+          </tr>
+          <tr style="background:rgba(255,92,53,0.05)">
+            <td style="color:#ff9070;">15位</td><td class="left" style="color:#ff9070;">TOWA</td><td style="color:var(--accent);">GR 11位</td><td style="color:#ff9070;">784,543</td><td style="color:#ff9070;">515,483</td><td style="color:#ff9070;">268,686</td><td style="color:#ff9070;">34%</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="insight green">
+      GR12名のうち10名が全体上位12名と一致するという高い一致率は、「SEKAI票が稼げるほど国民票も強い」という構造を示している。ただし REN.KO・TOWA はその例外で、SEKAI票頼みの票構造では国民票が強い GOTEN・RYOGA に逆転された。
+    </div>
+  </div>
+
+  <!-- 04 SEKAI型 vs 国民票型 -->
+  <div class="section">
+    <div class="section-head">
+      <span class="section-num">04</span>
+      <span class="section-title">SEKAI型 vs 国民票型 — 票構造と順位の関係</span>
+    </div>
+    <p>SEKAI比率（SEKAI票 ÷ 総票）を指標として、各練習生の票構造を分類した。</p>
+
+    <div class="type-grid">
+      <div class="type-card" style="border-color:rgba(255,92,53,0.3);">
+        <div class="type-title" style="color:#ff9070;">SEKAI型（比率 40% 超）</div>
+        <div class="type-meta">5名 · 順位帯: 33〜47位</div>
+        <div class="type-desc">SEKAI票は多いが国民票が追いつかず、中位〜下位に散在。票数は多くない。</div>
+        <div class="type-names">TAIGA.M 48% (35位)　WEIZE 47% (44位)<br>JAEYONG 47% (33位)　JAY 41% (47位)<br>HYEONSEUNG 40% (8位 ← 唯一デビュー圏)</div>
+      </div>
+      <div class="type-card" style="border-color:rgba(78,200,122,0.3);">
+        <div class="type-title" style="color:#4ec87a;">国民票型（比率 15% 未満）</div>
+        <div class="type-meta">7名 · 順位帯: 9〜50位（11位圏内も含む）</div>
+        <div class="type-desc">グローバルランカー圏外でも国民票の厚さで順位を稼ぐ。GOTEN・TAKUTOはデビュー圏内。</div>
+        <div class="type-names">GOTEN 13% (11位)　TAKUTO.K 14% (9位)<br>RYOGA 15% (12位)　RIKUTO.I 10% (31位)<br>RYOTA 11% (38位)　KAIMU 12% (48位)<br>GOTEN 13% (11位)</div>
+      </div>
+    </div>
+
+    <p>SEKAI型の唯一のデビュー圏内例外は <strong>HYEONSEUNG（SEKAI比率40%・8位）</strong>。彼は SEKAI票が26万票超と多いだけでなく、国民票も63万票と高水準で両立している点が他のSEKAI型と異なる。</p>
+    <p>逆に JAEYONG・WEIZE・TAIGA.M は SEKAI票22〜20万票と一定の規模があるが、国民票が22〜13万票にとどまり、総票が20〜40万票台に留まった。</p>
+
+    <div class="insight orange">
+      投票ウェイトの構造上（国民70% / SEKAI30%）、SEKAI票だけで順位を上げるには国民票比での圧倒的な差が必要。現状ではSEKAI票が強くても国民票が弱ければ30位台が現実的な上限になっている。第二回以降、SEKAI型の練習生が国民票をどれだけ伸ばせるかが最大の注目点。
+    </div>
+  </div>
+
+  <!-- 05 まとめ -->
+  <div class="section">
+    <div class="section-head">
+      <span class="section-num">05</span>
+      <span class="section-title">まとめ</span>
+    </div>
+
+    <div class="insight">
+      <strong>「壁」の位置</strong>：順位の断層は 2-3位・6-7位・7-8位・10-11位に集中。デビュー圏ボーダー（12-13位間）は4.6%と意外に薄く、10-11位間（11.3%）のほうが高い壁だった。
+    </div>
+    <div class="insight green">
+      <strong>超僅差の3点セット</strong>：5↔6位（403票）・11↔12位（3,025票）・8↔9位（5,853票）は第二回以降に最も順位変動が起きやすいゾーン。特に5位SHINHAENG・6位SIYOUNGはほぼ同順位と見てよい。
+    </div>
+    <div class="insight gold">
+      <strong>グローバルランカーは強力だが絶対ではない</strong>：GR12名のうち10名が全体12位以内に入ったが、REN.KO・TOWAは国民票不足で圏外に。GR圏外のGOTEN・RYOGAは純粋に国民票で生き残った。
+    </div>
+    <div class="insight orange">
+      <strong>国民票が順位を決める</strong>：投票ウェイト70%の国民票の厚さが順位の最大の規定因。SEKAI型は票数の壁を越えられず、第二回以降に国民票をどれだけ積み増せるかが最大の焦点。
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
