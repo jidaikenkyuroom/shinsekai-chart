@@ -227,6 +227,7 @@ tr:hover td{background:var(--surface);}
       <button class="g-tab" id="atab-class" onclick="switchAnalysisTab('class')">クラス vs 順位</button>
       <button class="g-tab" id="atab-timing" onclick="switchAnalysisTab('timing')">放送タイミング</button>
       <button class="g-tab" id="atab-scatter" onclick="switchAnalysisTab('scatter')">再生数 vs 順位</button>
+      <button class="g-tab" id="atab-gap" onclick="switchAnalysisTab('gap')">票差分析</button>
     </div>
 
     <!-- 国民 vs SEKAI票 -->
@@ -335,6 +336,17 @@ tr:hover td{background:var(--surface);}
         <p class="sub-label" id="quadrant-desc" style="margin-bottom:0.75rem;"></p>
         <div class="cards" id="quadrant-cards"></div>
       </div>
+    </div>
+
+    <!-- 票差分析 -->
+    <div id="asec-gap" class="asec">
+      <blockquote style="border-left:3px solid var(--border2);background:var(--surface);padding:0.8rem 1.1rem;margin-bottom:1.25rem;border-radius:0 5px 5px 0;font-size:0.76rem;color:var(--text);opacity:0.75;line-height:1.8;">
+        第一回順位発表式の連続する順位間の票差を可視化します。赤＝大きな断層（10%超）、緑＝超僅差（1%未満）。どこに「壁」があり、どこが入れ替わり可能な僅差だったかが一目でわかります。
+      </blockquote>
+      <div id="gap-stats" style="display:flex;gap:0.75rem;margin-bottom:1rem;flex-wrap:wrap;"></div>
+      <div class="chart-wrap" style="height:420px;"><canvas id="chartVoteGap"></canvas></div>
+      <p class="sub-label" style="margin-top:0.25rem;">赤＝断層（10%超）　紫＝通常　緑＝僅差（1%未満）　バーをホバーで詳細表示</p>
+      <div id="gap-border-detail" style="margin-top:1.5rem;"></div>
     </div>
 
   </div>
@@ -668,7 +680,7 @@ const tierColor={hot:'#ff5c35',rise:'#4ec87a',steady:'#555552'};
 const clsColor={up:'#4ec87a',keep:'#888884',down:'#ff5c35'};
 
 let selected=[], chartTrend=null, chartScatter=null, currentGraph='play';
-let chartVoteBreakdown=null, chartClassRank=null, chartBroadcastTiming=null;
+let chartVoteBreakdown=null, chartClassRank=null, chartBroadcastTiming=null, chartVoteGap=null;
 
 function saveSelection(){
   try{ localStorage.setItem('shinsekai_selected', JSON.stringify(selected)); }catch(e){}
@@ -2436,8 +2448,70 @@ function closeTimelineModal(){
   document.getElementById('timeline-modal').style.display = 'none';
 }
 
+function renderVoteGap(){
+  const ranked = rawRank1.filter(r=>r[3]!=null).sort((a,b)=>a[1]-b[1]);
+  const gaps = [];
+  for(let i=1;i<ranked.length;i++){
+    const prev=ranked[i-1],curr=ranked[i];
+    const diff=prev[5]-curr[5];
+    const pct=diff/prev[5]*100;
+    gaps.push({label:`${prev[1]}→${curr[1]}`,prevR:prev[0],currR:curr[0],diff,pct,prevTotal:prev[5],currTotal:curr[5]});
+  }
+  const clr=g=>g.pct>=10?'rgba(255,92,53,0.85)':g.pct<1?'rgba(78,200,122,0.85)':'rgba(200,184,255,0.45)';
+  const断層=gaps.filter(g=>g.pct>=10);
+  const僅差=gaps.filter(g=>g.pct<1);
+  const card=(label,val,sub)=>`<div style="background:var(--surface);border-radius:7px;padding:0.75rem 1rem;min-width:115px;">
+    <div style="font-size:0.62rem;color:var(--muted);margin-bottom:3px;">${label}</div>
+    <div style="font-size:1.15rem;font-weight:500;font-family:monospace;">${val}</div>
+    <div style="font-size:0.62rem;color:var(--muted);">${sub}</div></div>`;
+  const maxGap=断層.reduce((a,b)=>a.diff>b.diff?a:b,断層[0]);
+  const minGap=僅差.reduce((a,b)=>a.diff<b.diff?a:b,僅差[0]);
+  document.getElementById('gap-stats').innerHTML=
+    card('最大断層',maxGap?`${Math.round(maxGap.diff/10000)}万票差`:`-`,maxGap?`${maxGap.prevR}→${maxGap.currR}（${maxGap.pct.toFixed(1)}%）`:'')+
+    card('断層箇所（10%超）',断層.length+'箇所','順位が大きく離れている')+
+    card('最小僅差',minGap?`${minGap.diff.toLocaleString()}票`:`-`,minGap?`${minGap.prevR}→${minGap.currR}（${minGap.pct.toFixed(2)}%）`:'')+
+    card('僅差箇所（1%未満）',僅差.length+'箇所','入れ替わり可能だった');
+  const ctx=document.getElementById('chartVoteGap').getContext('2d');
+  if(chartVoteGap){chartVoteGap.destroy();chartVoteGap=null;}
+  chartVoteGap=new Chart(ctx,{
+    type:'bar',
+    data:{
+      labels:gaps.map(g=>g.label),
+      datasets:[{data:gaps.map(g=>Math.round(g.diff/1000)/10),backgroundColor:gaps.map(clr),borderColor:'transparent',borderRadius:3}]
+    },
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{
+        backgroundColor:'#1f1f24',borderColor:'rgba(255,255,255,0.13)',borderWidth:1,
+        bodyColor:'#f0f0ee',bodyFont:{family:'monospace',size:12},padding:10,displayColors:false,
+        callbacks:{label:ctx=>{
+          const g=gaps[ctx.dataIndex];
+          return[`${g.prevR} → ${g.currR}`,`票差: ${g.diff.toLocaleString()}票（${g.pct.toFixed(1)}%）`,
+            `${g.prevR}: ${g.prevTotal.toLocaleString()}票`,`${g.currR}: ${g.currTotal.toLocaleString()}票`];
+        }}
+      }},
+      scales:{
+        x:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#888',font:{size:8},maxRotation:60}},
+        y:{title:{display:true,text:'票差（万票）',color:'#888',font:{size:11}},
+           grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#888'}},
+      }
+    }
+  });
+  // ボーダー周辺詳細
+  const border=ranked.slice(-8);
+  const rows=border.map(r=>{
+    const sekaiPct=Math.round(r[4]/(r[3]+r[4])*100);
+    return`<tr><td>${r[1]}位</td><td>${readingClassMap[r[0]]?.name||r[0]}</td><td style="font-family:monospace">${r[5].toLocaleString()}</td><td style="font-family:monospace">${r[3].toLocaleString()}</td><td style="font-family:monospace">${r[4].toLocaleString()}</td><td style="font-family:monospace">${sekaiPct}%</td></tr>`;
+  }).join('');
+  document.getElementById('gap-border-detail').innerHTML=`
+    <p style="font-size:0.72rem;color:var(--accent);font-family:monospace;margin-bottom:0.5rem;">▼ ボーダー周辺（43〜50位）詳細</p>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>順位</th><th style="text-align:left">読み方</th><th>総獲得票</th><th>国民票</th><th>SEKAI票</th><th>SEKAI比率</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table></div>`;
+}
+
 function switchAnalysisTab(t){
-  ['vote','class','timing','scatter'].forEach(id=>{
+  ['vote','class','timing','scatter','gap'].forEach(id=>{
     document.getElementById('asec-'+id).classList.toggle('active',id===t);
     document.getElementById('atab-'+id).classList.toggle('active',id===t);
   });
@@ -2445,6 +2519,7 @@ function switchAnalysisTab(t){
   if(t==='class') renderClassRank();
   if(t==='timing') renderBroadcastTiming();
   if(t==='scatter') setTimeout(renderScatter,0);
+  if(t==='gap') renderVoteGap();
 }
 
 function renderVoteBreakdown(){
