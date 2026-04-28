@@ -2613,26 +2613,26 @@ function renderVoteGap(){
     gaps.push({label:`${prev[1]}→${curr[1]}`,prevR:prev[0],currR:curr[0],diff,pct,prevTotal:prev[5],currTotal:curr[5]});
   }
   const clr=g=>g.pct>=10?'rgba(255,92,53,0.85)':g.pct<1?'rgba(78,200,122,0.85)':'rgba(200,184,255,0.45)';
-  const断層=gaps.filter(g=>g.pct>=10);
-  const僅差=gaps.filter(g=>g.pct<1);
+  const dansou=gaps.filter(g=>g.pct>=10);
+  const kiwadosa=gaps.filter(g=>g.pct<1);
   const card=(label,val,sub)=>`<div style="background:var(--surface);border-radius:7px;padding:0.75rem 1rem;min-width:115px;">
     <div style="font-size:0.62rem;color:var(--muted);margin-bottom:3px;">${label}</div>
     <div style="font-size:1.15rem;font-weight:500;font-family:monospace;">${val}</div>
     <div style="font-size:0.62rem;color:var(--muted);">${sub}</div></div>`;
-  const maxGap=断層.reduce((a,b)=>a.diff>b.diff?a:b,断層[0]);
-  const minGap=僅差.reduce((a,b)=>a.diff<b.diff?a:b,僅差[0]);
+  const maxGap=dansou.reduce((a,b)=>a.diff>b.diff?a:b,dansou[0]);
+  const minGap=kiwadosa.reduce((a,b)=>a.diff<b.diff?a:b,kiwadosa[0]);
   document.getElementById('gap-stats').innerHTML=
     card('最大断層',maxGap?`${Math.round(maxGap.diff/10000)}万票差`:`-`,maxGap?`${maxGap.prevR}→${maxGap.currR}（${maxGap.pct.toFixed(1)}%）`:'')+
-    card('断層箇所（10%超）',断層.length+'箇所','順位が大きく離れている')+
+    card('断層箇所（10%超）',dansou.length+'箇所','順位が大きく離れている')+
     card('最小僅差',minGap?`${minGap.diff.toLocaleString()}票`:`-`,minGap?`${minGap.prevR}→${minGap.currR}（${minGap.pct.toFixed(2)}%）`:'')+
-    card('僅差箇所（1%未満）',僅差.length+'箇所','入れ替わり可能だった');
+    card('僅差箇所（1%未満）',kiwadosa.length+'箇所','入れ替わり可能だった');
   const ctx=document.getElementById('chartVoteGap').getContext('2d');
   if(chartVoteGap){chartVoteGap.destroy();chartVoteGap=null;}
   chartVoteGap=new Chart(ctx,{
     type:'bar',
     data:{
       labels:gaps.map(g=>g.label),
-      datasets:[{data:gaps.map(g=>Math.round(g.diff/1000)/10),backgroundColor:gaps.map(clr),borderColor:'transparent',borderRadius:3}]
+      datasets:[{data:gaps.map(g=>g.diff/10000),backgroundColor:gaps.map(clr),borderColor:'transparent',borderRadius:3}]
     },
     options:{responsive:true,maintainAspectRatio:false,
       plugins:{legend:{display:false},tooltip:{
@@ -2674,7 +2674,7 @@ function switchAnalysisTab(t){
   if(t==='class') renderClassRank();
   if(t==='timing') renderBroadcastTiming();
   if(t==='scatter') setTimeout(renderScatter,0);
-  if(t==='gap') renderVoteGap();
+  if(t==='gap') setTimeout(renderVoteGap,0);
 }
 
 function renderVoteBreakdown(){
