@@ -341,7 +341,13 @@ tr:hover td{background:var(--surface);}
     <!-- 票差分析 -->
     <div id="asec-gap" class="asec">
       <blockquote style="border-left:3px solid var(--border2);background:var(--surface);padding:0.8rem 1.1rem;margin-bottom:1.25rem;border-radius:0 5px 5px 0;font-size:0.76rem;color:var(--text);opacity:0.75;line-height:1.8;">
-        第一回順位発表式の連続する順位間の票差を可視化します。赤＝大きな断層（10%超）、緑＝超僅差（1%未満）。どこに「壁」があり、どこが入れ替わり可能な僅差だったかが一目でわかります。
+        第一回順位発表式の連続する順位間の票差を可視化します。赤＝大きな断層（10%超）、緑＝超僅差（1%未満）。どこに「壁」があり、どこが入れ替わり可能な僅差だったかが一目でわかります。<br>
+        <span style="opacity:0.9;">
+          <span style="color:rgba(255,92,53,0.9);">■ SEKAI型（比率40%超）</span>
+          SEKAI票は多いが国民票が追いつかず中位〜下位に散在（TAIGA.M 48%・WEIZE 47%・JAEYONG 47%・JAY 41%・CHISATO 40%）。<br>
+          <span style="color:rgba(78,200,122,0.9);">■ 国民票型（比率15%未満）</span>
+          グローバルランカー圏外だが国民票で順位を稼ぐタイプ（RIKUTO.I 10%・RYOTA 11%・KAIMU 12%・GOTEN 13%）。
+        </span>
       </blockquote>
       <div id="gap-stats" style="display:flex;gap:0.75rem;margin-bottom:1rem;flex-wrap:wrap;"></div>
       <div class="chart-wrap" style="height:420px;"><canvas id="chartVoteGap"></canvas></div>
@@ -2661,7 +2667,16 @@ function renderVoteGap(){
   ];
   const mkRow=r=>{
     const sekaiPct=Math.round(r[4]/(r[3]+r[4])*100);
-    return`<tr><td>${r[1]}位</td><td style="text-align:left">${readingClassMap[r[0]]?.name||r[0]}</td><td style="font-family:monospace">${r[5].toLocaleString()}</td><td style="font-family:monospace">${r[3].toLocaleString()}</td><td style="font-family:monospace">${r[4].toLocaleString()}</td><td style="font-family:monospace">${sekaiPct}%</td></tr>`;
+    const isSEKAI=sekaiPct>=40;
+    const isKokumin=sekaiPct<15;
+    const ratioStyle=isSEKAI
+      ?'font-family:monospace;background:rgba(255,92,53,0.18);color:#ff9070;border-radius:3px;'
+      :isKokumin
+        ?'font-family:monospace;background:rgba(78,200,122,0.18);color:#4ec87a;border-radius:3px;'
+        :'font-family:monospace;';
+    const natStyle=isKokumin?'font-family:monospace;color:#4ec87a;':'font-family:monospace;';
+    const sekaiStyle=isSEKAI?'font-family:monospace;color:#ff9070;':'font-family:monospace;';
+    return`<tr><td>${r[1]}位</td><td style="text-align:left">${readingClassMap[r[0]]?.name||r[0]}</td><td style="font-family:monospace">${r[5].toLocaleString()}</td><td style="${natStyle}">${r[3].toLocaleString()}</td><td style="${sekaiStyle}">${r[4].toLocaleString()}</td><td style="${ratioStyle}">${sekaiPct}%</td></tr>`;
   };
   const thead=`<thead><tr><th>順位</th><th style="text-align:left">名前</th><th>総獲得票</th><th>国民票</th><th>SEKAI票</th><th>SEKAI比率</th></tr></thead>`;
   const sections=groups.map(g=>{
