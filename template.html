@@ -341,7 +341,13 @@ tr:hover td{background:var(--surface);}
     <!-- 票差分析 -->
     <div id="asec-gap" class="asec">
       <blockquote style="border-left:3px solid var(--border2);background:var(--surface);padding:0.8rem 1.1rem;margin-bottom:1.25rem;border-radius:0 5px 5px 0;font-size:0.76rem;color:var(--text);opacity:0.75;line-height:1.8;">
-        第一回順位発表式の連続する順位間の票差を可視化します。赤＝大きな断層（10%超）、緑＝超僅差（1%未満）。どこに「壁」があり、どこが入れ替わり可能な僅差だったかが一目でわかります。
+        第一回順位発表式の連続する順位間の票差を可視化します。赤＝大きな断層（10%超）、緑＝超僅差（1%未満）。どこに「壁」があり、どこが入れ替わり可能な僅差だったかが一目でわかります。<br>
+        <span style="opacity:0.9;">
+          <span style="color:rgba(255,92,53,0.9);">■ SEKAI型（比率40%超）</span>
+          SEKAI票は多いが国民票が追いつかず中位〜下位に散在（TAIGA.M 48%・WEIZE 47%・JAEYONG 47%・JAY 41%・CHISATO 40%）。<br>
+          <span style="color:rgba(78,200,122,0.9);">■ 国民票型（比率15%未満）</span>
+          グローバルランカー圏外だが国民票で順位を稼ぐタイプ（RIKUTO.I 10%・RYOTA 11%・KAIMU 12%・GOTEN 13%）。
+        </span>
       </blockquote>
       <div id="gap-stats" style="display:flex;gap:0.75rem;margin-bottom:1rem;flex-wrap:wrap;"></div>
       <div class="chart-wrap" style="height:420px;"><canvas id="chartVoteGap"></canvas></div>
@@ -1432,22 +1438,7 @@ const rawBattleTeam = [
 ["板倉 悠太","YUTA","SEKAI NO OWARI","The Peak (最高到達点)",2,"後半組"],
 ];
 
-// 推しカメラ再生数（mnetplus 4月22日）: reading → [views, likes, comments]
-const rawOshiCam = {
-"ADAM":[19429,2095,218],"AJU":[2917,368,33],"AKIRA":[2470,225,27],"AOM":[1098,158,17],"ARCHER":[4716,1148,112],"AYUMU.K":[4690,236,119],"AYUMU.S":[12608,1179,154],"CHISATO":[19265,2014,224],"DAIKI.I":[3806,528,65],"DAIKI.K":[57179,6648,498],"DONGMIN":[10664,1206,164],"EITA":[5524,528,113],"EITO":[2283,330,41],"FUMA":[4914,631,98],"GIUSEPPE":[12607,1848,225],"GOTEN":[27537,3788,646],"HARUKU":[2253,190,27],"HARUTO":[1092,142,16],"HIJIRI":[19245,2404,487],"HIKARU":[6213,692,77],"HIROTO":[1758,296,45],"HYEONSEUNG":[18986,3169,310],"HYUGO":[24256,1843,294],"HYUNJAE":[21723,2629,202],"ISSA":[55549,6431,1184],"JAEYONG":[17417,2081,432],"JAY":[2513,619,87],"JINICHIRO":[11324,1472,151],"JOE":[1102,140,15],"JUNGUK":[986,147,19],"JUNSEI":[3196,497,56],"KAICHI":[3072,693,72],"KAIMU":[8095,885,112],"KANADE":[1493,248,47],"KANAME":[15364,2895,365],"KANTA":[6963,696,99],"KEIJIRO":[3138,334,45],"KEISHIN":[2146,161,27],"KEISUKE":[5752,522,109],"KEITO":[36951,3875,468],"KENTO":[1434,235,31],"KINARI":[52922,6201,765],"KOSEI":[3540,469,57],"KOSHIRO":[16621,2705,342],"KOSUKE":[68818,7958,1231],"KOTARO":[10402,1823,316],"KYOHEI":[11770,1989,210],"MAKI":[10189,1713,193],"MEI":[1844,332,30],"MUSASHI":[3268,345,49],"OSUKE":[58189,5644,816],"REN.H":[8737,1220,120],"REN.KO":[11061,1660,219],"RENTO":[4785,322,60],"RICKEY":[5983,1427,189],"RIKU":[6144,698,187],"RIKUTO.H":[3745,390,72],"RIKUTO.I":[12878,2267,314],"RIKUYA":[3672,327,66],"RINTO":[4523,765,143],"RUI.M":[1786,241,14],"RUI.U":[2747,137,22],"RYOGA":[42174,4993,603],"RYOTA":[9240,1467,172],"RYUGA":[5165,542,65],"RYUJI":[96577,8955,1459],"SEITA":[5125,575,102],"SENA":[3703,734,126],"SHINHAENG":[22173,4469,570],"SHINJI":[6126,755,154],"SHINSUKE":[3313,351,58],"SHU.N":[5829,829,147],"SHU.Y":[15849,1862,182],"SIYOUNG":[70159,5381,1238],"SOGO":[1648,113,15],"SORA.S":[8170,1303,378],"SORA.T":[1561,302,50],"SOSHI":[2791,517,63],"SOTA":[5208,425,98],"TAIGA.F":[14963,1390,375],"TAIGA.M":[8507,1358,211],"TAKUMI":[4936,463,96],"TAKUTO.K":[32976,4894,1622],"TAKUTO.M":[4983,1054,124],"TAKUTO.O":[4940,606,77],"TATSUYA":[3605,765,63],"TERU":[5478,504,211],"TETORA":[1649,242,28],"TOKIYA":[2538,425,53],"TOMOKI":[4028,541,105],"TOWA":[53698,4455,763],"TRISTAN":[1498,262,131],"WEIZE":[5493,916,104],"YOHAN":[1245,227,50],"YOSHIKI":[51174,4850,873],"YUKI":[31844,3606,503],"YUMA":[11832,1722,261],"YURA":[57447,5144,1284],"YUSEI.O":[22410,2822,284],"YUSEI.S":[5235,554,125],"YUTA":[13859,1915,211]
-};
-
-// YouTube チーム動画（全8曲）: [artist, song, team, videoId, views_4月22日]
-const rawYtTeam = [
-["ENHYPEN","Bite Me",1,"aMQnVQWG3kI",412423],["ENHYPEN","Bite Me",2,"zVikns6RB_M",711288],
-["Ado","Show",1,"XPT8CFEKCGg",147242],["Ado","Show",2,"VK-NCpcdJTc",229639],
-["JO1","Love seeker",1,"lii4F3ujNEk",431625],["JO1","Love seeker",2,"Kzgq0Ghr1zk",190399],
-["INI","LOUD",1,"lZxyjC-R-II",102503],["INI","LOUD",2,"3kzZSdl0Bzc",45197],
-["Wanna One","Energetic",1,"QQBwcf_ougU",182262],["Wanna One","Energetic",2,"UUTGkgJ8VSw",333142],
-["Stray Kids","CASE 143",1,"vuZrYLtWIUs",87895],["Stray Kids","CASE 143",2,"6F5UxvrmTzg",66059],
-["SEKAI NO OWARI","The Peak (最高到達点)",1,"wySd8eO6G6k",58645],["SEKAI NO OWARI","The Peak (最高到達点)",2,"FgYcyA8HevA",175387],
-["米津玄師","IRIS OUT",1,"QxhLJLm_gBM",70963],["米津玄師","IRIS OUT",2,"8dR3xq-27yc",184257],
-];
+// {{AUTO_BATTLE_SNAP}}
 
 // グループバトル結果: reading → {result, indv, free, total, bRank}
 const rawBattleResult = {
@@ -1540,19 +1531,13 @@ let chartClassScatter  = null;
 let chartBattleTrends  = null;
 
 // ── 動画推移グラフ用データ ──────────────────────────────────────
-const PUSH_CAM_DATES = ["4月12日","4月14日","4月16日"];
-const YT_TEAM_DATES  = ["4月12日","4月14日","4月16日","4月17日","4月19日"];
-const FULL_DATES     = ["4月17日","4月19日"];
-const NOCUT_DATES    = ["4月19日"];
+// {{AUTO_BATTLE_DATES}}
 const SONG_PALETTE   = {
   "IRIS OUT":"#c8b8ff","Love seeker":"#4ec87a","Show":"#f09878",
   "LOUD":"#60c8e0","Energetic":"#ff5c35","CASE 143":"#f0c040",
   "Bite Me":"#e080c0","The Peak (最高到達点)":"#80d060"
 };
-const rawPushViews = {"ADAM":[5227,11408,13855],"AJU":[606,1534,2144],"AKIRA":[527,1523,1938],"AOM":[175,505,709],"ARCHER":[1293,3090,3952],"AYUMU.K":[971,2619,3758],"AYUMU.S":[4205,8876,10935],"CHISATO":[6354,14199,17008],"DAIKI.I":[1306,2696,3255],"DAIKI.K":[21713,44967,52826],"DONGMIN":[3380,6988,8693],"EITA":[2050,4127,5021],"EITO":[455,1225,1674],"FUMA":[1739,3585,4314],"GIUSEPPE":[4140,9408,11324],"GOTEN":[5798,15574,20905],"HARUKU":[810,1639,1900],"HARUTO":[188,535,698],"HIJIRI":[5390,13529,16855],"HIKARU":[2980,5066,5746],"HIROTO":[332,924,1242],"HYEONSEUNG":[4664,11388,14557],"HYUGO":[5887,16571,20533],"HYUNJAE":[5219,10946,13428],"ISSA":[12884,35108,46542],"JAEYONG":[5297,11771,15047],"JAY":[690,1550,1924],"JINICHIRO":[2016,5713,7511],"JOE":[172,481,659],"JUNGUK":[170,417,589],"JUNSEI":[741,1787,2276],"KAICHI":[949,1908,2411],"KAIMU":[3396,6070,7172],"KANADE":[385,853,1073],"KANAME":[5130,10588,12887],"KANTA":[2059,4395,5647],"KEIJIRO":[880,1950,2473],"KEISHIN":[638,1371,1629],"KEISUKE":[1699,4041,4905],"KEITO":[13384,28722,33889],"KENTO":[274,737,989],"KINARI":[15748,31868,40985],"KOSEI":[785,2027,2689],"KOSHIRO":[5104,11434,13866],"KOSUKE":[17436,42198,55102],"KOTARO":[2150,5644,7537],"KYOHEI":[2442,6935,9133],"MAKI":[2537,6052,7900],"MEI":[458,1023,1287],"MUSASHI":[995,2158,2719],"OSUKE":[17610,40224,49920],"REN.KO":[3010,6517,8942],"REN.H":[3010,6097,7278],"RENTO":[1342,2766,3559],"RICKEY":[1594,3635,4966],"RIKU":[1424,3531,4627],"RIKUTO.I":[3582,8491,10953],"RIKUTO.H":[1056,2523,3082],"RIKUYA":[1158,2437,3008],"RINTO":[1271,2902,3518],"RUI.U":[739,1736,2142],"RUI.M":[423,988,1268],"RYOGA":[14805,29558,36134],"RYOTA":[3803,7158,8267],"RYUGA":[1616,3562,4301],"RYUJI":[26878,69871,88548],"SEITA":[1691,3741,4457],"SENA":[1185,2283,2942],"SHINHAENG":[6800,13830,17342],"SHINJI":[1362,3697,4922],"SHINSUKE":[1133,2365,2839],"SHU.N":[2273,4160,4869],"SHU.Y":[5479,10788,13024],"SIYOUNG":[18378,42536,55198],"SOGO":[176,568,906],"SORA.S":[1618,4424,6548],"SORA.T":[424,908,1137],"SOSHI":[784,1724,2147],"SOTA":[1128,3064,4388],"TAIGA.F":[3153,8340,11203],"TAIGA.M":[2886,6168,7548],"TAKUMI":[1450,3239,3980],"TAKUTO.O":[2312,3990,4498],"TAKUTO.K":[8688,21630,26146],"TAKUTO.M":[1283,3207,4152],"TATSUYA":[1081,2522,3084],"TERU":[1387,3476,4537],"TETORA":[330,794,1035],"TOKIYA":[581,1440,1966],"TOMOKI":[1243,2499,3180],"TOWA":[15182,34038,43389],"TRISTAN":[320,742,1038],"WEIZE":[1174,3228,4176],"YOHAN":[235,649,836],"YOSHIKI":[14256,31141,40730],"YUKI":[9569,20810,26367],"YUMA":[3153,7489,9663],"YURA":[14248,35373,47408],"YUSEI.O":[8291,16869,19749],"YUSEI.S":[1652,3582,4504],"YUTA":[4472,10116,12020]};
-const rawYtTeamViews = [{"artist":"ENHYPEN","song":"Bite Me","team":"1","views":[262503,311456,354827,362202,390827]},{"artist":"ENHYPEN","song":"Bite Me","team":"2","views":[388153,482953,567201,581577,648275]},{"artist":"Ado","song":"Show","team":"1","views":[104405,119265,130614,132734,141399]},{"artist":"Ado","song":"Show","team":"2","views":[151331,177057,198626,202447,217989]},{"artist":"JO1","song":"Love seeker","team":"1","views":[262064,315662,360312,367825,403393]},{"artist":"JO1","song":"Love seeker","team":"2","views":[131151,152814,169378,172318,183301]},{"artist":"INI","song":"LOUD","team":"1","views":[null,null,null,9116,71457]},{"artist":"INI","song":"LOUD","team":"2","views":[null,null,null,7131,33205]},{"artist":"Wanna One","song":"Energetic","team":"1","views":[null,null,null,5019,117746]},{"artist":"Wanna One","song":"Energetic","team":"2","views":[null,null,null,5022,216002]},{"artist":"Stray Kids","song":"CASE 143","team":"1","views":[null,null,null,7239,66014]},{"artist":"Stray Kids","song":"CASE 143","team":"2","views":[null,null,null,6868,47002]},{"artist":"SEKAI NO OWARI","song":"The Peak (最高到達点)","team":"1","views":[null,null,null,3150,36668]},{"artist":"SEKAI NO OWARI","song":"The Peak (最高到達点)","team":"2","views":[null,null,null,5203,107037]},{"artist":"Kenshi Yonezu","song":"IRIS OUT","team":"1","views":[null,null,null,null,51853]},{"artist":"Kenshi Yonezu","song":"IRIS OUT","team":"2","views":[null,null,null,null,107674]}];
-const rawFullViews = [{"artist":"Ado","song":"Show","team":"1","views":[863,14617]},{"artist":"Ado","song":"Show","team":"2","views":[2208,28139]},{"artist":"ENHYPEN","song":"Bite Me","team":"1","views":[3171,47197]},{"artist":"ENHYPEN","song":"Bite Me","team":"2","views":[4552,74203]},{"artist":"INI","song":"LOUD","team":"1","views":[3932,59731]},{"artist":"INI","song":"LOUD","team":"2","views":[1404,28061]},{"artist":"JO1","song":"Love seeker","team":"1","views":[3830,52000]},{"artist":"JO1","song":"Love seeker","team":"2","views":[1070,18902]},{"artist":"SEKAI NO OWARI","song":"The Peak (最高到達点)","team":"1","views":[2404,34884]},{"artist":"SEKAI NO OWARI","song":"The Peak (最高到達点)","team":"2","views":[5248,103994]},{"artist":"Stray Kids","song":"CASE 143","team":"1","views":[3301,47771]},{"artist":"Stray Kids","song":"CASE 143","team":"2","views":[2692,37435]},{"artist":"Wanna One","song":"Energetic","team":"1","views":[5458,208692]},{"artist":"Wanna One","song":"Energetic","team":"2","views":[5434,168248]},{"artist":"Kenshi Yonezu","song":"IRIS OUT","team":"1","views":[null,31506]},{"artist":"Kenshi Yonezu","song":"IRIS OUT","team":"2","views":[null,55505]}];
-const rawNocutViews = [{"artist":"Ado","song":"Show","team":"1","views":[6331]},{"artist":"Ado","song":"Show","team":"2","views":[10482]},{"artist":"ENHYPEN","song":"Bite Me","team":"1","views":[31932]},{"artist":"ENHYPEN","song":"Bite Me","team":"2","views":[30995]},{"artist":"INI","song":"LOUD","team":"1","views":[16038]},{"artist":"INI","song":"LOUD","team":"2","views":[7707]},{"artist":"JO1","song":"Love seeker","team":"1","views":[19333]},{"artist":"JO1","song":"Love seeker","team":"2","views":[7176]},{"artist":"Kenshi Yonezu","song":"IRIS OUT","team":"1","views":[14893]},{"artist":"Kenshi Yonezu","song":"IRIS OUT","team":"2","views":[23557]},{"artist":"SEKAI NO OWARI","song":"The Peak (最高到達点)","team":"1","views":[9243]},{"artist":"SEKAI NO OWARI","song":"The Peak (最高到達点)","team":"2","views":[26221]},{"artist":"Stray Kids","song":"CASE 143","team":"1","views":[12064]},{"artist":"Stray Kids","song":"CASE 143","team":"2","views":[9181]},{"artist":"Wanna One","song":"Energetic","team":"1","views":[54294]},{"artist":"Wanna One","song":"Energetic","team":"2","views":[48937]}];
+// {{AUTO_BATTLE_SERIES}}
 let currentBattleTab = 'list';
 
 function switchBattleTab(tab) {
@@ -2391,6 +2376,7 @@ function renderBattleTiming() {
 
 // ── レポートアーカイブ ──
 const REPORTS = [
+  { date:'2026/04/23', title:'第一回順位発表式 票差・票構造 分析', file:'reports/rank1_report_20260423.html' },
   { date:'2026/04/17', title:'動画再生数×クラス 相関分析', file:'reports/battle_report_20260417.html' },
   { date:'2026/04/16', title:'グループバトル後半組 放送直前 数値分析', file:'reports/battle_report_20260416.html' },
   { date:'2026/04/14', title:'グループバトル 推しカメラ数値分析', file:'reports/battle_report_20260414.html' },
@@ -2458,26 +2444,26 @@ function renderVoteGap(){
     gaps.push({label:`${prev[1]}→${curr[1]}`,prevR:prev[0],currR:curr[0],diff,pct,prevTotal:prev[5],currTotal:curr[5]});
   }
   const clr=g=>g.pct>=10?'rgba(255,92,53,0.85)':g.pct<1?'rgba(78,200,122,0.85)':'rgba(200,184,255,0.45)';
-  const断層=gaps.filter(g=>g.pct>=10);
-  const僅差=gaps.filter(g=>g.pct<1);
+  const dansou=gaps.filter(g=>g.pct>=10);
+  const kiwadosa=gaps.filter(g=>g.pct<1);
   const card=(label,val,sub)=>`<div style="background:var(--surface);border-radius:7px;padding:0.75rem 1rem;min-width:115px;">
     <div style="font-size:0.62rem;color:var(--muted);margin-bottom:3px;">${label}</div>
     <div style="font-size:1.15rem;font-weight:500;font-family:monospace;">${val}</div>
     <div style="font-size:0.62rem;color:var(--muted);">${sub}</div></div>`;
-  const maxGap=断層.reduce((a,b)=>a.diff>b.diff?a:b,断層[0]);
-  const minGap=僅差.reduce((a,b)=>a.diff<b.diff?a:b,僅差[0]);
+  const maxGap=dansou.reduce((a,b)=>a.diff>b.diff?a:b,dansou[0]);
+  const minGap=kiwadosa.reduce((a,b)=>a.diff<b.diff?a:b,kiwadosa[0]);
   document.getElementById('gap-stats').innerHTML=
     card('最大断層',maxGap?`${Math.round(maxGap.diff/10000)}万票差`:`-`,maxGap?`${maxGap.prevR}→${maxGap.currR}（${maxGap.pct.toFixed(1)}%）`:'')+
-    card('断層箇所（10%超）',断層.length+'箇所','順位が大きく離れている')+
+    card('断層箇所（10%超）',dansou.length+'箇所','順位が大きく離れている')+
     card('最小僅差',minGap?`${minGap.diff.toLocaleString()}票`:`-`,minGap?`${minGap.prevR}→${minGap.currR}（${minGap.pct.toFixed(2)}%）`:'')+
-    card('僅差箇所（1%未満）',僅差.length+'箇所','入れ替わり可能だった');
+    card('僅差箇所（1%未満）',kiwadosa.length+'箇所','入れ替わり可能だった');
   const ctx=document.getElementById('chartVoteGap').getContext('2d');
   if(chartVoteGap){chartVoteGap.destroy();chartVoteGap=null;}
   chartVoteGap=new Chart(ctx,{
     type:'bar',
     data:{
       labels:gaps.map(g=>g.label),
-      datasets:[{data:gaps.map(g=>Math.round(g.diff/1000)/10),backgroundColor:gaps.map(clr),borderColor:'transparent',borderRadius:3}]
+      datasets:[{data:gaps.map(g=>g.diff/10000),backgroundColor:gaps.map(clr),borderColor:'transparent',borderRadius:3}]
     },
     options:{responsive:true,maintainAspectRatio:false,
       plugins:{legend:{display:false},tooltip:{
@@ -2496,18 +2482,53 @@ function renderVoteGap(){
       }
     }
   });
-  // ボーダー周辺詳細
-  const border=ranked.slice(-8);
-  const rows=border.map(r=>{
+  // 全50名テーブル（グループ別）
+  const groups=[
+    {label:'1〜12位（デビュー圏内）',min:1,max:12},
+    {label:'13〜20位',min:13,max:20},
+    {label:'21〜30位',min:21,max:30},
+    {label:'31〜40位',min:31,max:40},
+    {label:'41〜50位',min:41,max:50},
+  ];
+  const diffMap={};
+  for(let i=1;i<ranked.length;i++){
+    const diff=ranked[i-1][5]-ranked[i][5];
+    const pct=diff/ranked[i-1][5]*100;
+    diffMap[ranked[i][1]]={diff,pct};
+  }
+  const mkRow=r=>{
     const sekaiPct=Math.round(r[4]/(r[3]+r[4])*100);
-    return`<tr><td>${r[1]}位</td><td>${readingClassMap[r[0]]?.name||r[0]}</td><td style="font-family:monospace">${r[5].toLocaleString()}</td><td style="font-family:monospace">${r[3].toLocaleString()}</td><td style="font-family:monospace">${r[4].toLocaleString()}</td><td style="font-family:monospace">${sekaiPct}%</td></tr>`;
-  }).join('');
-  document.getElementById('gap-border-detail').innerHTML=`
-    <p style="font-size:0.72rem;color:var(--accent);font-family:monospace;margin-bottom:0.5rem;">▼ ボーダー周辺（43〜50位）詳細</p>
-    <div class="tbl-wrap"><table>
-      <thead><tr><th>順位</th><th style="text-align:left">読み方</th><th>総獲得票</th><th>国民票</th><th>SEKAI票</th><th>SEKAI比率</th></tr></thead>
-      <tbody>${rows}</tbody>
-    </table></div>`;
+    const isSEKAI=sekaiPct>=40;
+    const isKokumin=sekaiPct<15;
+    const ratioStyle=isSEKAI
+      ?'font-family:monospace;background:rgba(255,92,53,0.18);color:#ff9070;border-radius:3px;'
+      :isKokumin
+        ?'font-family:monospace;background:rgba(78,200,122,0.18);color:#4ec87a;border-radius:3px;'
+        :'font-family:monospace;';
+    const natStyle=isKokumin?'font-family:monospace;color:#4ec87a;':'font-family:monospace;';
+    const sekaiStyle=isSEKAI?'font-family:monospace;color:#ff9070;':'font-family:monospace;';
+    const gi=diffMap[r[1]];
+    const gapTxt=gi?gi.diff.toLocaleString():'-';
+    const gapStyle=gi?(gi.pct>=10?'font-family:monospace;color:#ff9070;':gi.pct<1?'font-family:monospace;color:#4ec87a;':'font-family:monospace;color:#888;'):'font-family:monospace;color:#555;';
+    return`<tr><td>${r[1]}位</td><td style="text-align:left">${readingClassMap[r[0]]?.name||r[0]}</td><td style="font-family:monospace">${r[5].toLocaleString()}</td><td style="${gapStyle}">${gapTxt}</td><td style="${natStyle}">${r[3].toLocaleString()}</td><td style="${sekaiStyle}">${r[4].toLocaleString()}</td><td style="${ratioStyle}">${sekaiPct}%</td></tr>`;
+  };
+  const thead=`<thead><tr>
+    <th style="width:52px">順位</th>
+    <th style="text-align:left;width:130px">名前</th>
+    <th style="width:90px">総獲得票</th>
+    <th style="width:78px">↑票差</th>
+    <th style="width:88px">国民票</th>
+    <th style="width:88px">SEKAI票</th>
+    <th style="width:70px">SEKAI比率</th>
+  </tr></thead>`;
+  const allRows=groups.flatMap(g=>{
+    const inGroup=ranked.filter(r=>r[1]>=g.min&&r[1]<=g.max);
+    const accentColor=g.max===12?'var(--accent)':'#888';
+    const sep=`<tr><td colspan="7" style="padding:8px 8px 4px;font-size:0.68rem;color:${accentColor};font-family:monospace;background:rgba(255,255,255,0.025);border-bottom:1px solid var(--border2);">▼ ${g.label}</td></tr>`;
+    return[sep,...inGroup.map(mkRow)];
+  });
+  document.getElementById('gap-border-detail').innerHTML=
+    `<div class="tbl-wrap"><table style="table-layout:fixed">${thead}<tbody>${allRows.join('')}</tbody></table></div>`;
 }
 
 function switchAnalysisTab(t){
@@ -2519,7 +2540,7 @@ function switchAnalysisTab(t){
   if(t==='class') renderClassRank();
   if(t==='timing') renderBroadcastTiming();
   if(t==='scatter') setTimeout(renderScatter,0);
-  if(t==='gap') renderVoteGap();
+  if(t==='gap') setTimeout(renderVoteGap,0);
 }
 
 function renderVoteBreakdown(){

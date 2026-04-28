@@ -109,6 +109,128 @@ def build_level_broadcast_js(rows):
     return level_js, broadcast_js
 
 
+def int_or_null(s):
+    s = str(s).strip()
+    if s == "" or s.lower() == "null":
+        return "null"
+    try:
+        return str(int(float(s)))
+    except ValueError:
+        return "null"
+
+
+def build_battle_snap_js(source_dir, battle_cfg):
+    mnet = read_csv(source_dir / battle_cfg["mnetplus"])
+    header = mnet[0]
+    n = len(header)
+    latest_label = header[n - 3].replace("_再生数", "")
+    oshi_entries = []
+    for row in mnet[1:]:
+        if len(row) < 4:
+            continue
+        reading = row[1]
+        lv = int_or_null(row[n - 3]) if n - 3 < len(row) else "null"
+        ll = int_or_null(row[n - 2]) if n - 2 < len(row) else "null"
+        lc = int_or_null(row[n - 1]) if n - 1 < len(row) else "null"
+        oshi_entries.append(f'"{reading}":[{lv},{ll},{lc}]')
+    raw_oshi = (
+        f"// 推しカメラ再生数（mnetplus {latest_label}）: reading → [views, likes, comments]\n"
+        f'const rawOshiCam = {{{",".join(oshi_entries)}}};'
+    )
+
+    yt = read_csv(source_dir / battle_cfg["yt_team"])
+    latest_yt_label = yt[0][-1].replace("_再生数", "")
+    yt_entries = []
+    for row in yt[1:]:
+        if len(row) < 5:
+            continue
+        artist, song, team, vid = row[0], row[1], row[2], row[3]
+        lv = int_or_null(row[-1])
+        yt_entries.append(f'["{artist}","{song}",{int(team)},"{vid}",{lv}]')
+    raw_yt = (
+        f"// YouTube チーム動画（全8曲）: [artist, song, team, videoId, views_{latest_yt_label}]\n"
+        f'const rawYtTeam = [{",".join(yt_entries)}];'
+    )
+
+    return raw_oshi + "\n\n" + raw_yt
+
+
+def build_battle_dates_js(source_dir, battle_cfg):
+    mnet = read_csv(source_dir / battle_cfg["mnetplus"])
+    push_dates = [mnet[0][i].replace("_再生数", "") for i in range(2, len(mnet[0]), 3)]
+
+    yt = read_csv(source_dir / battle_cfg["yt_team"])
+    yt_dates = [c.replace("_再生数", "") for c in yt[0][4:]]
+
+    full = read_csv(source_dir / battle_cfg["yt_full"])
+    full_dates = [c.replace("_再生数", "") for c in full[0][4:]]
+
+    nocut = read_csv(source_dir / battle_cfg["yt_nocut"])
+    nocut_dates = [c.replace("_再生数", "") for c in nocut[0][4:]]
+
+    def arr(lst):
+        return "[" + ",".join(f'"{d}"' for d in lst) + "]"
+
+    return "\n".join([
+        f"const PUSH_CAM_DATES = {arr(push_dates)};",
+        f"const YT_TEAM_DATES  = {arr(yt_dates)};",
+        f"const FULL_DATES     = {arr(full_dates)};",
+        f"const NOCUT_DATES    = {arr(nocut_dates)};",
+    ])
+
+
+def build_battle_series_js(source_dir, battle_cfg):
+    mnet = read_csv(source_dir / battle_cfg["mnetplus"])
+    n_header = len(mnet[0])
+    view_indices = list(range(2, n_header, 3))
+    push_entries = []
+    for row in mnet[1:]:
+        if len(row) < 4:
+            continue
+        reading = row[1]
+        views = [int_or_null(row[i]) if i < len(row) else "null" for i in view_indices]
+        push_entries.append(f'"{reading}":[{",".join(views)}]')
+    raw_push = f'const rawPushViews = {{{",".join(push_entries)}}};'
+
+    yt = read_csv(source_dir / battle_cfg["yt_team"])
+    yt_series = []
+    for row in yt[1:]:
+        if len(row) < 5:
+            continue
+        artist, song, team = row[0], row[1], row[2]
+        views = [int_or_null(x) for x in row[4:]]
+        yt_series.append(
+            f'{{"artist":"{artist}","song":"{song}","team":"{team}","views":[{",".join(views)}]}}'
+        )
+    raw_yt_views = f'const rawYtTeamViews = [{",".join(yt_series)}];'
+
+    full = read_csv(source_dir / battle_cfg["yt_full"])
+    full_series = []
+    for row in full[1:]:
+        if len(row) < 5:
+            continue
+        artist, song, team = row[0], row[1], row[2]
+        views = [int_or_null(x) for x in row[4:]]
+        full_series.append(
+            f'{{"artist":"{artist}","song":"{song}","team":"{team}","views":[{",".join(views)}]}}'
+        )
+    raw_full = f'const rawFullViews = [{",".join(full_series)}];'
+
+    nocut = read_csv(source_dir / battle_cfg["yt_nocut"])
+    nocut_series = []
+    for row in nocut[1:]:
+        if len(row) < 5:
+            continue
+        artist, song, team = row[0], row[1], row[2]
+        views = [int_or_null(x) for x in row[4:]]
+        nocut_series.append(
+            f'{{"artist":"{artist}","song":"{song}","team":"{team}","views":[{",".join(views)}]}}'
+        )
+    raw_nocut = f'const rawNocutViews = [{",".join(nocut_series)}];'
+
+    return "\n".join([raw_push, raw_yt_views, raw_full, raw_nocut])
+
+
 def generate():
     with open(CONFIG_PATH, encoding="utf-8") as f:
         config = json.load(f)
@@ -146,6 +268,16 @@ def generate():
     template = TEMPLATE_PATH.read_text(encoding="utf-8")
     output = template.replace("// {{AUTO_DATA}}", auto_data)
     output = output.replace("{{LAST_DATE}}", last_date)
+
+    if "battle_source_dir" in config and "battle_csv" in config:
+        source_dir = Path(config["battle_source_dir"])
+        battle_cfg = config["battle_csv"]
+        snap_js = build_battle_snap_js(source_dir, battle_cfg)
+        dates_js = build_battle_dates_js(source_dir, battle_cfg)
+        series_js = build_battle_series_js(source_dir, battle_cfg)
+        output = output.replace("// {{AUTO_BATTLE_SNAP}}", snap_js)
+        output = output.replace("// {{AUTO_BATTLE_DATES}}", dates_js)
+        output = output.replace("// {{AUTO_BATTLE_SERIES}}", series_js)
 
     OUTPUT_PATH.write_text(output, encoding="utf-8")
     print(f"生成完了: {OUTPUT_PATH}")
