@@ -2688,14 +2688,23 @@ function renderVoteGap(){
     const gapStyle=gi?(gi.pct>=10?'font-family:monospace;color:#ff9070;':gi.pct<1?'font-family:monospace;color:#4ec87a;':'font-family:monospace;color:#888;'):'font-family:monospace;color:#555;';
     return`<tr><td>${r[1]}位</td><td style="text-align:left">${readingClassMap[r[0]]?.name||r[0]}</td><td style="font-family:monospace">${r[5].toLocaleString()}</td><td style="${gapStyle}">${gapTxt}</td><td style="${natStyle}">${r[3].toLocaleString()}</td><td style="${sekaiStyle}">${r[4].toLocaleString()}</td><td style="${ratioStyle}">${sekaiPct}%</td></tr>`;
   };
-  const thead=`<thead><tr><th>順位</th><th style="text-align:left">名前</th><th>総獲得票</th><th>↑票差</th><th>国民票</th><th>SEKAI票</th><th>SEKAI比率</th></tr></thead>`;
-  const sections=groups.map(g=>{
+  const thead=`<thead><tr>
+    <th style="width:52px">順位</th>
+    <th style="text-align:left;width:130px">名前</th>
+    <th style="width:90px">総獲得票</th>
+    <th style="width:78px">↑票差</th>
+    <th style="width:88px">国民票</th>
+    <th style="width:88px">SEKAI票</th>
+    <th style="width:70px">SEKAI比率</th>
+  </tr></thead>`;
+  const allRows=groups.flatMap(g=>{
     const inGroup=ranked.filter(r=>r[1]>=g.min&&r[1]<=g.max);
     const accentColor=g.max===12?'var(--accent)':'#888';
-    return`<p style="font-size:0.72rem;color:${accentColor};font-family:monospace;margin:1rem 0 0.4rem;">▼ ${g.label}</p>
-    <div class="tbl-wrap"><table>${thead}<tbody>${inGroup.map(mkRow).join('')}</tbody></table></div>`;
-  }).join('');
-  document.getElementById('gap-border-detail').innerHTML=sections;
+    const sep=`<tr><td colspan="7" style="padding:8px 8px 4px;font-size:0.68rem;color:${accentColor};font-family:monospace;background:rgba(255,255,255,0.025);border-bottom:1px solid var(--border2);">▼ ${g.label}</td></tr>`;
+    return[sep,...inGroup.map(mkRow)];
+  });
+  document.getElementById('gap-border-detail').innerHTML=
+    `<div class="tbl-wrap"><table style="table-layout:fixed">${thead}<tbody>${allRows.join('')}</tbody></table></div>`;
 }
 
 function switchAnalysisTab(t){
