@@ -78,6 +78,16 @@ tr:hover td{background:var(--surface);}
 .g-tabs{display:flex;gap:6px;margin-bottom:1rem;}
 .g-tab{font-size:0.75rem;padding:4px 14px;border-radius:5px;border:1px solid var(--border2);background:transparent;color:var(--muted);cursor:pointer;font-family:inherit;}
 .g-tab.active{background:rgba(200,184,255,0.12);border-color:rgba(200,184,255,0.4);color:var(--accent);}
+.pos-group-label{font-size:0.8rem;color:var(--muted);margin:1.4rem 0 0.6rem;border-bottom:1px solid var(--border2);padding-bottom:0.3rem;}
+.pos-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:0.75rem;}
+.pos-card{background:var(--surface);border:1px solid var(--border2);border-radius:8px;padding:0.75rem 0.9rem;}
+.pos-card-song{font-size:0.85rem;font-weight:600;color:var(--text);}
+.pos-card-artist{font-size:0.7rem;color:var(--muted);margin-bottom:0.5rem;}
+.pos-card-pos{font-size:0.65rem;color:var(--accent);font-family:monospace;margin-bottom:0.5rem;}
+.pos-member{font-size:0.75rem;color:var(--text);padding:2px 0;border-bottom:1px solid rgba(255,255,255,0.04);}
+.pos-member:last-child{border-bottom:none;}
+.pos-yt-link{display:inline-block;margin-top:0.5rem;font-size:0.65rem;color:var(--accent);text-decoration:none;opacity:0.8;}
+.pos-yt-link:hover{opacity:1;}
 .hm-wrap{overflow-x:auto;}
 .hm-header-row{display:flex;align-items:center;gap:3px;margin-bottom:3px;padding-left:96px;}
 .hm-head{flex:1;min-width:70px;font-size:0.62rem;color:var(--muted);text-align:center;font-family:monospace;}
@@ -133,6 +143,7 @@ tr:hover td{background:var(--surface);}
   <button class="tab" onclick="switchTab('heat')">ヒートマップ</button>
   <button class="tab" onclick="switchTab('analysis')">背景分析</button>
   <button class="tab" onclick="switchTab('battle')">グループバトル</button>
+  <button class="tab" onclick="switchTab('pos')">ポジションバトル</button>
 </div>
 <div class="main">
 
@@ -494,10 +505,19 @@ tr:hover td{background:var(--surface);}
 
   </div>
 
+  <!-- ========== ポジションバトル ========== -->
+  <div id="tab-pos" class="section">
+    <blockquote style="border-left:3px solid var(--border2);background:var(--surface);padding:0.8rem 1.1rem;margin-bottom:1.25rem;border-radius:0 5px 5px 0;font-size:0.76rem;color:var(--text);opacity:0.75;line-height:1.8;">
+      ポジション（ダンス・ボーカル・ラップ・セルフプロデュース）ごとの課題曲でチームに分かれてパフォーマンス。現場観覧者投票でチーム内1位の9名に1万票、最高チームのメンバー全員に5万票のベネフィット。全チーム終了翌週に第二回順位発表式（36位以下脱落、35名通過）。
+    </blockquote>
+    <div id="pos-list"></div>
+  </div>
+
 </div>
 <div id="trendTooltip" style="display:none;position:fixed;pointer-events:none;z-index:300;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:11px 14px;min-width:190px;max-width:230px;box-shadow:0 4px 20px rgba(0,0,0,0.5);"></div>
 <script>
 // {{AUTO_DATA}}
+// {{AUTO_POS_DATA}}
 
 // スキップ日付を除いたヒートマップ用インデックスペア
 const hmKeepIdx = PLAY_DATES.reduce((acc,d,i)=>{ if(!HM_SKIP_DATES.includes(d)) acc.push(i); return acc; }, []);
@@ -701,12 +721,13 @@ function loadSelection(){
 }
 
 function switchTab(t){
-  ['watch','all','trend','heat','analysis','battle'].forEach((id,i)=>{
+  ['watch','all','trend','heat','analysis','battle','pos'].forEach((id,i)=>{
     document.getElementById('tab-'+id).classList.toggle('active',id===t);
     document.querySelectorAll('.tab')[i].classList.toggle('active',id===t);
   });
   if(t==='all') renderAll();
   if(t==='trend') renderTrend();
+  if(t==='pos') renderPosBattle();
   if(t==='heat') renderHeatmap();
   if(t==='analysis') renderVoteBreakdown();
   if(t==='battle') renderBattle();
@@ -1541,6 +1562,43 @@ const SONG_PALETTE   = {
 };
 // {{AUTO_BATTLE_SERIES}}
 let currentBattleTab = 'list';
+
+function renderPosBattle() {
+  const teams = {};
+  const order = [];
+  rawPosBattle.forEach(r => {
+    const [name, reading, song, artist, pos, broadcast] = r;
+    if (!teams[song]) { teams[song] = {song, artist, pos, broadcast, members: []}; order.push(song); }
+    teams[song].members.push({name, reading});
+  });
+  const ytMap = {};
+  rawPosYt.forEach(r => { ytMap[r[1]] = r[2]; });
+
+  function teamCard(song) {
+    const t = teams[song];
+    const vid = ytMap[song] || '';
+    const ytLink = vid ? `<a class="pos-yt-link" href="https://youtu.be/${vid}" target="_blank">▶ YouTube ハイライト</a>` : '';
+    const members = t.members.map(m => {
+      const mc = readingClassMap[m.reading];
+      return `<div class="pos-member">${mc ? mc.name : m.name}</div>`;
+    }).join('');
+    return `<div class="pos-card">
+      <div class="pos-card-song">${t.song}</div>
+      <div class="pos-card-artist">${t.artist}</div>
+      <div class="pos-card-pos">${t.pos}</div>
+      ${members}
+      ${ytLink}
+    </div>`;
+  }
+
+  const front = order.filter(s => teams[s].broadcast === '前半組');
+  const back  = order.filter(s => teams[s].broadcast === '後半組');
+  document.getElementById('pos-list').innerHTML =
+    `<h3 class="pos-group-label">▼ 前半組（本日放送）</h3>
+    <div class="pos-grid">${front.map(teamCard).join('')}</div>
+    <h3 class="pos-group-label">▼ 後半組（来週放送）</h3>
+    <div class="pos-grid">${back.map(teamCard).join('')}</div>`;
+}
 
 function switchBattleTab(tab) {
   currentBattleTab = tab;

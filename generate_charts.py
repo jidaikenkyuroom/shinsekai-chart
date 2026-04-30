@@ -131,6 +131,32 @@ def int_or_null(s):
         return "null"
 
 
+def build_pos_js(source_dir, pos_cfg):
+    team_rows = read_csv(source_dir / pos_cfg["team"])
+    yt_rows = read_csv(source_dir / pos_cfg["yt_highlight"])
+
+    team_entries = []
+    for row in team_rows[1:]:
+        if len(row) < 5:
+            continue
+        name, reading, song_artist, position, broadcast = row[0], row[1], row[2], row[3], row[4]
+        parts = song_artist.split(" / ", 1)
+        song = parts[0]
+        artist = parts[1] if len(parts) > 1 else ""
+        team_entries.append(f'["{name}","{reading}","{song}","{artist}","{position}","{broadcast}"]')
+
+    yt_entries = []
+    for row in yt_rows[1:]:
+        if len(row) < 3:
+            continue
+        artist, song, vid = row[0], row[1], row[2] if len(row) > 2 else ""
+        yt_entries.append(f'["{artist}","{song}","{vid}"]')
+
+    raw_team = "const rawPosBattle = [\n" + ",\n".join(team_entries) + "\n];"
+    raw_yt = "const rawPosYt = [" + ",".join(yt_entries) + "];"
+    return raw_team + "\n" + raw_yt
+
+
 def build_battle_snap_js(source_dir, battle_cfg):
     mnet = read_csv(source_dir / battle_cfg["mnetplus"])
     header = mnet[0]
@@ -280,6 +306,11 @@ def generate():
     template = TEMPLATE_PATH.read_text(encoding="utf-8")
     output = template.replace("// {{AUTO_DATA}}", auto_data)
     output = output.replace("{{LAST_DATE}}", last_date)
+
+    if "pos_csv" in config:
+        src = Path(config.get("local_source_dir", config.get("battle_source_dir", "")))
+        pos_js = build_pos_js(src, config["pos_csv"])
+        output = output.replace("// {{AUTO_POS_DATA}}", pos_js)
 
     if "battle_source_dir" in config and "battle_csv" in config:
         source_dir = Path(config["battle_source_dir"])

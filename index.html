@@ -78,6 +78,16 @@ tr:hover td{background:var(--surface);}
 .g-tabs{display:flex;gap:6px;margin-bottom:1rem;}
 .g-tab{font-size:0.75rem;padding:4px 14px;border-radius:5px;border:1px solid var(--border2);background:transparent;color:var(--muted);cursor:pointer;font-family:inherit;}
 .g-tab.active{background:rgba(200,184,255,0.12);border-color:rgba(200,184,255,0.4);color:var(--accent);}
+.pos-group-label{font-size:0.8rem;color:var(--muted);margin:1.4rem 0 0.6rem;border-bottom:1px solid var(--border2);padding-bottom:0.3rem;}
+.pos-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:0.75rem;}
+.pos-card{background:var(--surface);border:1px solid var(--border2);border-radius:8px;padding:0.75rem 0.9rem;}
+.pos-card-song{font-size:0.85rem;font-weight:600;color:var(--text);}
+.pos-card-artist{font-size:0.7rem;color:var(--muted);margin-bottom:0.5rem;}
+.pos-card-pos{font-size:0.65rem;color:var(--accent);font-family:monospace;margin-bottom:0.5rem;}
+.pos-member{font-size:0.75rem;color:var(--text);padding:2px 0;border-bottom:1px solid rgba(255,255,255,0.04);}
+.pos-member:last-child{border-bottom:none;}
+.pos-yt-link{display:inline-block;margin-top:0.5rem;font-size:0.65rem;color:var(--accent);text-decoration:none;opacity:0.8;}
+.pos-yt-link:hover{opacity:1;}
 .hm-wrap{overflow-x:auto;}
 .hm-header-row{display:flex;align-items:center;gap:3px;margin-bottom:3px;padding-left:96px;}
 .hm-head{flex:1;min-width:70px;font-size:0.62rem;color:var(--muted);text-align:center;font-family:monospace;}
@@ -133,6 +143,7 @@ tr:hover td{background:var(--surface);}
   <button class="tab" onclick="switchTab('heat')">ヒートマップ</button>
   <button class="tab" onclick="switchTab('analysis')">背景分析</button>
   <button class="tab" onclick="switchTab('battle')">グループバトル</button>
+  <button class="tab" onclick="switchTab('pos')">ポジションバトル</button>
 </div>
 <div class="main">
 
@@ -494,6 +505,14 @@ tr:hover td{background:var(--surface);}
 
   </div>
 
+  <!-- ========== ポジションバトル ========== -->
+  <div id="tab-pos" class="section">
+    <blockquote style="border-left:3px solid var(--border2);background:var(--surface);padding:0.8rem 1.1rem;margin-bottom:1.25rem;border-radius:0 5px 5px 0;font-size:0.76rem;color:var(--text);opacity:0.75;line-height:1.8;">
+      ポジション（ダンス・ボーカル・ラップ・セルフプロデュース）ごとの課題曲でチームに分かれてパフォーマンス。現場観覧者投票でチーム内1位の9名に1万票、最高チームのメンバー全員に5万票のベネフィット。全チーム終了翌週に第二回順位発表式（36位以下脱落、35名通過）。
+    </blockquote>
+    <div id="pos-list"></div>
+  </div>
+
 </div>
 <div id="trendTooltip" style="display:none;position:fixed;pointer-events:none;z-index:300;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:11px 14px;min-width:190px;max-width:230px;box-shadow:0 4px 20px rgba(0,0,0,0.5);"></div>
 <script>
@@ -653,6 +672,59 @@ const rawVote = [
 ["岡田 侑磨","YUMA",47,48,39,null],["安部 結蘭","YURA",4,4,3,null],["大林 悠成","YUSEI.O",24,22,24,null],
 ["佐野 由征","YUSEI.S",60,55,68,-1],["板倉 悠太","YUTA",19,19,29,38],
 ];
+const rawPosBattle = [
+["小林 千悟","CHISATO","Natural","Imagine Dragons","ダンス","前半組"],
+["ユ・ヒョンスン","HYEONSEUNG","Super","SEVENTEEN","ダンス","前半組"],
+["ユン・ジェヨン","JAEYONG","宿命","Official髭男dism","ボーカル","前半組"],
+["ジュアン・ジェイ","JAY","Super","SEVENTEEN","ダンス","前半組"],
+["小野 慶人","KEITO","宿命","Official髭男dism","ボーカル","前半組"],
+["青沼 昂史朗","KOSHIRO","Super","SEVENTEEN","ダンス","前半組"],
+["照井 康祐","KOSUKE","Super","SEVENTEEN","ダンス","前半組"],
+["浅香 孝太郎","KOTARO","Natural","Imagine Dragons","ダンス","前半組"],
+["チェン・リッキー","RICKEY","Natural","Imagine Dragons","ダンス","前半組"],
+["大瀬 凜和","RINTO","Super","SEVENTEEN","ダンス","前半組"],
+["飯塚 亮賀","RYOGA","宿命","Official髭男dism","ボーカル","前半組"],
+["石田 亮太","RYOTA","Natural","Imagine Dragons","ダンス","前半組"],
+["杉山 竜司","RYUJI","DOMINANCE","INI","ダンス,ラップ","前半組"],
+["澤井 星名","SENA","Super","SEVENTEEN","ダンス","前半組"],
+["山下 柊","SHU.Y","DOMINANCE","INI","ダンス,ラップ","前半組"],
+["髙橋 空良","SORA.T","DOMINANCE","INI","ダンス,ラップ","前半組"],
+["藤牧 大雅","TAIGA.F","DOMINANCE","INI","ダンス,ラップ","前半組"],
+["松田 太雅","TAIGA.M","Super","SEVENTEEN","ダンス","前半組"],
+["南平 達矢","TATSUYA","宿命","Official髭男dism","ボーカル","前半組"],
+["リー・ウェイゼ","WEIZE","Natural","Imagine Dragons","ダンス","前半組"],
+["後藤 結","YUKI","宿命","Official髭男dism","ボーカル","前半組"],
+["安部 結蘭","YURA","Natural","Imagine Dragons","ダンス","前半組"],
+["大林 悠成","YUSEI.O","DOMINANCE","INI","ダンス,ラップ","前半組"],
+["アダム・ナガイ","ADAM","My Grandfather’s Clock","","セルフプロデュース","後半組"],
+["アーチャー・ウイ","ARCHER","My Grandfather’s Clock","","セルフプロデュース","後半組"],
+["篠ヶ谷 歩夢","AYUMU.S","ベテルギウス","優里","ボーカル","後半組"],
+["加藤 大樹","DAIKI.K","Doctor!Doctor!","ZEROBASEONE","ダンス,ボーカル,ラップ","後半組"],
+["カク・ドンミン","DONGMIN","BE CLASSIC","JO1","ダンス","後半組"],
+["小笠原 ジュゼッペ 慧","GIUSEPPE","WORK HARD","ちゃんみな","ラップ","後半組"],
+["倉橋 吾槙","GOTEN","BE CLASSIC","JO1","ダンス","後半組"],
+["イ・ヒョンジェ","HYUNJAE","ベテルギウス","優里","ボーカル","後半組"],
+["柳谷 伊冴","ISSA","ベテルギウス","優里","ボーカル","後半組"],
+["金安 純正","JUNSEI","BE CLASSIC","JO1","ダンス","後半組"],
+["リュウ・カイチ","KAICHI","ベテルギウス","優里","ボーカル","後半組"],
+["宇野 海夢","KAIMU","My Grandfather’s Clock","","セルフプロデュース","後半組"],
+["横山 奏夢","KANAME","WORK HARD","ちゃんみな","ラップ","後半組"],
+["釼持 吉成","KINARI","BE CLASSIC","JO1","ダンス","後半組"],
+["田中 蒔","MAKI","My Grandfather’s Clock","","セルフプロデュース","後半組"],
+["森 明育","MEI","WORK HARD","ちゃんみな","ラップ","後半組"],
+["土田 央修","OSUKE","Doctor!Doctor!","ZEROBASEONE","ダンス,ボーカル,ラップ","後半組"],
+["小清水 蓮","REN.KO","BE CLASSIC","JO1","ダンス","後半組"],
+["今江 陸斗","RIKUTO.I","BE CLASSIC","JO1","ダンス","後半組"],
+["オ・シンヘン","SHINHAENG","Doctor!Doctor!","ZEROBASEONE","ダンス,ボーカル,ラップ","後半組"],
+["西﨑 柊","SHU.N","WORK HARD","ちゃんみな","ラップ","後半組"],
+["パク・シヨン","SIYOUNG","Doctor!Doctor!","ZEROBASEONE","ダンス,ボーカル,ラップ","後半組"],
+["熊部 拓斗","TAKUTO.K","WORK HARD","ちゃんみな","ラップ","後半組"],
+["濱田 永遠","TOWA","WORK HARD","ちゃんみな","ラップ","後半組"],
+["矢田 佳暉","YOSHIKI","Doctor!Doctor!","ZEROBASEONE","ダンス,ボーカル,ラップ","後半組"],
+["岡田 侑磨","YUMA","BE CLASSIC","JO1","ダンス","後半組"],
+["板倉 悠太","YUTA","My Grandfather’s Clock","","セルフプロデュース","後半組"]
+];
+const rawPosYt = [["INI","DOMINANCE","z03OBZTaRWM"],["SEVENTEEN","Super","nmMksZTDWyc"],["Official髭男dism","宿命","4TiuS0SzANc"],["Imagine Dragons","Natural","FjBIXbVr37I"],["JO1","BE CLASSIC",""],["ZEROBASEONE","Doctor!Doctor!",""],["サンプリング","My Grandfather's Clock",""],["ちゃんみな","WORK HARD",""],["優里","ベテルギウス",""]];
 
 // スキップ日付を除いたヒートマップ用インデックスペア
 const hmKeepIdx = PLAY_DATES.reduce((acc,d,i)=>{ if(!HM_SKIP_DATES.includes(d)) acc.push(i); return acc; }, []);
@@ -856,12 +928,13 @@ function loadSelection(){
 }
 
 function switchTab(t){
-  ['watch','all','trend','heat','analysis','battle'].forEach((id,i)=>{
+  ['watch','all','trend','heat','analysis','battle','pos'].forEach((id,i)=>{
     document.getElementById('tab-'+id).classList.toggle('active',id===t);
     document.querySelectorAll('.tab')[i].classList.toggle('active',id===t);
   });
   if(t==='all') renderAll();
   if(t==='trend') renderTrend();
+  if(t==='pos') renderPosBattle();
   if(t==='heat') renderHeatmap();
   if(t==='analysis') renderVoteBreakdown();
   if(t==='battle') renderBattle();
@@ -1706,6 +1779,43 @@ const rawYtTeamViews = [{"artist":"ENHYPEN","song":"Bite Me","team":"1","views":
 const rawFullViews = [{"artist":"Ado","song":"Show","team":"1","views":[863,14617,21430,24601]},{"artist":"Ado","song":"Show","team":"2","views":[2208,28139,41910,48718]},{"artist":"ENHYPEN","song":"Bite Me","team":"1","views":[3171,47197,71591,81758]},{"artist":"ENHYPEN","song":"Bite Me","team":"2","views":[4552,74203,105747,119716]},{"artist":"INI","song":"LOUD","team":"1","views":[3932,59731,79884,88210]},{"artist":"INI","song":"LOUD","team":"2","views":[1404,28061,35341,38296]},{"artist":"JO1","song":"Love seeker","team":"1","views":[3830,52000,75914,86775]},{"artist":"JO1","song":"Love seeker","team":"2","views":[1070,18902,28296,32975]},{"artist":"SEKAI NO OWARI","song":"The Peak (最高到達点)","team":"1","views":[2404,34884,45451,49855]},{"artist":"SEKAI NO OWARI","song":"The Peak (最高到達点)","team":"2","views":[5248,103994,146987,166799]},{"artist":"Stray Kids","song":"CASE 143","team":"1","views":[3301,47771,58110,62484]},{"artist":"Stray Kids","song":"CASE 143","team":"2","views":[2692,37435,48408,52832]},{"artist":"Wanna One","song":"Energetic","team":"1","views":[5458,208692,281553,309641]},{"artist":"Wanna One","song":"Energetic","team":"2","views":[5434,168248,225580,251052]},{"artist":"Kenshi Yonezu","song":"IRIS OUT","team":"1","views":[null,31506,49483,59240]},{"artist":"Kenshi Yonezu","song":"IRIS OUT","team":"2","views":[null,55505,87883,102656]}];
 const rawNocutViews = [{"artist":"Ado","song":"Show","team":"1","views":[6331,10552,11876]},{"artist":"Ado","song":"Show","team":"2","views":[10482,16272,17739]},{"artist":"ENHYPEN","song":"Bite Me","team":"1","views":[31932,46494,49667]},{"artist":"ENHYPEN","song":"Bite Me","team":"2","views":[30995,45849,49383]},{"artist":"INI","song":"LOUD","team":"1","views":[16038,25786,28253]},{"artist":"INI","song":"LOUD","team":"2","views":[7707,11605,12582]},{"artist":"JO1","song":"Love seeker","team":"1","views":[19333,30337,33092]},{"artist":"JO1","song":"Love seeker","team":"2","views":[7176,11770,13127]},{"artist":"Kenshi Yonezu","song":"IRIS OUT","team":"1","views":[14893,26089,30161]},{"artist":"Kenshi Yonezu","song":"IRIS OUT","team":"2","views":[23557,40477,46481]},{"artist":"SEKAI NO OWARI","song":"The Peak (最高到達点)","team":"1","views":[9243,14838,16477]},{"artist":"SEKAI NO OWARI","song":"The Peak (最高到達点)","team":"2","views":[26221,39782,43107]},{"artist":"Stray Kids","song":"CASE 143","team":"1","views":[12064,18577,20085]},{"artist":"Stray Kids","song":"CASE 143","team":"2","views":[9181,13662,14806]},{"artist":"Wanna One","song":"Energetic","team":"1","views":[54294,79003,84005]},{"artist":"Wanna One","song":"Energetic","team":"2","views":[48937,70447,74980]}];
 let currentBattleTab = 'list';
+
+function renderPosBattle() {
+  const teams = {};
+  const order = [];
+  rawPosBattle.forEach(r => {
+    const [name, reading, song, artist, pos, broadcast] = r;
+    if (!teams[song]) { teams[song] = {song, artist, pos, broadcast, members: []}; order.push(song); }
+    teams[song].members.push({name, reading});
+  });
+  const ytMap = {};
+  rawPosYt.forEach(r => { ytMap[r[1]] = r[2]; });
+
+  function teamCard(song) {
+    const t = teams[song];
+    const vid = ytMap[song] || '';
+    const ytLink = vid ? `<a class="pos-yt-link" href="https://youtu.be/${vid}" target="_blank">▶ YouTube ハイライト</a>` : '';
+    const members = t.members.map(m => {
+      const mc = readingClassMap[m.reading];
+      return `<div class="pos-member">${mc ? mc.name : m.name}</div>`;
+    }).join('');
+    return `<div class="pos-card">
+      <div class="pos-card-song">${t.song}</div>
+      <div class="pos-card-artist">${t.artist}</div>
+      <div class="pos-card-pos">${t.pos}</div>
+      ${members}
+      ${ytLink}
+    </div>`;
+  }
+
+  const front = order.filter(s => teams[s].broadcast === '前半組');
+  const back  = order.filter(s => teams[s].broadcast === '後半組');
+  document.getElementById('pos-list').innerHTML =
+    `<h3 class="pos-group-label">▼ 前半組（本日放送）</h3>
+    <div class="pos-grid">${front.map(teamCard).join('')}</div>
+    <h3 class="pos-group-label">▼ 後半組（来週放送）</h3>
+    <div class="pos-grid">${back.map(teamCard).join('')}</div>`;
+}
 
 function switchBattleTab(tab) {
   currentBattleTab = tab;
