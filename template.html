@@ -172,7 +172,8 @@ tr:hover td{background:var(--surface);}
         <option value="abc">ABC順</option>
       </select>
       <select id="all-filter" onchange="renderAll()">
-        <option value="all">全員</option>
+        <option value="active">通過者のみ（50名）</option>
+        <option value="all">全員（脱落含む）</option>
         <option value="hot">急上昇のみ</option>
         <option value="rise">上昇中以上</option>
         <option value="cls-up">クラスUPのみ</option>
@@ -826,7 +827,7 @@ function renderWatch(){
     const br = rawBattleResult[d.reading];
     const battleBadge = br ? (br.result==='WIN' ? '<span class="badge badge-rise">G：WIN</span>' : '<span class="badge badge-hot">G：LOSE</span>') : '';
     const latestRank = d.votes.length ? d.votes[d.votes.length-1] : null;
-    const elimBadge = (latestRank != null && latestRank >= 51) ? ' <span class="badge badge-elim">脱落</span>' : '';
+    const elimBadge = (latestRank === -1 || (latestRank != null && latestRank >= 51)) ? ' <span class="badge badge-elim">脱落</span>' : '';
     return `<div class="card">
       <div class="card-name">${d.name} <span style="font-size:0.6rem;color:var(--hint);font-family:monospace;">${d.reading}</span>${elimBadge}</div>
       <div class="card-val" style="color:${tierColor[d.tier]}">${gStr}</div>
@@ -900,6 +901,7 @@ function renderAll(){
   const sort=document.getElementById('all-sort').value;
   const filter=document.getElementById('all-filter').value;
   let list=[...data];
+  if(filter==='active') list=list.filter(d=>{const l=d.votes.length?d.votes[d.votes.length-1]:null;return l!==-1&&!(l!=null&&l>=51);});
   if(filter==='hot') list=list.filter(d=>d.tier==='hot');
   if(filter==='rise') list=list.filter(d=>d.tier==='hot'||d.tier==='rise');
   if(filter==='cls-up') list=list.filter(d=>d.clsLabel==='up');
@@ -911,14 +913,14 @@ function renderAll(){
     const tc=d.tier==='hot'?'td-hot':d.tier==='rise'?'td-rise':'';
     const gPct=d.growPct!=null?`<span class="${tc}">+${d.growPct}%</span>`:'-';
     const gAbs=d.growAbs!=null?`<span class="${tc}">${d.growAbs>0?'+':''}${d.growAbs}</span>`:'-';
-    const votes=VOTE_DATES.map((_,i)=>`<td>${d.votes[i]!=null?d.votes[i]+'位':'-'}</td>`).join('');
+    const votes=VOTE_DATES.map((_,i)=>{const v=d.votes[i];return`<td>${v===-1?'<span style="color:#777;font-size:0.7rem;">脱落</span>':v!=null?v+'位':'-'}</td>`;}).join('');
     const cc='td-cls-'+d.clsLabel;
     const arrow=d.clsLabel==='aa'?'★':d.clsLabel==='up'?'↑':d.clsLabel==='down'?'↓':'→';
     const lcColor = d.level==='前半組' ? 'color:var(--accent)' : 'color:var(--muted)';
     const bcBg = d.broadcast==='前半組' ? 'rgba(96,200,224,0.15)' : 'rgba(224,128,192,0.15)';
     const bcTxt = d.broadcast==='前半組' ? '#60c8e0' : '#e080c0';
     const latestRankAll = d.votes.length ? d.votes[d.votes.length-1] : null;
-    const isElim = latestRankAll != null && latestRankAll >= 51;
+    const isElim = latestRankAll === -1 || (latestRankAll != null && latestRankAll >= 51);
     const elimBadgeAll = isElim ? ' <span class="badge badge-elim">脱落</span>' : '';
     const elimRowCls = isElim ? ' class="elim-row"' : '';
     html+=`<tr${elimRowCls}>
@@ -1002,7 +1004,7 @@ function renderTrend(){
       data:{
         labels:VOTE_DATES,
         datasets:withVote.map((d,i)=>({
-          label:d.name, data:d.votes,
+          label:d.name, data:d.votes.map(v=>v===-1?null:v),
           borderColor:palette[i%palette.length], backgroundColor:'transparent',
           tension:0.3, pointRadius:5, spanGaps:true,
           datalabels:{display:false},

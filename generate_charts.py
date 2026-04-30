@@ -64,7 +64,7 @@ def build_vote_js(rows):
     entries = []
     for row in rows[1:]:
         name, code = row[0], row[1]
-        vals = ",".join(format_val(v, as_float=False) for v in row[2:])
+        vals = ",".join(format_rank(v) for v in row[2:])
         entries.append(f'["{name}","{code}",{vals}]')
 
     raw_lines = ["const rawVote = ["]
@@ -107,6 +107,18 @@ def build_level_broadcast_js(rows):
         "broadcastMap",
     )
     return level_js, broadcast_js
+
+
+def format_rank(v):
+    v = str(v).strip()
+    if v == "" or v.lower() == "null":
+        return "null"
+    if v in ("ー", "－", "-"):
+        return "-1"
+    try:
+        return str(int(float(v)))
+    except ValueError:
+        return "null"
 
 
 def int_or_null(s):

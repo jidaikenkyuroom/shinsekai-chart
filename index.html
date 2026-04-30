@@ -172,7 +172,8 @@ tr:hover td{background:var(--surface);}
         <option value="abc">ABC順</option>
       </select>
       <select id="all-filter" onchange="renderAll()">
-        <option value="all">全員</option>
+        <option value="active">通過者のみ（50名）</option>
+        <option value="all">全員（脱落含む）</option>
         <option value="hot">急上昇のみ</option>
         <option value="rise">上昇中以上</option>
         <option value="cls-up">クラスUPのみ</option>
@@ -497,7 +498,7 @@ tr:hover td{background:var(--surface);}
 <div id="trendTooltip" style="display:none;position:fixed;pointer-events:none;z-index:300;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:11px 14px;min-width:190px;max-width:230px;box-shadow:0 4px 20px rgba(0,0,0,0.5);"></div>
 <script>
 const PLAY_DATES = ["3月6日","3月14日","3月21日","3月28日","4月4日","4月12日","4月16日","4月19日","4月22日","4月24日","4月25日"];
-const VOTE_DATES = ["4月2日","4月9日","4月23日"];
+const VOTE_DATES = ["4月2日","4月9日","4月23日","4月30日"];
 const CLASS_ORDER = {A:0,B:1,C:2,D:3,F:4};
 const palette = ['#ff5c35','#4ec87a','#c8b8ff','#f0c040','#60c8e0','#e080c0','#80d060','#a0a8ff','#f09878','#98e0b0','#d8c0ff','#f8e080'];
 const HM_SKIP_DATES = ["4月16日","4月22日","4月24日"];
@@ -617,40 +618,40 @@ const broadcastMap = {
 };
 
 const rawVote = [
-["アダム・ナガイ","ADAM",7,7,10],["中丸 晏寿","AJU",54,57,64],["本荘 晃","AKIRA",51,52,56],
-["オム・スアンカワーテン","AOM",67,72,81],["アーチャー・ウイ","ARCHER",20,18,22],["児島 歩夢","AYUMU.K",75,83,94],
-["篠ヶ谷 歩夢","AYUMU.S",29,30,32],["小林 千悟","CHISATO",23,23,27],["市川 大輝","DAIKI.I",66,62,66],
-["加藤 大樹","DAIKI.K",3,2,1],["カク・ドンミン","DONGMIN",33,35,37],["末川 瑛太","EITA",83,79,89],
-["金田 栄都","EITO",52,53,57],["櫻井 楓真","FUMA",59,59,62],["小笠原 ジュゼッペ 慧","GIUSEPPE",18,20,28],
-["倉橋 吾槙","GOTEN",11,13,11],["村松 遼空","HARUKU",74,78,87],["髙城 暖人","HARUTO",58,60,70],
-["堀尾 聖","HIJIRI",63,63,55],["平島 輝","HIKARU",44,49,53],["瑞慶覧 太都","HIROTO",71,76,76],
-["ユ・ヒョンスン","HYEONSEUNG",15,10,8],["岡田 彪吾","HYUGO",93,75,77],["イ・ヒョンジェ","HYUNJAE",21,21,20],
-["柳谷 伊冴","ISSA",48,37,19],["ユン・ジェヨン","JAEYONG",32,33,33],["ジュアン・ジェイ","JAY",50,45,47],
-["丸尾 尋一郎","JINICHIRO",62,61,52],["河邊 晟","JOE",101,91,99],["シン・ジョンウク","JUNGUK",87,101,93],
-["金安 純正","JUNSEI",40,43,50],["リュウ・カイチ","KAICHI",68,73,43],["宇野 海夢","KAIMU",42,42,48],
-["多比 奏聖","KANADE",99,93,85],["横山 奏夢","KANAME",27,26,21],["黒﨑 貫汰","KANTA",57,56,69],
-["関 敬次郎","KEIJIRO",98,98,94],["黄 敬眞","KEISHIN",69,74,88],["髙松 敬祐","KEISUKE",90,96,100],
-["小野 慶人","KEITO",13,15,16],["西山 賢人","KENTO",96,99,92],["釼持 吉成","KINARI",2,1,2],
-["河合 晃誠","KOSEI",94,87,75],["青沼 昂史朗","KOSHIRO",31,27,26],["照井 康祐","KOSUKE",9,8,7],
-["浅香 孝太郎","KOTARO",26,24,18],["髙谷 京平","KYOHEI",86,86,59],["田中 蒔","MAKI",25,29,30],
-["森 明育","MEI",39,41,45],["山根 武蔵","MUSASHI",65,68,79],["土田 央修","OSUKE",14,14,13],
-["小清水 蓮","REN.KO",8,12,14],["堀野 蓮","REN.H",56,50,51],["小林 蓮翔","RENTO",55,58,80],
-["チェン・リッキー","RICKEY",38,28,25],["神元 理丘","RIKU",97,71,65],["今江 陸斗","RIKUTO.I",35,36,31],
-["鳩場 陸人","RIKUTO.H",84,88,97],["甲斐 陸也","RIKUYA",88,97,98],["大瀬 凜和","RINTO",46,46,46],
-["上野 琉偉","RUI.U",79,100,101],["水上 琉偉","RUI.M",61,64,72],["飯塚 亮賀","RYOGA",10,11,12],
-["石田 亮太","RYOTA",41,38,38],["岡戸 竜芽","RYUGA",95,84,91],["杉山 竜司","RYUJI",22,25,23],
-["香月 誠太","SEITA",91,67,71],["澤井 星名","SENA",36,40,40],["オ・シンヘン","SHINHAENG",6,6,5],
-["岩城 慎二","SHINJI",73,66,60],["宮崎 真佑","SHINSUKE",72,77,86],["西﨑 柊","SHU.N",45,44,49],
-["山下 柊","SHU.Y",28,31,34],["パク・シヨン","SIYOUNG",5,5,6],["松田 颯吾","SOGO",85,81,84],
-["佐藤 碧空","SORA.S",77,82,61],["髙橋 空良","SORA.T",37,39,42],["西田 颯梓","SOSHI",64,65,67],
-["東野 蒼汰","SOTA",82,85,83],["藤牧 大雅","TAIGA.F",34,34,36],["松田 太雅","TAIGA.M",30,32,35],
-["金倉 拓未","TAKUMI",81,92,90],["岡本 拓士","TAKUTO.O",49,51,58],["熊部 拓斗","TAKUTO.K",12,9,9],
-["宮里 拓利","TAKUTO.M",80,95,63],["南平 達矢","TATSUYA",43,47,41],["森井 輝","TERU",100,89,96],
-["北林 天虎","TETORA",89,94,82],["藤芳 辰弥","TOKIYA",92,90,78],["増田 倫希","TOMOKI",76,80,73],
-["濱田 永遠","TOWA",16,16,15],["アギナルド・トリスタン・ジェームス","TRISTAN",70,69,74],["リー・ウェイゼ","WEIZE",53,54,44],
-["ヨハン・エマニュエル","YOHAN",78,70,54],["矢田 佳暉","YOSHIKI",1,3,4],["後藤 結","YUKI",17,17,17],
-["岡田 侑磨","YUMA",47,48,39],["安部 結蘭","YURA",4,4,3],["大林 悠成","YUSEI.O",24,22,24],
-["佐野 由征","YUSEI.S",60,55,68],["板倉 悠太","YUTA",19,19,29],
+["アダム・ナガイ","ADAM",7,7,10,22],["中丸 晏寿","AJU",54,57,64,-1],["本荘 晃","AKIRA",51,52,56,-1],
+["オム・スアンカワーテン","AOM",67,72,81,-1],["アーチャー・ウイ","ARCHER",20,18,22,36],["児島 歩夢","AYUMU.K",75,83,94,-1],
+["篠ヶ谷 歩夢","AYUMU.S",29,30,32,null],["小林 千悟","CHISATO",23,23,27,null],["市川 大輝","DAIKI.I",66,62,66,-1],
+["加藤 大樹","DAIKI.K",3,2,1,1],["カク・ドンミン","DONGMIN",33,35,37,39],["末川 瑛太","EITA",83,79,89,-1],
+["金田 栄都","EITO",52,53,57,-1],["櫻井 楓真","FUMA",59,59,62,-1],["小笠原 ジュゼッペ 慧","GIUSEPPE",18,20,28,null],
+["倉橋 吾槙","GOTEN",11,13,11,20],["村松 遼空","HARUKU",74,78,87,-1],["髙城 暖人","HARUTO",58,60,70,-1],
+["堀尾 聖","HIJIRI",63,63,55,-1],["平島 輝","HIKARU",44,49,53,-1],["瑞慶覧 太都","HIROTO",71,76,76,-1],
+["ユ・ヒョンスン","HYEONSEUNG",15,10,8,null],["岡田 彪吾","HYUGO",93,75,77,-1],["イ・ヒョンジェ","HYUNJAE",21,21,20,null],
+["柳谷 伊冴","ISSA",48,37,19,null],["ユン・ジェヨン","JAEYONG",32,33,33,35],["ジュアン・ジェイ","JAY",50,45,47,41],
+["丸尾 尋一郎","JINICHIRO",62,61,52,-1],["河邊 晟","JOE",101,91,99,-1],["シン・ジョンウク","JUNGUK",87,101,93,-1],
+["金安 純正","JUNSEI",40,43,50,43],["リュウ・カイチ","KAICHI",68,73,43,null],["宇野 海夢","KAIMU",42,42,48,null],
+["多比 奏聖","KANADE",99,93,85,-1],["横山 奏夢","KANAME",27,26,21,null],["黒﨑 貫汰","KANTA",57,56,69,-1],
+["関 敬次郎","KEIJIRO",98,98,94,-1],["黄 敬眞","KEISHIN",69,74,88,-1],["髙松 敬祐","KEISUKE",90,96,100,-1],
+["小野 慶人","KEITO",13,15,16,null],["西山 賢人","KENTO",96,99,92,-1],["釼持 吉成","KINARI",2,1,2,null],
+["河合 晃誠","KOSEI",94,87,75,-1],["青沼 昂史朗","KOSHIRO",31,27,26,19],["照井 康祐","KOSUKE",9,8,7,2],
+["浅香 孝太郎","KOTARO",26,24,18,21],["髙谷 京平","KYOHEI",86,86,59,-1],["田中 蒔","MAKI",25,29,30,null],
+["森 明育","MEI",39,41,45,null],["山根 武蔵","MUSASHI",65,68,79,-1],["土田 央修","OSUKE",14,14,13,10],
+["小清水 蓮","REN.KO",8,12,14,null],["堀野 蓮","REN.H",56,50,51,-1],["小林 蓮翔","RENTO",55,58,80,-1],
+["チェン・リッキー","RICKEY",38,28,25,null],["神元 理丘","RIKU",97,71,65,-1],["今江 陸斗","RIKUTO.I",35,36,31,null],
+["鳩場 陸人","RIKUTO.H",84,88,97,-1],["甲斐 陸也","RIKUYA",88,97,98,-1],["大瀬 凜和","RINTO",46,46,46,null],
+["上野 琉偉","RUI.U",79,100,101,-1],["水上 琉偉","RUI.M",61,64,72,-1],["飯塚 亮賀","RYOGA",10,11,12,null],
+["石田 亮太","RYOTA",41,38,38,37],["岡戸 竜芽","RYUGA",95,84,91,-1],["杉山 竜司","RYUJI",22,25,23,11],
+["香月 誠太","SEITA",91,67,71,-1],["澤井 星名","SENA",36,40,40,null],["オ・シンヘン","SHINHAENG",6,6,5,null],
+["岩城 慎二","SHINJI",73,66,60,-1],["宮崎 真佑","SHINSUKE",72,77,86,-1],["西﨑 柊","SHU.N",45,44,49,40],
+["山下 柊","SHU.Y",28,31,34,34],["パク・シヨン","SIYOUNG",5,5,6,null],["松田 颯吾","SOGO",85,81,84,-1],
+["佐藤 碧空","SORA.S",77,82,61,-1],["髙橋 空良","SORA.T",37,39,42,null],["西田 颯梓","SOSHI",64,65,67,-1],
+["東野 蒼汰","SOTA",82,85,83,-1],["藤牧 大雅","TAIGA.F",34,34,36,null],["松田 太雅","TAIGA.M",30,32,35,null],
+["金倉 拓未","TAKUMI",81,92,90,-1],["岡本 拓士","TAKUTO.O",49,51,58,-1],["熊部 拓斗","TAKUTO.K",12,9,9,null],
+["宮里 拓利","TAKUTO.M",80,95,63,-1],["南平 達矢","TATSUYA",43,47,41,null],["森井 輝","TERU",100,89,96,-1],
+["北林 天虎","TETORA",89,94,82,-1],["藤芳 辰弥","TOKIYA",92,90,78,-1],["増田 倫希","TOMOKI",76,80,73,-1],
+["濱田 永遠","TOWA",16,16,15,null],["アギナルド・トリスタン・ジェームス","TRISTAN",70,69,74,-1],["リー・ウェイゼ","WEIZE",53,54,44,42],
+["ヨハン・エマニュエル","YOHAN",78,70,54,-1],["矢田 佳暉","YOSHIKI",1,3,4,null],["後藤 結","YUKI",17,17,17,null],
+["岡田 侑磨","YUMA",47,48,39,null],["安部 結蘭","YURA",4,4,3,null],["大林 悠成","YUSEI.O",24,22,24,null],
+["佐野 由征","YUSEI.S",60,55,68,-1],["板倉 悠太","YUTA",19,19,29,38],
 ];
 
 // スキップ日付を除いたヒートマップ用インデックスペア
@@ -981,7 +982,7 @@ function renderWatch(){
     const br = rawBattleResult[d.reading];
     const battleBadge = br ? (br.result==='WIN' ? '<span class="badge badge-rise">G：WIN</span>' : '<span class="badge badge-hot">G：LOSE</span>') : '';
     const latestRank = d.votes.length ? d.votes[d.votes.length-1] : null;
-    const elimBadge = (latestRank != null && latestRank >= 51) ? ' <span class="badge badge-elim">脱落</span>' : '';
+    const elimBadge = (latestRank === -1 || (latestRank != null && latestRank >= 51)) ? ' <span class="badge badge-elim">脱落</span>' : '';
     return `<div class="card">
       <div class="card-name">${d.name} <span style="font-size:0.6rem;color:var(--hint);font-family:monospace;">${d.reading}</span>${elimBadge}</div>
       <div class="card-val" style="color:${tierColor[d.tier]}">${gStr}</div>
@@ -1055,6 +1056,7 @@ function renderAll(){
   const sort=document.getElementById('all-sort').value;
   const filter=document.getElementById('all-filter').value;
   let list=[...data];
+  if(filter==='active') list=list.filter(d=>{const l=d.votes.length?d.votes[d.votes.length-1]:null;return l!==-1&&!(l!=null&&l>=51);});
   if(filter==='hot') list=list.filter(d=>d.tier==='hot');
   if(filter==='rise') list=list.filter(d=>d.tier==='hot'||d.tier==='rise');
   if(filter==='cls-up') list=list.filter(d=>d.clsLabel==='up');
@@ -1066,14 +1068,14 @@ function renderAll(){
     const tc=d.tier==='hot'?'td-hot':d.tier==='rise'?'td-rise':'';
     const gPct=d.growPct!=null?`<span class="${tc}">+${d.growPct}%</span>`:'-';
     const gAbs=d.growAbs!=null?`<span class="${tc}">${d.growAbs>0?'+':''}${d.growAbs}</span>`:'-';
-    const votes=VOTE_DATES.map((_,i)=>`<td>${d.votes[i]!=null?d.votes[i]+'位':'-'}</td>`).join('');
+    const votes=VOTE_DATES.map((_,i)=>{const v=d.votes[i];return`<td>${v===-1?'<span style="color:#777;font-size:0.7rem;">脱落</span>':v!=null?v+'位':'-'}</td>`;}).join('');
     const cc='td-cls-'+d.clsLabel;
     const arrow=d.clsLabel==='aa'?'★':d.clsLabel==='up'?'↑':d.clsLabel==='down'?'↓':'→';
     const lcColor = d.level==='前半組' ? 'color:var(--accent)' : 'color:var(--muted)';
     const bcBg = d.broadcast==='前半組' ? 'rgba(96,200,224,0.15)' : 'rgba(224,128,192,0.15)';
     const bcTxt = d.broadcast==='前半組' ? '#60c8e0' : '#e080c0';
     const latestRankAll = d.votes.length ? d.votes[d.votes.length-1] : null;
-    const isElim = latestRankAll != null && latestRankAll >= 51;
+    const isElim = latestRankAll === -1 || (latestRankAll != null && latestRankAll >= 51);
     const elimBadgeAll = isElim ? ' <span class="badge badge-elim">脱落</span>' : '';
     const elimRowCls = isElim ? ' class="elim-row"' : '';
     html+=`<tr${elimRowCls}>
@@ -1157,7 +1159,7 @@ function renderTrend(){
       data:{
         labels:VOTE_DATES,
         datasets:withVote.map((d,i)=>({
-          label:d.name, data:d.votes,
+          label:d.name, data:d.votes.map(v=>v===-1?null:v),
           borderColor:palette[i%palette.length], backgroundColor:'transparent',
           tension:0.3, pointRadius:5, spanGaps:true,
           datalabels:{display:false},
