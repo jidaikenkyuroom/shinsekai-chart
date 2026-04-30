@@ -1571,13 +1571,8 @@ function renderPosBattle() {
     if (!teams[song]) { teams[song] = {song, artist, pos, broadcast, members: []}; order.push(song); }
     teams[song].members.push({name, reading});
   });
-  const ytMap = {};
-  rawPosYt.forEach(r => { ytMap[r[1]] = r[2]; });
-
   function teamCard(song) {
     const t = teams[song];
-    const vid = ytMap[song] || '';
-    const ytLink = vid ? `<a class="pos-yt-link" href="https://youtu.be/${vid}" target="_blank">▶ YouTube ハイライト</a>` : '';
     const members = t.members.map(m => {
       const mc = readingClassMap[m.reading];
       return `<div class="pos-member">${mc ? mc.name : m.name}</div>`;
@@ -1587,7 +1582,6 @@ function renderPosBattle() {
       <div class="pos-card-artist">${t.artist}</div>
       <div class="pos-card-pos">${t.pos}</div>
       ${members}
-      ${ytLink}
     </div>`;
   }
 
