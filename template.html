@@ -519,6 +519,8 @@ tr:hover td{background:var(--surface);}
 // {{AUTO_DATA}}
 // {{AUTO_POS_DATA}}
 
+const RANK_423_IDX = VOTE_DATES.indexOf("4月23日");
+
 // スキップ日付を除いたヒートマップ用インデックスペア
 const hmKeepIdx = PLAY_DATES.reduce((acc,d,i)=>{ if(!HM_SKIP_DATES.includes(d)) acc.push(i); return acc; }, []);
 const hmIntervals = hmKeepIdx.slice(1).map((idx,k)=>[hmKeepIdx[k], idx]);
@@ -755,7 +757,7 @@ function sortList(list, sort, weekIdx){
     });
   }
   else if(sort==='growabs') list.sort((a,b)=>(b.growAbs||0)-(a.growAbs||0));
-  else if(sort==='rank') list.sort((a,b)=>{const ai=a.votes.length?a.votes[a.votes.length-1]:999;const bi=b.votes.length?b.votes[b.votes.length-1]:999;return ai-bi;});
+  else if(sort==='rank') list.sort((a,b)=>{const ai=RANK_423_IDX>=0&&a.votes[RANK_423_IDX]!=null?a.votes[RANK_423_IDX]:999;const bi=RANK_423_IDX>=0&&b.votes[RANK_423_IDX]!=null?b.votes[RANK_423_IDX]:999;return ai-bi;});
   else if(sort==='eval-class') list.sort((a,b)=>{
     const ao=CLASS_ORDER[a.classEval]??5, bo=CLASS_ORDER[b.classEval]??5;
     if(ao!==bo) return ao-bo;
@@ -1536,7 +1538,6 @@ const SONG_COLORS = {
 const ytTeamMap = {};
 rawYtTeam.forEach(r => { ytTeamMap[`${r[0]}|${r[1]}|${r[2]}`] = {videoId:r[3], views:r[4]}; });
 
-const GB_VOTE_IDX = VOTE_DATES.indexOf("4月23日");
 const battleData = rawBattleTeam.map(r => {
   const [name, reading, artist, song, team, broadcast] = r;
   const oshi = rawOshiCam[reading] || [0,0,0];
@@ -1793,8 +1794,8 @@ function renderBattleList() {
     list.sort((a,b) => b.oshiViews - a.oshiViews);
   } else if(sort==='rank') {
     list.sort((a,b) => {
-      const av = GB_VOTE_IDX>=0 && a.votes[GB_VOTE_IDX]!=null ? a.votes[GB_VOTE_IDX] : 999;
-      const bv = GB_VOTE_IDX>=0 && b.votes[GB_VOTE_IDX]!=null ? b.votes[GB_VOTE_IDX] : 999;
+      const av = RANK_423_IDX>=0 && a.votes[RANK_423_IDX]!=null ? a.votes[RANK_423_IDX] : 999;
+      const bv = RANK_423_IDX>=0 && b.votes[RANK_423_IDX]!=null ? b.votes[RANK_423_IDX] : 999;
       return av - bv;
     });
   } else if(sort==='battlerank') {
@@ -1813,7 +1814,7 @@ function renderBattleList() {
     const sc  = SONG_COLORS[d.song] || '#888';
     const bc  = d.broadcast==='前半組' ? '#60c8e0' : '#e080c0';
     const bcBg = d.broadcast==='前半組' ? 'rgba(96,200,224,0.13)' : 'rgba(224,128,192,0.13)';
-    const gbRank = GB_VOTE_IDX>=0 ? d.votes[GB_VOTE_IDX] : null;
+    const gbRank = RANK_423_IDX>=0 ? d.votes[RANK_423_IDX] : null;
     const latestVote = gbRank!=null ? gbRank+'位' : '-';
     const winColor = d.battleResult==='WIN' ? '#4ec87a' : d.battleResult==='LOSE' ? '#ff5c35' : '#888';
     const winBg   = d.battleResult==='WIN' ? 'rgba(78,200,122,0.12)' : d.battleResult==='LOSE' ? 'rgba(255,92,53,0.12)' : 'transparent';
@@ -2199,9 +2200,9 @@ function renderBattleScatter() {
   const datasets = songList.map(({artist, song, broadcast}) => {
     const color = SONG_COLORS[song] || '#888';
     const pts = battleData
-      .filter(d => d.song===song && GB_VOTE_IDX>=0 && d.votes[GB_VOTE_IDX]!=null)
+      .filter(d => d.song===song && RANK_423_IDX>=0 && d.votes[RANK_423_IDX]!=null)
       .map(d => ({
-        x: d.votes[GB_VOTE_IDX], y: d.oshiViews,
+        x: d.votes[RANK_423_IDX], y: d.oshiViews,
         name:d.name, reading:d.reading, song:d.song, team:d.team, broadcast:d.broadcast,
         oshiViews:d.oshiViews,
       }));
@@ -2380,8 +2381,8 @@ function renderBattleTiming() {
   const ko  = battleData.filter(d => d.broadcast==='後半組');
   const avgViews = arr => arr.length ? Math.round(arr.reduce((s,d)=>s+d.oshiViews,0)/arr.length) : 0;
   const avgRank  = arr => {
-    const w = arr.filter(d=>GB_VOTE_IDX>=0 && d.votes[GB_VOTE_IDX]!=null);
-    return w.length ? (w.reduce((s,d)=>s+d.votes[GB_VOTE_IDX],0)/w.length).toFixed(1) : '-';
+    const w = arr.filter(d=>RANK_423_IDX>=0 && d.votes[RANK_423_IDX]!=null);
+    return w.length ? (w.reduce((s,d)=>s+d.votes[RANK_423_IDX],0)/w.length).toFixed(1) : '-';
   };
   const topViews = arr => arr.length ? Math.max(...arr.map(d=>d.oshiViews)) : 0;
 
