@@ -131,6 +131,25 @@ def int_or_null(s):
         return "null"
 
 
+def build_pos_oshi_js(source_dir, pos_cfg):
+    rows = read_csv(source_dir / pos_cfg["oshi_cam"])
+    header = rows[0]
+    dates = [h.replace("_再生数", "") for h in header[3:]]
+
+    entries = []
+    for row in rows[1:]:
+        if len(row) < 4:
+            continue
+        reading = row[1]
+        vid = row[2]
+        views = [int_or_null(row[3 + i]) if 3 + i < len(row) else "null" for i in range(len(dates))]
+        entries.append(f'"{reading}":["{vid}",{",".join(views)}]')
+
+    dates_js = "const POS_OSHI_DATES = [" + ",".join(f'"{d}"' for d in dates) + "];"
+    data_js = "const rawPosOshi = {" + ",".join(entries) + "};"
+    return dates_js + "\n" + data_js
+
+
 def build_pos_js(source_dir, pos_cfg):
     team_rows = read_csv(source_dir / pos_cfg["team"])
     yt_rows = read_csv(source_dir / pos_cfg["yt_highlight"])
@@ -311,6 +330,9 @@ def generate():
         src = Path(config.get("local_source_dir", config.get("battle_source_dir", "")))
         pos_js = build_pos_js(src, config["pos_csv"])
         output = output.replace("// {{AUTO_POS_DATA}}", pos_js)
+        if "oshi_cam" in config["pos_csv"]:
+            pos_oshi_js = build_pos_oshi_js(src, config["pos_csv"])
+            output = output.replace("// {{AUTO_POS_OSHI_DATA}}", pos_oshi_js)
 
     if "battle_source_dir" in config and "battle_csv" in config:
         source_dir = Path(config["battle_source_dir"])

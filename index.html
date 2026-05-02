@@ -510,7 +510,19 @@ tr:hover td{background:var(--surface);}
     <blockquote style="border-left:3px solid var(--border2);background:var(--surface);padding:0.8rem 1.1rem;margin-bottom:1.25rem;border-radius:0 5px 5px 0;font-size:0.76rem;color:var(--text);opacity:0.75;line-height:1.8;">
       ポジション（ダンス・ボーカル・ラップ・セルフプロデュース）ごとの課題曲でチームに分かれてパフォーマンス。現場観覧者投票でチーム内1位の9名に1万票、最高チームのメンバー全員に5万票のベネフィット。全チーム終了翌週に第二回順位発表式（36位以下脱落、35名通過）。
     </blockquote>
-    <div id="pos-list"></div>
+    <div class="g-tabs" id="pos-tabs">
+      <button class="g-tab active" onclick="switchPosTab('list')">チーム一覧</button>
+      <button class="g-tab" onclick="switchPosTab('oshi')">推しカメラ</button>
+    </div>
+    <div id="ptab-list">
+      <div id="pos-list"></div>
+    </div>
+    <div id="ptab-oshi" style="display:none">
+      <p class="sub-label">推しカメラ再生数（前半組）と4/23投票順位の相関。点の色は楽曲。</p>
+      <div class="chart-wrap" style="height:460px;"><canvas id="chartPosOshiScatter"></canvas></div>
+      <h3 class="pos-group-label" style="margin-top:1.5rem;">▼ 再生数ランキング</h3>
+      <div class="chart-wrap" style="height:460px;"><canvas id="chartPosOshiBar"></canvas></div>
+    </div>
   </div>
 
 </div>
@@ -725,6 +737,8 @@ const rawPosBattle = [
 ["板倉 悠太","YUTA","My Grandfather’s Clock","","セルフプロデュース","後半組"]
 ];
 const rawPosYt = [["INI","DOMINANCE","z03OBZTaRWM"],["SEVENTEEN","Super","nmMksZTDWyc"],["Official髭男dism","宿命","4TiuS0SzANc"],["Imagine Dragons","Natural","FjBIXbVr37I"],["JO1","BE CLASSIC",""],["ZEROBASEONE","Doctor!Doctor!",""],["サンプリング","My Grandfather's Clock",""],["ちゃんみな","WORK HARD",""],["優里","ベテルギウス",""]];
+const POS_OSHI_DATES = ["5月2日"];
+const rawPosOshi = {"CHISATO":["7vJJYQO3wMI",7889],"HYEONSEUNG":["9nQ-OsyWAj4",14425],"JAEYONG":["_WKnDZwgKPs",11670],"JAY":["5h3qCui2xEk",4094],"KEITO":["ayOM0Dzbln4",17748],"KOSHIRO":["d-5fjcWXVZY",7058],"KOSUKE":["oWoDICWG4ek",59743],"KOTARO":["ZJahgLQNr-Y",21531],"RICKEY":["g4rT-miDi2Q",29239],"RINTO":["BjWOGGME1pU",5239],"RYOGA":["CibpoDEFJ6Q",15805],"RYOTA":["6mHV-Jh51-4",8735],"RYUJI":["rIFRnhQAfFE",11860],"SENA":["qU6UPQLXo0A",3422],"SHU.Y":["sTZd1acZ1xw",19826],"SORA.T":["O0eBmgoRazE",2519],"TAIGA.F":["3lpRx3Vj2xQ",7483],"TAIGA.M":["ncUjJhiChAg",6017],"TATSUYA":["0uj4hSwfG-c",4372],"WEIZE":["saYqHhvi1n8",4601],"YUKI":["5Gpyb_0Jf28",17134],"YURA":["uhY_zbWThSA",38761],"YUSEI.O":["EnWxqIySwrk",6345]};
 
 const RANK_423_IDX = VOTE_DATES.indexOf("4月23日");
 
@@ -1807,10 +1821,134 @@ function renderPosBattle() {
   const front = order.filter(s => teams[s].broadcast === '前半組');
   const back  = order.filter(s => teams[s].broadcast === '後半組');
   document.getElementById('pos-list').innerHTML =
-    `<h3 class="pos-group-label">▼ 前半組（本日放送）</h3>
+    `<h3 class="pos-group-label">▼ 前半組（放送済み）</h3>
     <div class="pos-grid">${front.map(teamCard).join('')}</div>
     <h3 class="pos-group-label">▼ 後半組（来週放送）</h3>
     <div class="pos-grid">${back.map(teamCard).join('')}</div>`;
+}
+
+let currentPosTab = 'list';
+let chartPosOshiScatter = null;
+let chartPosOshiBar = null;
+
+const POS_SONG_COLORS = {
+  'DOMINANCE': '#ff5c35',
+  'Super': '#4ec87a',
+  '宿命': '#c8b8ff',
+  'Natural': '#f0c040',
+};
+
+function switchPosTab(tab) {
+  currentPosTab = tab;
+  ['list','oshi'].forEach(t => {
+    document.getElementById('ptab-'+t).style.display = t===tab ? '' : 'none';
+  });
+  document.querySelectorAll('#pos-tabs .g-tab').forEach((el,i) => {
+    el.classList.toggle('active', ['list','oshi'][i]===tab);
+  });
+  if (tab==='oshi') renderPosOshi();
+}
+
+function renderPosOshi() {
+  const posOshiData = rawPosBattle
+    .filter(r => rawPosOshi && rawPosOshi[r[1]])
+    .map(r => {
+      const [name, reading, song, artist, position, broadcast] = r;
+      const oshi = rawPosOshi[reading];
+      const videoId = oshi[0];
+      const latestViews = oshi.length > 1 ? oshi[oshi.length - 1] : null;
+      const votes = voteMap[name] || [];
+      const rank423 = RANK_423_IDX >= 0 ? votes[RANK_423_IDX] : null;
+      return {name, reading, song, artist, broadcast, videoId, latestViews, rank423};
+    });
+
+  // --- 散布図 ---
+  if (chartPosOshiScatter) { chartPosOshiScatter.destroy(); chartPosOshiScatter = null; }
+  const songs = [...new Set(posOshiData.map(d => d.song))];
+  const scatterDatasets = songs.map(song => {
+    const color = POS_SONG_COLORS[song] || '#888';
+    const pts = posOshiData
+      .filter(d => d.song===song && d.rank423!=null && d.rank423>0 && d.latestViews!=null)
+      .map(d => ({x:d.rank423, y:d.latestViews, name:d.name, reading:d.reading, song:d.song}));
+    return {
+      label: song,
+      data: pts,
+      backgroundColor: color+'bb', borderColor: color, borderWidth:1,
+      pointRadius:6, pointHoverRadius:9,
+    };
+  });
+  chartPosOshiScatter = new Chart(document.getElementById('chartPosOshiScatter'), {
+    type:'scatter',
+    data:{datasets:scatterDatasets},
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{
+        legend:{display:true, position:'bottom', labels:{color:'#888', font:{size:10}, boxWidth:10, padding:8}},
+        tooltip:{
+          callbacks:{
+            label: c => {
+              const p=c.raw;
+              return [`${p.name}（${p.reading}）`,`推しカメラ: ${p.y.toLocaleString()}回`,`4/23順位: ${p.x}位`];
+            }
+          },
+          backgroundColor:'#1f1f24', borderColor:'rgba(255,255,255,0.13)', borderWidth:1,
+          bodyColor:'#f0f0ee', bodyFont:{family:'monospace',size:12}, padding:10, displayColors:false,
+        }
+      },
+      scales:{
+        x:{
+          reverse:true, min:0, max:52,
+          title:{display:true, text:'4/23投票順位（右が1位）', color:'#888', font:{size:11}},
+          ticks:{color:'#888', font:{size:11}, callback:v=>v===0||v===52?'':v+'位'},
+          grid:{color:'rgba(255,255,255,0.04)'},
+        },
+        y:{
+          title:{display:true, text:'推しカメラ再生数', color:'#888', font:{size:11}},
+          ticks:{color:'#888', font:{size:11}, callback:v=>v>=10000?(v/10000).toFixed(1)+'万':v.toLocaleString()},
+          grid:{color:'rgba(255,255,255,0.06)'},
+        }
+      }
+    }
+  });
+
+  // --- 棒グラフ ---
+  if (chartPosOshiBar) { chartPosOshiBar.destroy(); chartPosOshiBar = null; }
+  const sorted = posOshiData.filter(d=>d.latestViews!=null).sort((a,b)=>b.latestViews-a.latestViews);
+  chartPosOshiBar = new Chart(document.getElementById('chartPosOshiBar'), {
+    type:'bar',
+    data:{
+      labels: sorted.map(d=>d.reading),
+      datasets:[{
+        data: sorted.map(d=>d.latestViews),
+        backgroundColor: sorted.map(d=>(POS_SONG_COLORS[d.song]||'#888')+'bb'),
+        borderColor: sorted.map(d=>POS_SONG_COLORS[d.song]||'#888'),
+        borderWidth:1,
+      }]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{
+        legend:{display:false},
+        tooltip:{
+          callbacks:{
+            label: c => {
+              const d=sorted[c.dataIndex];
+              return [`${d.name}（${d.reading}）`,`${c.raw.toLocaleString()}回`,d.song];
+            }
+          },
+          backgroundColor:'#1f1f24', borderColor:'rgba(255,255,255,0.13)', borderWidth:1,
+          bodyColor:'#f0f0ee', bodyFont:{family:'monospace',size:12}, padding:10, displayColors:false,
+        }
+      },
+      scales:{
+        x:{ticks:{color:'#888', font:{size:11}}, grid:{display:false}},
+        y:{
+          ticks:{color:'#888', font:{size:11}, callback:v=>v>=10000?(v/10000).toFixed(1)+'万':v.toLocaleString()},
+          grid:{color:'rgba(255,255,255,0.06)'},
+        }
+      }
+    }
+  });
 }
 
 function switchBattleTab(tab) {

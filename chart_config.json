@@ -10,7 +10,8 @@
   "battle_source_dir": "C:/Users/nanac/Documents/AI_saito.jidai.kenkyu.room/my-project/shinsekai",
   "pos_csv": {
     "team": "新世界_ポジションバトルチーム.csv",
-    "yt_highlight": "新世界_ポジションバトルYouTubeハイライト再生数.csv"
+    "yt_highlight": "新世界_ポジションバトルYouTubeハイライト再生数.csv",
+    "oshi_cam": "新世界_ポジションバトル推しカメラ再生数.csv"
   },
   "battle_csv": {
     "mnetplus": "新世界_グループバトル推しカメラ再生数.csv",
