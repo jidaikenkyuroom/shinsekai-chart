@@ -131,6 +131,52 @@ def int_or_null(s):
         return "null"
 
 
+def build_rank_events_js(source_dir, csv_name):
+    rows = read_csv(source_dir / csv_name)
+    header = rows[0]
+
+    # 「第N回_順位」列を探してイベントキーを収集（順序保持）
+    event_keys = []
+    for col in header:
+        if col.endswith("_順位"):
+            event_keys.append(col[:-3])  # "_順位" を除いたプレフィックス
+
+    # 各イベントの列インデックスを取得
+    def col_idx(name):
+        return header.index(name) if name in header else None
+
+    event_col_map = {}
+    for k in event_keys:
+        event_col_map[k] = {
+            "rank":    col_idx(f"{k}_順位"),
+            "grRank":  col_idx(f"{k}_GR枠"),
+            "natPt":   col_idx(f"{k}_国民pt"),
+            "sekaiPt": col_idx(f"{k}_SEKAIpt"),
+            "totalPt": col_idx(f"{k}_総票"),
+        }
+
+    def get(row, idx):
+        return int_or_null(row[idx]) if idx is not None and idx < len(row) else "null"
+
+    event_data = {}
+    for k, cols in event_col_map.items():
+        entries = []
+        for row in rows[1:]:
+            if len(row) < 2 or not row[1]:
+                continue
+            reading = row[1]
+            vals = [get(row, cols["rank"]), get(row, cols["grRank"]),
+                    get(row, cols["natPt"]), get(row, cols["sekaiPt"]), get(row, cols["totalPt"])]
+            entries.append(f'["{reading}",{",".join(vals)}]')
+        event_data[k] = entries
+
+    keys_js  = "const RANK_EVENT_KEYS = [" + ",".join(f'"{k}"' for k in event_keys) + "];"
+    parts    = [f'"{k}":[{",".join(v)}]' for k, v in event_data.items()]
+    data_js  = "const rawRankData = {" + ",".join(parts) + "};"
+    compat   = "const rawRank1 = rawRankData['第1回'] || [];"
+    return "\n".join([keys_js, data_js, compat])
+
+
 def build_pos_oshi_js(source_dir, pos_cfg):
     rows = read_csv(source_dir / pos_cfg["oshi_cam"])
     header = rows[0]
@@ -325,6 +371,11 @@ def generate():
     template = TEMPLATE_PATH.read_text(encoding="utf-8")
     output = template.replace("// {{AUTO_DATA}}", auto_data)
     output = output.replace("{{LAST_DATE}}", last_date)
+
+    if "rank_event_csv" in config:
+        src = Path(config.get("local_source_dir", config.get("battle_source_dir", "")))
+        rank_js = build_rank_events_js(src, config["rank_event_csv"])
+        output = output.replace("// {{AUTO_RANK_EVENTS}}", rank_js)
 
     if "pos_csv" in config:
         src = Path(config.get("local_source_dir", config.get("battle_source_dir", "")))

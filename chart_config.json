@@ -7,6 +7,7 @@
   },
   "heatmap_skip_dates": ["4月16日","4月22日"],
   "local_source_dir": "C:/Users/nanac/Documents/AI_saito.jidai.kenkyu.room/my-project/shinsekai",
+  "rank_event_csv": "新世界_順位発表式データ.csv",
   "battle_source_dir": "C:/Users/nanac/Documents/AI_saito.jidai.kenkyu.room/my-project/shinsekai",
   "pos_csv": {
     "team": "新世界_ポジションバトルチーム.csv",

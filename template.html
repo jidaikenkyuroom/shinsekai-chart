@@ -582,61 +582,8 @@ const rawClass = [
 ["板倉 悠太","YUTA","B","F"],
 ];
 
-// ── 第一回順位発表式データ ──
-// [reading, rank, grRank|null, natPt|null, sekaiPt|null, totalPt|null]
-const rawRank1 = [
-["DAIKI.K",1,2,1296479,488603,1785492],["KINARI",2,6,1372025,392007,1764377],
-["YURA",3,3,1051560,501072,1553054],["YOSHIKI",4,1,939786,590728,1530933],
-["SHINHAENG",5,5,939330,472529,1412187],["SIYOUNG",6,4,897732,513636,1411784],
-["KOSUKE",7,10,981058,209766,1194391],["HYEONSEUNG",8,7,634710,426353,1061514],
-["TAKUTO.K",9,12,904298,147917,1055661],["ADAM",10,8,749512,298131,1047949],
-["GOTEN",11,null,804763,120893,929221],["RYOGA",12,null,783434,142348,926196],
-["OSUKE",13,null,714427,166755,883587],["REN.KO",14,9,565502,297370,866339],
-["TOWA",15,11,515483,268686,784543],["KEITO",16,null,577221,193555,771187],
-["YUKI",17,null,493758,180964,677125],["KOTARO",18,null,485986,188343,674618],
-["ISSA",19,null,554421,93744,651675],["HYUNJAE",20,null,491405,152334,644057],
-["KANAME",21,null,489111,147710,640295],["ARCHER",22,null,418956,215873,635060],
-["RYUJI",23,null,517442,107469,627362],["YUSEI.O",24,null,491658,123081,618187],
-["RICKEY",25,null,480239,116014,596495],["KOSHIRO",26,null,384186,203900,588448],
-["CHISATO",27,null,342390,232804,578670],["GIUSEPPE",28,null,413742,149834,563977],
-["YUTA",29,null,402896,156487,559733],["MAKI",30,null,454479,73019,531106],
-["RIKUTO.I",31,null,410634,48771,462848],["AYUMU.S",32,null,307665,135249,446330],
-["JAEYONG",33,null,224307,197307,422017],["SHU.Y",34,null,251103,156737,410550],
-["TAIGA.M",35,null,209257,194627,406263],["TAIGA.F",36,null,274222,102710,377259],
-["DONGMIN",37,null,259411,113469,376311],["RYOTA",38,null,285753,35288,324441],
-["YUMA",39,null,237995,63227,301538],["SENA",40,null,235534,56097,291936],
-["TATSUYA",41,null,210577,60123,271044],["SORA.T",42,null,200773,64374,268589],
-["KAICHI",43,null,199855,57688,260987],["WEIZE",44,null,133326,120464,257224],
-["MEI",45,null,211739,40894,252911],["RINTO",46,null,198103,48609,250191],
-["JAY",47,null,146040,103620,249896],["KAIMU",48,null,215997,30000,248719],
-["SHU.N",49,null,178864,66133,248417],["JUNSEI",50,null,203906,31643,238966],
-["REN.H",51,null,null,null,null],["JINICHIRO",52,null,null,null,null],
-["HIKARU",53,null,null,null,null],["YOHAN",54,null,null,null,null],
-["HIJIRI",55,null,null,null,null],["AKIRA",56,null,null,null,null],
-["EITO",57,null,null,null,null],["TAKUTO.O",58,null,null,null,null],
-["KYOHEI",59,null,null,null,null],["SHINJI",60,null,null,null,null],
-["SORA.S",61,null,null,null,null],["FUMA",62,null,null,null,null],
-["TAKUTO.M",63,null,null,null,null],["AJU",64,null,null,null,null],
-["RIKU",65,null,null,null,null],["DAIKI.I",66,null,null,null,null],
-["SOSHI",67,null,null,null,null],["YUSEI.S",68,null,null,null,null],
-["KANTA",69,null,null,null,null],["HARUTO",70,null,null,null,null],
-["SEITA",71,null,null,null,null],["RUI.M",72,null,null,null,null],
-["TOMOKI",73,null,null,null,null],["TRISTAN",74,null,null,null,null],
-["KOSEI",75,null,null,null,null],["HIROTO",76,null,null,null,null],
-["HYUGO",77,null,null,null,null],["TOKIYA",78,null,null,null,null],
-["MUSASHI",79,null,null,null,null],["RENTO",80,null,null,null,null],
-["AOM",81,null,null,null,null],["TETORA",82,null,null,null,null],
-["SOTA",83,null,null,null,null],["SOGO",84,null,null,null,null],
-["KANADE",85,null,null,null,null],["SHINSUKE",86,null,null,null,null],
-["HARUKU",87,null,null,null,null],["KEISHIN",88,null,null,null,null],
-["EITA",89,null,null,null,null],["TAKUMI",90,null,null,null,null],
-["RYUGA",91,null,null,null,null],["KENTO",92,null,null,null,null],
-["JUNGUK",93,null,null,null,null],["AYUMU.K",94,null,null,null,null],
-["KEIJIRO",94,null,null,null,null],["TERU",96,null,null,null,null],
-["RIKUTO.H",97,null,null,null,null],["RIKUYA",98,null,null,null,null],
-["JOE",99,null,null,null,null],["KEISUKE",100,null,null,null,null],
-["RUI.U",101,null,null,null,null],
-];
+// {{AUTO_RANK_EVENTS}}
+// ↑ RANK_EVENT_KEYS / rawRankData / rawRank1 はgenerate_charts.pyが生成
 
 // ── 練習生属性データ ── [reading, senseType, fanStr]
 const rawAttr = [
@@ -682,8 +629,12 @@ const classMap = {};
 rawClass.forEach(r => { classMap[r[0]] = {first:r[2], eval:r[3]}; });
 const readingClassMap = {};
 rawClass.forEach(r => { readingClassMap[r[1]] = {first:r[2], eval:r[3], name:r[0]}; });
-const rank1Map = {};
-rawRank1.forEach(r => { rank1Map[r[0]] = {rank:r[1],grRank:r[2],natPt:r[3],sekaiPt:r[4],totalPt:r[5]}; });
+function buildRankMap(eventKey) {
+  const m = {};
+  (rawRankData[eventKey] || []).forEach(r => { m[r[0]] = {rank:r[1],grRank:r[2],natPt:r[3],sekaiPt:r[4],totalPt:r[5]}; });
+  return m;
+}
+const rank1Map = buildRankMap('第1回');
 const attrMap = {};
 rawAttr.forEach(r => { attrMap[r[0]] = {sensei:r[1],fanStr:r[2]}; });
 
