@@ -520,8 +520,10 @@ tr:hover td{background:var(--surface);}
     <div id="ptab-oshi" style="display:none">
       <p class="sub-label">推しカメラ再生数（前半組）と4/23投票順位の相関。点の色は楽曲。</p>
       <div class="chart-wrap" style="height:460px;"><canvas id="chartPosOshiScatter"></canvas></div>
-      <h3 class="pos-group-label" style="margin-top:1.5rem;">▼ 再生数ランキング</h3>
+      <h3 class="pos-group-label" style="margin-top:1.5rem;">▼ 再生数ランキング（前半組）</h3>
       <div class="chart-wrap" style="height:460px;"><canvas id="chartPosOshiBar"></canvas></div>
+      <h3 class="pos-group-label" id="pos-bar2-label" style="margin-top:1.5rem;display:none;">▼ 再生数ランキング（後半組）</h3>
+      <div id="pos-bar2-wrap" style="display:none;"><div class="chart-wrap" style="height:460px;"><canvas id="chartPosOshiBar2"></canvas></div></div>
     </div>
   </div>
 
@@ -1830,6 +1832,7 @@ function renderPosBattle() {
 let currentPosTab = 'list';
 let chartPosOshiScatter = null;
 let chartPosOshiBar = null;
+let chartPosOshiBar2 = null;
 
 const POS_SONG_COLORS = {
   'DOMINANCE': '#ff5c35',
@@ -1911,28 +1914,16 @@ function renderPosOshi() {
     }
   });
 
-  // --- 棒グラフ ---
-  if (chartPosOshiBar) { chartPosOshiBar.destroy(); chartPosOshiBar = null; }
-  const sorted = posOshiData.filter(d=>d.latestViews!=null).sort((a,b)=>b.latestViews-a.latestViews);
-  chartPosOshiBar = new Chart(document.getElementById('chartPosOshiBar'), {
-    type:'bar',
-    data:{
-      labels: sorted.map(d=>d.reading),
-      datasets:[{
-        data: sorted.map(d=>d.latestViews),
-        backgroundColor: sorted.map(d=>(POS_SONG_COLORS[d.song]||'#888')+'bb'),
-        borderColor: sorted.map(d=>POS_SONG_COLORS[d.song]||'#888'),
-        borderWidth:1,
-      }]
-    },
-    options:{
+  // --- 棒グラフ共通オプション生成 ---
+  function makeBarOptions(dataArr) {
+    return {
       responsive:true, maintainAspectRatio:false,
       plugins:{
         legend:{display:false},
         tooltip:{
           callbacks:{
             label: c => {
-              const d=sorted[c.dataIndex];
+              const d=dataArr[c.dataIndex];
               return [`${d.name}（${d.reading}）`,`${c.raw.toLocaleString()}回`,d.song];
             }
           },
@@ -1947,8 +1938,47 @@ function renderPosOshi() {
           grid:{color:'rgba(255,255,255,0.06)'},
         }
       }
-    }
+    };
+  }
+
+  // --- 棒グラフ（前半組）---
+  if (chartPosOshiBar) { chartPosOshiBar.destroy(); chartPosOshiBar = null; }
+  const sortedFront = posOshiData.filter(d=>d.broadcast==='前半組'&&d.latestViews!=null).sort((a,b)=>b.latestViews-a.latestViews);
+  chartPosOshiBar = new Chart(document.getElementById('chartPosOshiBar'), {
+    type:'bar',
+    data:{
+      labels: sortedFront.map(d=>d.reading),
+      datasets:[{
+        data: sortedFront.map(d=>d.latestViews),
+        backgroundColor: sortedFront.map(d=>(POS_SONG_COLORS[d.song]||'#888')+'bb'),
+        borderColor: sortedFront.map(d=>POS_SONG_COLORS[d.song]||'#888'),
+        borderWidth:1,
+      }]
+    },
+    options: makeBarOptions(sortedFront),
   });
+
+  // --- 棒グラフ（後半組）: データがあれば表示 ---
+  if (chartPosOshiBar2) { chartPosOshiBar2.destroy(); chartPosOshiBar2 = null; }
+  const sortedBack = posOshiData.filter(d=>d.broadcast==='後半組'&&d.latestViews!=null).sort((a,b)=>b.latestViews-a.latestViews);
+  const showBack = sortedBack.length > 0;
+  document.getElementById('pos-bar2-label').style.display = showBack ? '' : 'none';
+  document.getElementById('pos-bar2-wrap').style.display = showBack ? '' : 'none';
+  if (showBack) {
+    chartPosOshiBar2 = new Chart(document.getElementById('chartPosOshiBar2'), {
+      type:'bar',
+      data:{
+        labels: sortedBack.map(d=>d.reading),
+        datasets:[{
+          data: sortedBack.map(d=>d.latestViews),
+          backgroundColor: sortedBack.map(d=>(POS_SONG_COLORS[d.song]||'#888')+'bb'),
+          borderColor: sortedBack.map(d=>POS_SONG_COLORS[d.song]||'#888'),
+          borderWidth:1,
+        }]
+      },
+      options: makeBarOptions(sortedBack),
+    });
+  }
 }
 
 function switchBattleTab(tab) {
