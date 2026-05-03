@@ -177,6 +177,33 @@ def build_rank_events_js(source_dir, csv_name):
     return "\n".join([keys_js, data_js, compat])
 
 
+def build_level_js(source_dir, csv_name):
+    rows = read_csv(source_dir / csv_name)
+    entries = []
+    for row in rows[1:]:
+        row = [c.strip() for c in row]
+        if len(row) < 7 or not row[1]:
+            continue
+        reading, first_cls, eval_cls, team, song, broadcast = row[1], row[2], row[3], row[4], row[5], row[6]
+        team_esc = team.replace('"', '\\"')
+        song_esc = song.replace('"', '\\"')
+        entries.append(f'"{reading}":{{"cls":"{first_cls}","evalCls":"{eval_cls}","team":"{team_esc}","song":"{song_esc}","bc":"{broadcast}"}}')
+    return "const rawLevelData = {" + ",".join(entries) + "};"
+
+
+def build_group_battle_profile_js(source_dir, csv_name):
+    rows = read_csv(source_dir / csv_name)
+    entries = []
+    for row in rows[1:]:
+        row = [c.strip() for c in row]
+        if len(row) < 7 or not row[1]:
+            continue
+        reading, artist, song, team, broadcast, result = row[1], row[2], row[3], row[4], row[5], row[6]
+        song_esc = song.replace('"', '\\"')
+        entries.append(f'"{reading}":{{"artist":"{artist}","song":"{song_esc}","team":{team},"bc":"{broadcast}","result":"{result}"}}')
+    return "const rawGroupBattleData = {" + ",".join(entries) + "};"
+
+
 def build_pos_oshi_js(source_dir, pos_cfg):
     rows = read_csv(source_dir / pos_cfg["oshi_cam"])
     header = rows[0]
@@ -371,6 +398,14 @@ def generate():
     template = TEMPLATE_PATH.read_text(encoding="utf-8")
     output = template.replace("// {{AUTO_DATA}}", auto_data)
     output = output.replace("{{LAST_DATE}}", last_date)
+
+    if "level_csv" in config:
+        src = Path(config.get("local_source_dir", ""))
+        output = output.replace("// {{AUTO_LEVEL_DATA}}", build_level_js(src, config["level_csv"]))
+
+    if "group_battle_team_csv" in config:
+        src = Path(config.get("local_source_dir", ""))
+        output = output.replace("// {{AUTO_GROUP_BATTLE_DATA}}", build_group_battle_profile_js(src, config["group_battle_team_csv"]))
 
     if "rank_event_csv" in config:
         src = Path(config.get("local_source_dir", config.get("battle_source_dir", "")))
