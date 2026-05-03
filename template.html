@@ -3066,7 +3066,7 @@ function buildTPHTML(d) {
     const [,, posSong, posArtist, posPos, posBc] = posRow;
     const posTeammates = rawPosBattle
       .filter(r => r[2] === posSong && r[1] !== d.reading)
-      .map(r => tpName(r[1])).join('、');
+      .map(r => tpLink(r[1])).join('　');
     html += `<div class="tp-section">▼ ポジションバトル</div>
     <div class="tp-grid">
       <div class="tp-row"><span class="tp-key">楽曲</span><span class="tp-val">${posSong}${posArtist ? ' / '+posArtist : ''}</span></div>
