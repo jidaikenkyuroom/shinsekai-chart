@@ -518,7 +518,7 @@ tr:hover td{background:var(--surface);}
       <div id="pos-list"></div>
     </div>
     <div id="ptab-oshi" style="display:none">
-      <p class="sub-label">推しカメラ再生数（前半組）と4/23投票順位の相関。点の色は楽曲。</p>
+      <p class="sub-label">推しカメラ再生数（前後半組）と4/23投票順位の相関。点の色は楽曲。</p>
       <div class="chart-wrap" style="height:460px;"><canvas id="chartPosOshiScatter"></canvas></div>
       <h3 class="pos-group-label" style="margin-top:1.5rem;">▼ 再生数ランキング</h3>
       <div class="g-tabs" id="pos-bar-tabs" style="margin-bottom:0.75rem;">
@@ -1561,7 +1561,7 @@ function renderPosBattle() {
   document.getElementById('pos-list').innerHTML =
     `<h3 class="pos-group-label">▼ 前半組（放送済み）</h3>
     <div class="pos-grid">${front.map(teamCard).join('')}</div>
-    <h3 class="pos-group-label">▼ 後半組（来週放送）</h3>
+    <h3 class="pos-group-label">▼ 後半組（放送済み）</h3>
     <div class="pos-grid">${back.map(teamCard).join('')}</div>`;
 }
 
@@ -1594,7 +1594,8 @@ function renderPosOshi() {
       const [name, reading, song, artist, position, broadcast] = r;
       const oshi = rawPosOshi[reading];
       const videoId = oshi[0];
-      const latestViews = oshi.length > 1 ? oshi[oshi.length - 1] : null;
+      let latestViews = null;
+      for (let i = oshi.length - 1; i >= 1; i--) { if (oshi[i] != null) { latestViews = oshi[i]; break; } }
       const votes = voteMap[name] || [];
       const rank423 = RANK_423_IDX >= 0 ? votes[RANK_423_IDX] : null;
       return {name, reading, song, artist, broadcast, videoId, latestViews, rank423};
