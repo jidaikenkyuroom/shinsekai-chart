@@ -3007,6 +3007,9 @@ function tpName(r) {
   const x = data.find(d => d.reading === r);
   return x ? x.name : r;
 }
+function tpLink(r) {
+  return `<span class="trainee-link" onclick="openTraineePanel('${r}')">${tpName(r)}</span>`;
+}
 
 function buildTPHTML(d) {
   const lv = typeof rawLevelData !== 'undefined' && rawLevelData[d.reading];
@@ -3033,7 +3036,7 @@ function buildTPHTML(d) {
   if (lv) {
     const teammates = Object.keys(rawLevelData)
       .filter(r => rawLevelData[r].team === lv.team && r !== d.reading)
-      .map(tpName).join('、');
+      .map(tpLink).join('　');
     html += `<div class="tp-section">▼ レベル分けテスト</div>
     <div class="tp-grid">
       <div class="tp-row"><span class="tp-key">課題曲</span><span class="tp-val">${lv.song}</span></div>
@@ -3047,7 +3050,7 @@ function buildTPHTML(d) {
   if (gb) {
     const gbTeammates = Object.keys(rawGroupBattleData)
       .filter(r => rawGroupBattleData[r].song === gb.song && rawGroupBattleData[r].team === gb.team && r !== d.reading)
-      .map(tpName).join('、');
+      .map(tpLink).join('　');
     const winColor = gb.result === 'WIN' ? '#4ec87a' : '#f09878';
     html += `<div class="tp-section">▼ グループバトル</div>
     <div class="tp-grid">
