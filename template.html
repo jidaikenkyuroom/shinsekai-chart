@@ -3093,9 +3093,9 @@ function renderTPChart(d) {
     },
     options: {
       responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => c.parsed.y != null ? c.parsed.y + '位' : '-' } } },
       scales: {
-        y: { reverse: true, min: 1, ticks: { color: '#888', font: { size: 9 }, maxTicksLimit: 6 }, grid: { color: 'rgba(255,255,255,0.05)' } },
+        y: { reverse: true, min: 1, ticks: { color: '#888', font: { size: 9 }, maxTicksLimit: 6, callback: v => v + '位' }, grid: { color: 'rgba(255,255,255,0.05)' } },
         x: { ticks: { color: '#888', font: { size: 9 } }, grid: { display: false } }
       }
     }
