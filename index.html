@@ -3263,7 +3263,7 @@ function buildTPHTML(d) {
       <div class="tp-row"><span class="tp-key">課題曲</span><span class="tp-val">${lvSongDisp}</span></div>
       <div class="tp-row"><span class="tp-key">チーム名</span><span class="tp-val">${lv.team}</span></div>
       <div class="tp-row"><span class="tp-key">クラス</span><span class="tp-val"><span style="color:${clsCol(lv.cls)}">${lv.cls}</span> → <span style="color:${clsCol(lv.evalCls)};font-weight:600;">${lv.evalCls}</span></span></div>
-      <div class="tp-row"><span class="tp-key">放送</span><span class="tp-val">${lv.bc}</span></div>
+      <div class="tp-row"><span class="tp-key">放送</span><span class="tp-val" style="color:${lv.bc==='前半組'?'#60c8e0':'#e080c0'};font-weight:600;">${lv.bc}</span></div>
       <div class="tp-row"><span class="tp-key">チームメンバー</span><span class="tp-val">${teammates || '-'}</span></div>
     </div>`;
   }
@@ -3278,7 +3278,7 @@ function buildTPHTML(d) {
       <div class="tp-row"><span class="tp-key">楽曲</span><span class="tp-val">${gb.song} / ${gb.artist}</span></div>
       <div class="tp-row"><span class="tp-key">チーム</span><span class="tp-val">${gb.team}組</span></div>
       <div class="tp-row"><span class="tp-key">勝敗</span><span class="tp-val" style="color:${winColor};font-weight:700;">${gb.result}</span></div>
-      <div class="tp-row"><span class="tp-key">放送</span><span class="tp-val">${gb.bc}</span></div>
+      <div class="tp-row"><span class="tp-key">放送</span><span class="tp-val" style="color:${gb.bc==='前半組'?'#60c8e0':'#e080c0'};font-weight:600;">${gb.bc}</span></div>
       <div class="tp-row"><span class="tp-key">チームメンバー</span><span class="tp-val">${gbTeammates || '-'}</span></div>
     </div>`;
   }
@@ -3292,7 +3292,7 @@ function buildTPHTML(d) {
     <div class="tp-grid">
       <div class="tp-row"><span class="tp-key">楽曲</span><span class="tp-val">${posSong}${posArtist ? ' / '+posArtist : ''}</span></div>
       <div class="tp-row"><span class="tp-key">ポジション</span><span class="tp-val">${posPos}</span></div>
-      <div class="tp-row"><span class="tp-key">放送</span><span class="tp-val">${posBc}</span></div>
+      <div class="tp-row"><span class="tp-key">放送</span><span class="tp-val" style="color:${posBc==='前半組'?'#60c8e0':'#e080c0'};font-weight:600;">${posBc}</span></div>
       <div class="tp-row"><span class="tp-key">チームメンバー</span><span class="tp-val">${posTeammates || '-'}</span></div>
     </div>`;
   }
