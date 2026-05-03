@@ -918,7 +918,7 @@ function renderAll(){
   if(filter==='cls-down') list=list.filter(d=>d.clsLabel==='down');
   sortList(list,sort);
   const vHeaders=VOTE_DATES.map(d=>`<th>${d}順位</th>`).join('');
-  let html=`<thead><tr><th style="text-align:left;">名前</th><th>reading</th><th>初回</th><th>再評価</th><th>レベル分け</th><th>グループバトル</th><th>現在（万回）</th><th>週間+（万）</th><th>週間伸び率</th>${vHeaders}</tr></thead><tbody>`;
+  let html=`<thead><tr><th style="text-align:left;">名前</th><th>reading</th><th>初回</th><th>再評価</th><th>レベル分け</th><th>グループバトル</th><th>ポジションバトル</th><th>現在（万回）</th><th>週間+（万）</th><th>週間伸び率</th>${vHeaders}</tr></thead><tbody>`;
   list.forEach(d=>{
     const tc=d.tier==='hot'?'td-hot':d.tier==='rise'?'td-rise':'';
     const gPct=d.growPct!=null?`<span class="${tc}">+${d.growPct}%</span>`:'-';
@@ -929,6 +929,11 @@ function renderAll(){
     const lcColor = d.level==='前半組' ? 'color:var(--accent)' : 'color:var(--muted)';
     const bcBg = d.broadcast==='前半組' ? 'rgba(96,200,224,0.15)' : 'rgba(224,128,192,0.15)';
     const bcTxt = d.broadcast==='前半組' ? '#60c8e0' : '#e080c0';
+    const posRow = typeof rawPosBattle !== 'undefined' && rawPosBattle.find(r => r[1] === d.reading);
+    const posBc = posRow ? posRow[5] : null;
+    const posBcBg = posBc==='前半組' ? 'rgba(96,200,224,0.15)' : posBc==='後半組' ? 'rgba(224,128,192,0.15)' : 'transparent';
+    const posBcTxt = posBc==='前半組' ? '#60c8e0' : posBc==='後半組' ? '#e080c0' : 'var(--hint)';
+    const posBcCell = posBc ? `<span style="font-size:0.65rem;padding:1px 6px;border-radius:3px;background:${posBcBg};color:${posBcTxt};">${posBc}</span>` : '-';
     const latestRankAll = d.votes.length ? d.votes[d.votes.length-1] : null;
     const isElim = latestRankAll === -1 || (latestRankAll != null && latestRankAll >= 51);
     const elimBadgeAll = isElim ? ' <span class="badge badge-elim">脱落</span>' : '';
@@ -940,6 +945,7 @@ function renderAll(){
       <td style="text-align:center;" class="${cc}">${d.classEval}${arrow}</td>
       <td style="text-align:center;font-size:0.7rem;${lcColor}">${d.level}</td>
       <td style="text-align:center;"><span style="font-size:0.65rem;padding:1px 6px;border-radius:3px;background:${bcBg};color:${bcTxt};">${d.broadcast}</span></td>
+      <td style="text-align:center;">${posBcCell}</td>
       <td>${d.cur.toFixed(1)}</td><td>${gAbs}</td><td>${gPct}</td>${votes}
     </tr>`;
   });
