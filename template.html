@@ -518,9 +518,10 @@ tr:hover td{background:var(--surface);}
       <div id="pos-list"></div>
     </div>
     <div id="ptab-oshi" style="display:none">
-      <p class="sub-label">推しカメラ再生数（前後半組）と4/23投票順位の相関。点の色は楽曲。</p>
+      <p class="sub-label">推しカメラ再生数（前後半組）と4/23投票順位の相関。点の色は楽曲。<span id="pos-oshi-scatter-date" style="margin-left:0.6em;opacity:0.55;font-size:0.85em;"></span></p>
+      <p class="sub-label" style="opacity:0.6;font-size:0.76rem;margin-top:0.1rem;">※ 前半組（5/1公開）は後半組（5/3公開）より2日早く視聴可能</p>
       <div class="chart-wrap" style="height:460px;"><canvas id="chartPosOshiScatter"></canvas></div>
-      <h3 class="pos-group-label" style="margin-top:1.5rem;">▼ 再生数ランキング</h3>
+      <h3 class="pos-group-label" style="margin-top:1.5rem;">▼ 再生数ランキング <span id="pos-oshi-bar-date" style="font-size:0.72rem;font-weight:normal;opacity:0.55;margin-left:0.4rem;"></span></h3>
       <div class="g-tabs" id="pos-bar-tabs" style="margin-bottom:0.75rem;">
         <button class="g-tab active" onclick="switchPosBarTab('all')">全員</button>
         <button class="g-tab" onclick="switchPosBarTab('front')">前半組</button>
@@ -1605,6 +1606,22 @@ function renderPosOshi() {
       const rank423 = RANK_423_IDX >= 0 ? votes[RANK_423_IDX] : null;
       return {name, reading, song, artist, broadcast, videoId, latestViews, rank423};
     });
+
+  // データ更新日をグループ別に計算して表示
+  function getLatestOshiDate(broadcastGroup) {
+    const members = posOshiData.filter(d => d.broadcast === broadcastGroup);
+    for (let di = POS_OSHI_DATES.length - 1; di >= 0; di--) {
+      if (members.some(d => rawPosOshi[d.reading] && rawPosOshi[d.reading][di+1] != null)) return POS_OSHI_DATES[di];
+    }
+    return null;
+  }
+  const frontDate = getLatestOshiDate('前半組');
+  const backDate  = getLatestOshiDate('後半組');
+  const dateText  = frontDate === backDate
+    ? `データ更新: ${frontDate}`
+    : `データ更新: 前半組 ${frontDate||'-'} / 後半組 ${backDate||'-'}`;
+  document.getElementById('pos-oshi-scatter-date').textContent = dateText;
+  document.getElementById('pos-oshi-bar-date').textContent = dateText;
 
   // --- 散布図 ---
   if (chartPosOshiScatter) { chartPosOshiScatter.destroy(); chartPosOshiScatter = null; }
