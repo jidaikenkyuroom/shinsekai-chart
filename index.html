@@ -3257,9 +3257,10 @@ function buildTPHTML(d) {
     const teammates = Object.keys(rawLevelData)
       .filter(r => rawLevelData[r].team === lv.team && r !== d.reading)
       .map(tpLink).join('　');
+    const lvParts = lv.song.split('／'); const lvSongDisp = lvParts.length > 1 ? `${lvParts[1]} / ${lvParts[0]}` : lv.song;
     html += `<div class="tp-section">▼ レベル分けテスト</div>
     <div class="tp-grid">
-      <div class="tp-row"><span class="tp-key">課題曲</span><span class="tp-val">${lv.song}</span></div>
+      <div class="tp-row"><span class="tp-key">課題曲</span><span class="tp-val">${lvSongDisp}</span></div>
       <div class="tp-row"><span class="tp-key">チーム名</span><span class="tp-val">${lv.team}</span></div>
       <div class="tp-row"><span class="tp-key">クラス</span><span class="tp-val"><span style="color:${clsCol(lv.cls)}">${lv.cls}</span> → <span style="color:${clsCol(lv.evalCls)};font-weight:600;">${lv.evalCls}</span></span></div>
       <div class="tp-row"><span class="tp-key">放送</span><span class="tp-val">${lv.bc}</span></div>
@@ -3274,7 +3275,7 @@ function buildTPHTML(d) {
     const winColor = gb.result === 'WIN' ? '#4ec87a' : '#f09878';
     html += `<div class="tp-section">▼ グループバトル</div>
     <div class="tp-grid">
-      <div class="tp-row"><span class="tp-key">楽曲</span><span class="tp-val">${gb.artist} / ${gb.song}</span></div>
+      <div class="tp-row"><span class="tp-key">楽曲</span><span class="tp-val">${gb.song} / ${gb.artist}</span></div>
       <div class="tp-row"><span class="tp-key">チーム</span><span class="tp-val">${gb.team}組</span></div>
       <div class="tp-row"><span class="tp-key">勝敗</span><span class="tp-val" style="color:${winColor};font-weight:700;">${gb.result}</span></div>
       <div class="tp-row"><span class="tp-key">放送</span><span class="tp-val">${gb.bc}</span></div>
