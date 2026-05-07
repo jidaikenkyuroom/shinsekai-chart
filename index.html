@@ -1048,10 +1048,15 @@ function renderWatch(){
     const battleBadge = br ? (br.result==='WIN' ? '<span class="badge badge-rise">G：WIN</span>' : '<span class="badge badge-hot">G：LOSE</span>') : '';
     const latestRank = d.votes.length ? d.votes[d.votes.length-1] : null;
     const elimBadge = (latestRank === -1 || (latestRank != null && latestRank >= 51)) ? ' <span class="badge badge-elim">脱落</span>' : '';
+    const posRow = typeof rawPosBattle !== 'undefined' && rawPosBattle.find(r => r[1] === d.reading);
+    const posPosRank = posRow ? posRow[10] : null;
+    const posBenefit = posRow ? parseInt(posRow[8]) : 0;
+    const posRankBadge = posPosRank ? `<span class="badge" style="background:rgba(200,184,255,0.18);color:#c8b8ff;border:1px solid rgba(200,184,255,0.3);">P: ${posPosRank}位</span>` : '';
+    const posTeamBadge = posBenefit >= 50000 ? `<span class="badge" style="background:rgba(255,215,0,0.18);color:#ffd700;border:1px solid rgba(255,215,0,0.3);">P: 1位チーム</span>` : '';
     return `<div class="card">
       <div class="card-name">${d.name} <span style="font-size:0.6rem;color:var(--hint);font-family:monospace;">${d.reading}</span>${elimBadge}</div>
       <div class="card-val" style="color:${tierColor[d.tier]}">${gStr}</div>
-      <div class="card-sub">${gAbsStr} &nbsp;${d.cur.toFixed(1)}万 <span class="badge badge-${d.tier}">${tierLabel[d.tier]}</span> ${clsBadgeHtml(d)} ${battleBadge}</div>
+      <div class="card-sub">${gAbsStr} &nbsp;${d.cur.toFixed(1)}万 <span class="badge badge-${d.tier}">${tierLabel[d.tier]}</span> ${clsBadgeHtml(d)} ${battleBadge} ${posRankBadge} ${posTeamBadge}</div>
       ${spark}
       <div style="font-size:0.65rem;color:var(--hint);margin-top:3px;font-family:monospace;">${vStr}</div>
     </div>`;
