@@ -235,7 +235,12 @@ def build_pos_js(source_dir, pos_cfg):
         parts = song_artist.split(" / ", 1)
         song = parts[0]
         artist = parts[1] if len(parts) > 1 else ""
-        team_entries.append(f'["{name}","{reading}","{song}","{artist}","{position}","{broadcast}"]')
+        indiv_votes = row[5] if len(row) > 5 else ""
+        team_rank   = row[6] if len(row) > 6 else ""
+        benefit     = row[7] if len(row) > 7 else ""
+        total_votes = row[8] if len(row) > 8 else ""
+        pos_rank    = row[9] if len(row) > 9 else ""
+        team_entries.append(f'["{name}","{reading}","{song}","{artist}","{position}","{broadcast}","{indiv_votes}","{team_rank}","{benefit}","{total_votes}","{pos_rank}"]')
 
     yt_entries = []
     for row in yt_rows[1:]:
@@ -361,6 +366,184 @@ def build_battle_series_js(source_dir, battle_cfg):
     return "\n".join([raw_push, raw_yt_views, raw_full, raw_nocut])
 
 
+def build_tracker_js(src, battle_src, csv_cfg, battle_cfg, gb_team_csv, pos_cfg, pos_src):
+    def js_str(s):
+        return str(s).replace('\\', '\\\\').replace('"', '\\"')
+
+    def js_dates(dates):
+        return "[" + ",".join(f'"{d}"' for d in dates) + "]"
+
+    def js_int_arr(vals):
+        return "[" + ",".join("null" if v is None else str(v) for v in vals) + "]"
+
+    def js_float_arr(vals):
+        return "[" + ",".join("null" if v is None else str(v) for v in vals) + "]"
+
+    def view_cols(header):
+        return [i for i, h in enumerate(header) if h.endswith("_再生数")]
+
+    def safe_int(s):
+        s = str(s).strip()
+        try:
+            return int(float(s))
+        except (ValueError, TypeError):
+            return None
+
+    def safe_float(s):
+        s = str(s).strip()
+        try:
+            return float(s)
+        except (ValueError, TypeError):
+            return None
+
+    # ── テーマ曲推しカメラ ──
+    theme_rows = read_csv(src / csv_cfg["play"])
+    theme_dates = list(theme_rows[0][2:])
+    theme_map = {}
+    for row in theme_rows[1:]:
+        r = row[1].strip() if len(row) > 1 else ""
+        if r:
+            theme_map[r] = [safe_float(row[i]) if i < len(row) else None for i in range(2, len(theme_rows[0]))]
+
+    # ── GB mnetplus 推しカメラ ──
+    mnet_rows = read_csv(battle_src / battle_cfg["mnetplus"])
+    mnet_vi = view_cols(mnet_rows[0])
+    mnet_dates = [mnet_rows[0][i].replace("_再生数", "") for i in mnet_vi]
+    mnet_map = {}
+    for row in mnet_rows[1:]:
+        r = row[1].strip() if len(row) > 1 else ""
+        if r:
+            mnet_map[r] = [safe_int(row[i]) if i < len(row) else None for i in mnet_vi]
+
+    # ── GB YouTube 推しカメラ ──
+    ytoshi_rows = read_csv(battle_src / battle_cfg["yt_oshicam"])
+    ytoshi_vi = view_cols(ytoshi_rows[0])
+    ytoshi_dates = [ytoshi_rows[0][i].replace("_再生数", "") for i in ytoshi_vi]
+    ytoshi_map = {}
+    for row in ytoshi_rows[1:]:
+        r = row[0].strip() if row else ""
+        if r:
+            ytoshi_map[r] = [safe_int(row[i]) if i < len(row) else None for i in ytoshi_vi]
+
+    # ── GB チームメンバー ──
+    gb_team_rows = read_csv(battle_src / gb_team_csv)
+    gb_member = {}
+    for row in gb_team_rows[1:]:
+        if len(row) < 6: continue
+        r = row[1].strip()
+        gb_member[r] = {"name": row[0], "artist": js_str(row[2]), "song": js_str(row[3]),
+                        "team": row[4], "broadcast": row[5], "result": row[6].strip() if len(row) > 6 else ""}
+
+    gb_indiv = []
+    for r, m in gb_member.items():
+        gb_indiv.append(
+            f'{{"reading":"{r}","name":"{js_str(m["name"])}","broadcast":"{m["broadcast"]}",'
+            f'"song":"{m["song"]}","artist":"{m["artist"]}","team":{m["team"]},'
+            f'"mnet":{js_int_arr(mnet_map.get(r) or [])},'
+            f'"ytOshi":{js_int_arr(ytoshi_map.get(r) or [])},'
+            f'"theme":{js_float_arr(theme_map.get(r) or [])}}}'
+        )
+
+    # ── GB チーム動画 ──
+    def load_team_video(path):
+        rows = read_csv(path)
+        vi = list(range(4, len(rows[0])))
+        dates = [rows[0][i].replace("_再生数", "") for i in vi]
+        data = {}
+        for row in rows[1:]:
+            if len(row) < 5: continue
+            key = (js_str(row[0]), js_str(row[1]), row[2])
+            data[key] = [safe_int(row[i]) if i < len(row) else None for i in vi]
+        return dates, data
+
+    yt_dates, yt_map   = load_team_video(battle_src / battle_cfg["yt_team"])
+    full_dates, full_map = load_team_video(battle_src / battle_cfg["yt_full"])
+    nocut_dates, nocut_map = load_team_video(battle_src / battle_cfg["yt_nocut"])
+
+    seen_teams = {}
+    for r, m in gb_member.items():
+        key = (m["artist"], m["song"], m["team"])
+        if key not in seen_teams:
+            seen_teams[key] = {**m, "members": []}
+        seen_teams[key]["members"].append(r)
+
+    gb_teams = []
+    for (artist, song, team), t in seen_teams.items():
+        key = (artist, song, team)
+        members_js = "[" + ",".join(f'"{r}"' for r in t["members"]) + "]"
+        gb_teams.append(
+            f'{{"artist":"{artist}","song":"{song}","team":{team},'
+            f'"broadcast":"{t["broadcast"]}","result":"{t["result"]}",'
+            f'"members":{members_js},'
+            f'"ytTeam":{js_int_arr(yt_map.get(key) or [])},'
+            f'"ytFull":{js_int_arr(full_map.get(key) or [])},'
+            f'"ytNocut":{js_int_arr(nocut_map.get(key) or [])}}}'
+        )
+
+    # ── ポジションバトル 推しカメラ ──
+    pos_oshi_rows = read_csv(pos_src / pos_cfg["oshi_cam"])
+    pos_oshi_vi = view_cols(pos_oshi_rows[0])
+    pos_oshi_dates = [pos_oshi_rows[0][i].replace("_再生数", "") for i in pos_oshi_vi]
+    pos_oshi_map = {}
+    for row in pos_oshi_rows[1:]:
+        r = row[1].strip() if len(row) > 1 else ""
+        if r:
+            pos_oshi_map[r] = [safe_int(row[i]) if i < len(row) else None for i in pos_oshi_vi]
+
+    # ── ポジションバトル ハイライト ──
+    pos_yt_rows = read_csv(pos_src / pos_cfg["yt_highlight"])
+    pos_yt_vi = view_cols(pos_yt_rows[0])
+    pos_yt_dates = [pos_yt_rows[0][i].replace("_再生数", "") for i in pos_yt_vi]
+    pos_yt_map = {}
+    for row in pos_yt_rows[1:]:
+        if len(row) < 2: continue
+        song = js_str(row[1].strip())
+        pos_yt_map[song] = [safe_int(row[i]) if i < len(row) else None for i in pos_yt_vi]
+
+    # ── ポジションバトル チームメンバー ──
+    pos_team_rows = read_csv(pos_src / pos_cfg["team"])
+    pos_member = {}
+    pos_teams_dict = {}
+    for row in pos_team_rows[1:]:
+        if len(row) < 5: continue
+        r = row[1].strip()
+        parts = row[2].split(" / ", 1)
+        song = js_str(parts[0])
+        artist = js_str(parts[1]) if len(parts) > 1 else ""
+        bc = row[4]
+        pos_member[r] = {"name": row[0], "song": song, "artist": artist, "broadcast": bc}
+        if song not in pos_teams_dict:
+            pos_teams_dict[song] = {"song": song, "artist": artist, "broadcast": bc, "members": []}
+        if r not in pos_teams_dict[song]["members"]:
+            pos_teams_dict[song]["members"].append(r)
+
+    pos_indiv = []
+    for r, m in pos_member.items():
+        pos_indiv.append(
+            f'{{"reading":"{r}","name":"{js_str(m["name"])}","broadcast":"{m["broadcast"]}",'
+            f'"song":"{m["song"]}","artist":"{m["artist"]}",'
+            f'"oshi":{js_int_arr(pos_oshi_map.get(r) or [])}}}'
+        )
+
+    pos_teams = []
+    for song, t in pos_teams_dict.items():
+        members_js = "[" + ",".join(f'"{r}"' for r in t["members"]) + "]"
+        pos_teams.append(
+            f'{{"song":"{song}","artist":"{t["artist"]}","broadcast":"{t["broadcast"]}",'
+            f'"members":{members_js},'
+            f'"ytHl":{js_int_arr(pos_yt_map.get(song) or [])}}}'
+        )
+
+    return "\n".join([
+        f"const GB_TRACKER={{oshiDates:{js_dates(mnet_dates)},ytOshiDates:{js_dates(ytoshi_dates)},themeDates:{js_dates(theme_dates)},ytTeamDates:{js_dates(yt_dates)},ytFullDates:{js_dates(full_dates)},ytNocutDates:{js_dates(nocut_dates)},",
+        f"indiv:[{','.join(gb_indiv)}],",
+        f"teams:[{','.join(gb_teams)}]}};",
+        f"const POS_TRACKER={{oshiDates:{js_dates(pos_oshi_dates)},ytHlDates:{js_dates(pos_yt_dates)},",
+        f"indiv:[{','.join(pos_indiv)}],",
+        f"teams:[{','.join(pos_teams)}]}};",
+    ])
+
+
 def generate():
     with open(CONFIG_PATH, encoding="utf-8") as f:
         config = json.load(f)
@@ -429,6 +612,17 @@ def generate():
         output = output.replace("// {{AUTO_BATTLE_SNAP}}", snap_js)
         output = output.replace("// {{AUTO_BATTLE_DATES}}", dates_js)
         output = output.replace("// {{AUTO_BATTLE_SERIES}}", series_js)
+
+    if ("battle_source_dir" in config and "battle_csv" in config
+            and "group_battle_team_csv" in config and "pos_csv" in config):
+        src_l = Path(config.get("local_source_dir", config["battle_source_dir"]))
+        battle_src = Path(config["battle_source_dir"])
+        pos_src = Path(config.get("local_source_dir", config["battle_source_dir"]))
+        tracker_js = build_tracker_js(
+            src_l, battle_src, config["csv"], config["battle_csv"],
+            config["group_battle_team_csv"], config["pos_csv"], pos_src
+        )
+        output = output.replace("// {{AUTO_TRACKER_DATA}}", tracker_js)
 
     OUTPUT_PATH.write_text(output, encoding="utf-8")
     print(f"生成完了: {OUTPUT_PATH}")

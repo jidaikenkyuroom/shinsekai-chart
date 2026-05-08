@@ -528,7 +528,9 @@ tr:hover td{background:var(--surface);}
     <div class="g-tabs" id="pos-tabs">
       <button class="g-tab active" onclick="switchPosTab('list')">チーム一覧</button>
       <button class="g-tab" onclick="switchPosTab('oshi')">推しカメラ</button>
+      <button class="g-tab" onclick="switchPosTab('compare')">チーム比較</button>
     </div>
+    <div id="ptab-compare" style="display:none;"><div id="pos-compare-content"></div></div>
     <div id="ptab-list">
       <div id="pos-list"></div>
     </div>
@@ -554,6 +556,7 @@ tr:hover td{background:var(--surface);}
 // {{AUTO_POS_OSHI_DATA}}
 // {{AUTO_LEVEL_DATA}}
 // {{AUTO_GROUP_BATTLE_DATA}}
+// {{AUTO_TRACKER_DATA}}
 
 const RANK_423_IDX = VOTE_DATES.indexOf("4月23日");
 
@@ -838,10 +841,15 @@ function renderWatch(){
     const battleBadge = br ? (br.result==='WIN' ? '<span class="badge badge-rise">G：WIN</span>' : '<span class="badge badge-hot">G：LOSE</span>') : '';
     const latestRank = d.votes.length ? d.votes[d.votes.length-1] : null;
     const elimBadge = (latestRank === -1 || (latestRank != null && latestRank >= 51)) ? ' <span class="badge badge-elim">脱落</span>' : '';
+    const posRow = typeof rawPosBattle !== 'undefined' && rawPosBattle.find(r => r[1] === d.reading);
+    const posPosRank = posRow ? posRow[10] : null;
+    const posBenefit = posRow ? parseInt(posRow[8]) : 0;
+    const posRankBadge = posPosRank ? `<span class="badge" style="background:rgba(200,184,255,0.18);color:#c8b8ff;border:1px solid rgba(200,184,255,0.3);">P: ${posPosRank}位</span>` : '';
+    const posTeamBadge = posBenefit >= 50000 ? `<span class="badge" style="background:rgba(255,215,0,0.18);color:#ffd700;border:1px solid rgba(255,215,0,0.3);">P: 1位チーム</span>` : '';
     return `<div class="card">
       <div class="card-name">${d.name} <span style="font-size:0.6rem;color:var(--hint);font-family:monospace;">${d.reading}</span>${elimBadge}</div>
       <div class="card-val" style="color:${tierColor[d.tier]}">${gStr}</div>
-      <div class="card-sub">${gAbsStr} &nbsp;${d.cur.toFixed(1)}万 <span class="badge badge-${d.tier}">${tierLabel[d.tier]}</span> ${clsBadgeHtml(d)} ${battleBadge}</div>
+      <div class="card-sub">${gAbsStr} &nbsp;${d.cur.toFixed(1)}万 <span class="badge badge-${d.tier}">${tierLabel[d.tier]}</span> ${clsBadgeHtml(d)} ${battleBadge} ${posRankBadge} ${posTeamBadge}</div>
       ${spark}
       <div style="font-size:0.65rem;color:var(--hint);margin-top:3px;font-family:monospace;">${vStr}</div>
     </div>`;
@@ -1562,15 +1570,19 @@ function renderPosBattle() {
   const teams = {};
   const order = [];
   rawPosBattle.forEach(r => {
-    const [name, reading, song, artist, pos, broadcast] = r;
+    const [name, reading, song, artist, pos, broadcast, indivVotes, teamRank, benefit, totalVotes, posRank] = r;
     if (!teams[song]) { teams[song] = {song, artist, pos, broadcast, members: []}; order.push(song); }
-    teams[song].members.push({name, reading});
+    teams[song].members.push({name, reading, indivVotes, teamRank, benefit, totalVotes, posRank});
   });
   function teamCard(song) {
     const t = teams[song];
-    const members = t.members.map(m => {
+    const sorted = [...t.members].sort((a, b) => (parseInt(a.teamRank)||99) - (parseInt(b.teamRank)||99));
+    const members = sorted.map(m => {
       const mc = readingClassMap[m.reading];
-      return `<div class="pos-member">${mc ? mc.name : m.name}</div>`;
+      const dispName = mc ? mc.name : m.name;
+      const rankBadge = m.teamRank ? `<span style="font-size:0.65rem;color:#aaa;margin-right:4px;">${m.teamRank}位</span>` : '';
+      const benefitBadge = m.benefit ? `<span style="font-size:0.6rem;padding:0 4px;border-radius:3px;background:rgba(255,215,0,0.2);color:#ffd700;margin-left:4px;">+${Number(m.benefit).toLocaleString()}票</span>` : '';
+      return `<div class="pos-member">${rankBadge}${dispName}${benefitBadge}</div>`;
     }).join('');
     return `<div class="pos-card">
       <div class="pos-card-song">${t.song}</div>
@@ -1607,14 +1619,56 @@ const POS_SONG_COLORS = {
 
 function switchPosTab(tab) {
   currentPosTab = tab;
-  ['list','oshi'].forEach(t => {
+  ['list','oshi','compare'].forEach(t => {
     document.getElementById('ptab-'+t).style.display = t===tab ? '' : 'none';
   });
   document.querySelectorAll('#pos-tabs .g-tab').forEach((el,i) => {
-    el.classList.toggle('active', ['list','oshi'][i]===tab);
+    el.classList.toggle('active', ['list','oshi','compare'][i]===tab);
   });
-  if (tab==='oshi') renderPosOshi();
+  if(tab==='oshi') renderPosOshi();
+  if(tab==='compare') renderPosCompare();
 }
+
+// ===== トラッカーヘルパー（チーム比較で使用）=====
+function trkLatest(arr) {
+  if(!arr||!arr.length) return null;
+  for(let i=arr.length-1;i>=0;i--){ if(arr[i]!=null) return arr[i]; }
+  return null;
+}
+
+function trkPrev(arr) {
+  if(!arr||arr.length<2) return null;
+  let found=false;
+  for(let i=arr.length-1;i>=0;i--){
+    if(arr[i]!=null){ if(found) return arr[i]; found=true; }
+  }
+  return null;
+}
+
+function trkValStr(val, isWan) {
+  if(val==null) return '-';
+  if(isWan) return val.toFixed(1)+'万';
+  if(val>=10000) return (val/10000).toFixed(1)+'万';
+  if(val>=1000)  return (val/1000).toFixed(1)+'k';
+  return String(val);
+}
+
+function trkDeltaHtml(latest, prev, isWan) {
+  if(latest==null||prev==null) return '';
+  const d = latest-prev;
+  if(d===0) return '<span style="color:#888;font-size:0.68rem"> ±0</span>';
+  const sign = d>0?'+':'';
+  const color = d>0?'#4ec87a':'#ff5c35';
+  let disp;
+  const abs=Math.abs(d);
+  if(isWan) disp=sign+(d).toFixed(1)+'万';
+  else if(abs>=10000) disp=sign+(d/10000).toFixed(1)+'万';
+  else if(abs>=1000)  disp=sign+(d/1000).toFixed(1)+'k';
+  else disp=sign+d;
+  return `<span style="color:${color};font-size:0.68rem"> ${disp}</span>`;
+}
+
+// ===== トラッカーヘルパーここまで =====
 
 function renderPosOshi() {
   const posOshiData = rawPosBattle
@@ -2012,20 +2066,31 @@ function teamBarHtml(label, value, maxValue, color) {
 }
 
 function renderBattleCompare() {
+  if(typeof GB_TRACKER==='undefined'){ document.getElementById('bc-content').innerHTML='<p style="color:var(--hint)">データ読み込み中</p>'; return; }
   let html = '';
   SONGS_INFO.forEach(({artist, song, broadcast}) => {
     const sc   = SONG_COLORS[song] || '#888';
     const bc   = broadcast==='前半組' ? '#60c8e0' : '#e080c0';
     const bcBg = broadcast==='前半組' ? 'rgba(96,200,224,0.13)' : 'rgba(224,128,192,0.13)';
-    const members = battleData.filter(d => d.song===song);
-    const t1 = members.filter(d => d.team===1);
-    const t2 = members.filter(d => d.team===2);
-    const t1total = t1.reduce((s,d) => s+d.oshiViews, 0);
-    const t2total = t2.reduce((s,d) => s+d.oshiViews, 0);
-    const oshiMax = Math.max(t1total, t2total, 1);
-    const yt1 = ytTeamMap[`${artist}|${song}|1`];
-    const yt2 = ytTeamMap[`${artist}|${song}|2`];
-    const ytMax = Math.max(yt1?.views||0, yt2?.views||0, 1);
+
+    const gbT1 = GB_TRACKER.teams.find(t => t.song===song && t.team===1);
+    const gbT2 = GB_TRACKER.teams.find(t => t.song===song && t.team===2);
+    const m1 = GB_TRACKER.indiv.filter(d => d.song===song && d.team===1);
+    const m2 = GB_TRACKER.indiv.filter(d => d.song===song && d.team===2);
+
+    const yt1=trkLatest(gbT1?.ytTeam)||0, yt2=trkLatest(gbT2?.ytTeam)||0;
+    const fu1=trkLatest(gbT1?.ytFull)||0, fu2=trkLatest(gbT2?.ytFull)||0;
+    const nc1=trkLatest(gbT1?.ytNocut)||0,nc2=trkLatest(gbT2?.ytNocut)||0;
+    const mn1=m1.reduce((s,d)=>s+(trkLatest(d.mnet)||0),0);
+    const mn2=m2.reduce((s,d)=>s+(trkLatest(d.mnet)||0),0);
+    const yo1=m1.reduce((s,d)=>s+(trkLatest(d.ytOshi)||0),0);
+    const yo2=m2.reduce((s,d)=>s+(trkLatest(d.ytOshi)||0),0);
+
+    const lastYt   = GB_TRACKER.ytTeamDates[GB_TRACKER.ytTeamDates.length-1]??'';
+    const lastFull = GB_TRACKER.ytFullDates[GB_TRACKER.ytFullDates.length-1]??'';
+    const lastNc   = GB_TRACKER.ytNocutDates[GB_TRACKER.ytNocutDates.length-1]??'';
+    const lastMnet = GB_TRACKER.oshiDates[GB_TRACKER.oshiDates.length-1]??'';
+    const lastYtOs = GB_TRACKER.ytOshiDates[GB_TRACKER.ytOshiDates.length-1]??'';
 
     html += `<div class="song-card">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:1rem;flex-wrap:wrap;">
@@ -2034,31 +2099,65 @@ function renderBattleCompare() {
         <span style="font-size:0.62rem;padding:1px 6px;border-radius:3px;background:${bcBg};color:${bc};">${broadcast}</span>
       </div>`;
 
-    if(yt1 || yt2) {
-      html += `<div style="margin-bottom:1rem;"><div style="font-size:0.7rem;color:var(--muted);margin-bottom:6px;font-family:monospace;">YouTube チーム動画（4/19時点）</div>
-        ${teamBarHtml('TEAM 1', yt1?.views||0, ytMax, '#c8b8ff')}
-        ${teamBarHtml('TEAM 2', yt2?.views||0, ytMax, '#f0c040')}
-      </div>`;
+    if(yt1||yt2) {
+      html+=`<div style="margin-bottom:0.9rem;"><div style="font-size:0.7rem;color:var(--muted);margin-bottom:6px;font-family:monospace;">YouTube 通常版（${lastYt}）</div>
+        ${teamBarHtml('TEAM 1',yt1,Math.max(yt1,yt2,1),'#c8b8ff')}${teamBarHtml('TEAM 2',yt2,Math.max(yt1,yt2,1),'#f0c040')}</div>`;
     } else {
-      html += `<div style="font-size:0.7rem;color:var(--hint);margin-bottom:1rem;font-family:monospace;">YouTube動画: 著作権により非公開（${artist}）</div>`;
+      html+=`<div style="font-size:0.7rem;color:var(--hint);margin-bottom:0.9rem;font-family:monospace;">YouTube: 著作権により非公開（${artist}）</div>`;
     }
+    if(fu1||fu2) html+=`<div style="margin-bottom:0.9rem;"><div style="font-size:0.7rem;color:var(--muted);margin-bottom:6px;font-family:monospace;">YouTube 完全版（${lastFull}）</div>
+      ${teamBarHtml('TEAM 1',fu1,Math.max(fu1,fu2,1),'#c8b8ff')}${teamBarHtml('TEAM 2',fu2,Math.max(fu1,fu2,1),'#f0c040')}</div>`;
+    if(nc1||nc2) html+=`<div style="margin-bottom:0.9rem;"><div style="font-size:0.7rem;color:var(--muted);margin-bottom:6px;font-family:monospace;">YouTube NOCUT版（${lastNc}）</div>
+      ${teamBarHtml('TEAM 1',nc1,Math.max(nc1,nc2,1),'#c8b8ff')}${teamBarHtml('TEAM 2',nc2,Math.max(nc1,nc2,1),'#f0c040')}</div>`;
 
-    html += `<div style="margin-bottom:1rem;"><div style="font-size:0.7rem;color:var(--muted);margin-bottom:6px;font-family:monospace;">推しカメラ 合計再生数（mnetplus 4/16）</div>
-      ${teamBarHtml('TEAM 1 計', t1total, oshiMax, '#c8b8ff')}
-      ${teamBarHtml('TEAM 2 計', t2total, oshiMax, '#f0c040')}
-    </div>`;
+    html+=`<div style="margin-bottom:0.9rem;"><div style="font-size:0.7rem;color:var(--muted);margin-bottom:6px;font-family:monospace;">推しカメラ合計 mnetplus（${lastMnet}）</div>
+      ${teamBarHtml('TEAM 1 計',mn1,Math.max(mn1,mn2,1),'#c8b8ff')}${teamBarHtml('TEAM 2 計',mn2,Math.max(mn1,mn2,1),'#f0c040')}</div>`;
+    if(yo1||yo2) html+=`<div style="margin-bottom:0.9rem;"><div style="font-size:0.7rem;color:var(--muted);margin-bottom:6px;font-family:monospace;">推しカメラ合計 YouTube（${lastYtOs}）</div>
+      ${teamBarHtml('TEAM 1 計',yo1,Math.max(yo1,yo2,1),'#c8b8ff')}${teamBarHtml('TEAM 2 計',yo2,Math.max(yo1,yo2,1),'#f0c040')}</div>`;
 
-    const memberChips = (arr, color) => arr
-      .sort((a,b) => b.oshiViews-a.oshiViews)
-      .map(d => `<span class="member-chip" style="background:${color}15;border:1px solid ${color}33;">${d.name} <span style="color:var(--hint);font-size:0.6rem;">${d.oshiViews.toLocaleString()}</span></span>`)
-      .join('');
-
-    html += `<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-      <div><div style="font-size:0.65rem;color:#c8b8ff;font-family:monospace;margin-bottom:4px;">TEAM 1（${t1.length}名）</div>${memberChips(t1,'#c8b8ff')}</div>
-      <div><div style="font-size:0.65rem;color:#f0c040;font-family:monospace;margin-bottom:4px;">TEAM 2（${t2.length}名）</div>${memberChips(t2,'#f0c040')}</div>
+    const chips=(arr,color)=>arr.sort((a,b)=>(trkLatest(b.mnet)||0)-(trkLatest(a.mnet)||0))
+      .map(d=>`<span class="member-chip" style="background:${color}15;border:1px solid ${color}33;">${d.name} <span style="color:var(--hint);font-size:0.6rem;">${(trkLatest(d.mnet)||0).toLocaleString()}</span></span>`).join('');
+    html+=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+      <div><div style="font-size:0.65rem;color:#c8b8ff;font-family:monospace;margin-bottom:4px;">TEAM 1（${m1.length}名）</div>${chips(m1,'#c8b8ff')}</div>
+      <div><div style="font-size:0.65rem;color:#f0c040;font-family:monospace;margin-bottom:4px;">TEAM 2（${m2.length}名）</div>${chips(m2,'#f0c040')}</div>
     </div></div>`;
   });
   document.getElementById('bc-content').innerHTML = html;
+}
+
+function renderPosCompare() {
+  if(typeof POS_TRACKER==='undefined'){ document.getElementById('pos-compare-content').innerHTML='<p style="color:var(--hint)">データ読み込み中</p>'; return; }
+  const songStats = POS_TRACKER.teams.map(t => {
+    const members = POS_TRACKER.indiv.filter(d => d.song===t.song);
+    return { ...t, members, oshiTotal: members.reduce((s,d)=>s+(trkLatest(d.oshi)||0),0), hlViews: trkLatest(t.ytHl)||0 };
+  }).sort((a,b) => b.oshiTotal - a.oshiTotal);
+
+  const maxOshi = Math.max(...songStats.map(s=>s.oshiTotal), 1);
+  const maxHl   = Math.max(...songStats.map(s=>s.hlViews), 1);
+  const lastOshi = POS_TRACKER.oshiDates[POS_TRACKER.oshiDates.length-1]??'';
+  const lastHl   = POS_TRACKER.ytHlDates[POS_TRACKER.ytHlDates.length-1]??'';
+
+  let html = '';
+  songStats.forEach(t => {
+    const sc   = POS_SONG_COLORS[t.song] || '#888';
+    const bc   = t.broadcast==='前半組'?'#60c8e0':'#e080c0';
+    const bcBg = t.broadcast==='前半組'?'rgba(96,200,224,0.13)':'rgba(224,128,192,0.13)';
+    const chips = t.members.sort((a,b)=>(trkLatest(b.oshi)||0)-(trkLatest(a.oshi)||0))
+      .map(d=>`<span class="member-chip" style="background:${sc}15;border:1px solid ${sc}33;">${d.name} <span style="color:var(--hint);font-size:0.6rem;">${(trkLatest(d.oshi)||0).toLocaleString()}</span></span>`).join('');
+    html += `<div class="song-card">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:1rem;flex-wrap:wrap;">
+        <span style="font-size:0.88rem;font-weight:500;color:${sc};">${t.artist||'—'}</span>
+        <span style="font-size:0.8rem;color:var(--muted);">♪${t.song}</span>
+        <span style="font-size:0.62rem;padding:1px 6px;border-radius:3px;background:${bcBg};color:${bc};">${t.broadcast}</span>
+      </div>
+      <div style="margin-bottom:0.9rem;"><div style="font-size:0.7rem;color:var(--muted);margin-bottom:6px;font-family:monospace;">推しカメラ合計（${lastOshi}）</div>
+        ${teamBarHtml('合計',t.oshiTotal,maxOshi,sc)}</div>
+      ${t.hlViews?`<div style="margin-bottom:0.9rem;"><div style="font-size:0.7rem;color:var(--muted);margin-bottom:6px;font-family:monospace;">ハイライト動画（${lastHl}）</div>
+        ${teamBarHtml('YT',t.hlViews,maxHl,sc)}</div>`:''}
+      <div>${chips}</div>
+    </div>`;
+  });
+  document.getElementById('pos-compare-content').innerHTML = html;
 }
 
 // ── 個人票データ（個人獲得票数＋FREE PART獲得票数の合計順位）──
@@ -3070,15 +3169,21 @@ function buildTPHTML(d) {
   }
 
   if (posRow) {
-    const [,, posSong, posArtist, posPos, posBc] = posRow;
+    const [,, posSong, posArtist, posPos, posBc, posIndivVotes, posTeamRank, posBenefit, posTotalVotes, posPosRank] = posRow;
     const posTeammates = rawPosBattle
       .filter(r => r[2] === posSong && r[1] !== d.reading)
+      .sort((a, b) => (parseInt(a[7])||99) - (parseInt(b[7])||99))
       .map(r => tpLink(r[1])).join('　');
+    const benefitDisp = posBenefit ? `<span style="font-size:0.7rem;padding:1px 5px;border-radius:3px;background:rgba(255,215,0,0.2);color:#ffd700;margin-left:6px;">+${Number(posBenefit).toLocaleString()}票</span>` : '';
     html += `<div class="tp-section">▼ ポジションバトル</div>
     <div class="tp-grid">
       <div class="tp-row"><span class="tp-key">楽曲</span><span class="tp-val">${posSong}${posArtist ? ' / '+posArtist : ''}</span></div>
       <div class="tp-row"><span class="tp-key">ポジション</span><span class="tp-val">${posPos}</span></div>
       <div class="tp-row"><span class="tp-key">放送</span><span class="tp-val" style="color:${posBc==='前半組'?'#60c8e0':'#e080c0'};font-weight:600;">${posBc}</span></div>
+      ${posTeamRank ? `<div class="tp-row"><span class="tp-key">チーム内順位</span><span class="tp-val">${posTeamRank}位${benefitDisp}</span></div>` : ''}
+      ${posIndivVotes ? `<div class="tp-row"><span class="tp-key">個人獲得票数</span><span class="tp-val">${Number(posIndivVotes).toLocaleString()}票</span></div>` : ''}
+      ${posTotalVotes ? `<div class="tp-row"><span class="tp-key">総獲得票数</span><span class="tp-val">${Number(posTotalVotes).toLocaleString()}票</span></div>` : ''}
+      ${posPosRank ? `<div class="tp-row"><span class="tp-key">ポジバトル順位</span><span class="tp-val">${posPosRank}位</span></div>` : ''}
       <div class="tp-row"><span class="tp-key">チームメンバー</span><span class="tp-val">${posTeammates || '-'}</span></div>
     </div>`;
   }
