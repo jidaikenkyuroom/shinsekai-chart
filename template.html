@@ -2110,13 +2110,24 @@ function renderBattleCompare() {
     if(nc1||nc2) html+=`<div style="margin-bottom:0.9rem;"><div style="font-size:0.7rem;color:var(--muted);margin-bottom:6px;font-family:monospace;">YouTube NOCUT版（${lastNc}）</div>
       ${teamBarHtml('TEAM 1',nc1,Math.max(nc1,nc2,1),'#c8b8ff')}${teamBarHtml('TEAM 2',nc2,Math.max(nc1,nc2,1),'#f0c040')}</div>`;
 
-    html+=`<div style="margin-bottom:0.9rem;"><div style="font-size:0.7rem;color:var(--muted);margin-bottom:6px;font-family:monospace;">推しカメラ合計 mnetplus（${lastMnet}）</div>
-      ${teamBarHtml('TEAM 1 計',mn1,Math.max(mn1,mn2,1),'#c8b8ff')}${teamBarHtml('TEAM 2 計',mn2,Math.max(mn1,mn2,1),'#f0c040')}</div>`;
+    if(mn1||mn2) {
+      html+=`<div style="margin-bottom:0.9rem;"><div style="font-size:0.7rem;color:var(--muted);margin-bottom:6px;font-family:monospace;">推しカメラ合計 mnetplus（${lastMnet}）</div>
+        ${teamBarHtml('TEAM 1 計',mn1,Math.max(mn1,mn2,1),'#c8b8ff')}${teamBarHtml('TEAM 2 計',mn2,Math.max(mn1,mn2,1),'#f0c040')}</div>`;
+    } else {
+      html+=`<div style="font-size:0.7rem;color:var(--hint);margin-bottom:0.9rem;font-family:monospace;">mnetplus: 非対応楽曲（${artist}）</div>`;
+    }
     if(yo1||yo2) html+=`<div style="margin-bottom:0.9rem;"><div style="font-size:0.7rem;color:var(--muted);margin-bottom:6px;font-family:monospace;">推しカメラ合計 YouTube（${lastYtOs}）</div>
       ${teamBarHtml('TEAM 1 計',yo1,Math.max(yo1,yo2,1),'#c8b8ff')}${teamBarHtml('TEAM 2 計',yo2,Math.max(yo1,yo2,1),'#f0c040')}</div>`;
 
-    const chips=(arr,color)=>arr.sort((a,b)=>(trkLatest(b.mnet)||0)-(trkLatest(a.mnet)||0))
-      .map(d=>`<span class="member-chip" style="background:${color}15;border:1px solid ${color}33;">${d.name} <span style="color:var(--hint);font-size:0.6rem;">${(trkLatest(d.mnet)||0).toLocaleString()}</span></span>`).join('');
+    const chips=(arr,color)=>arr.sort((a,b)=>{
+      const va=(trkLatest(b.mnet)||0)||(trkLatest(b.ytOshi)||0);
+      const vb=(trkLatest(a.mnet)||0)||(trkLatest(a.ytOshi)||0);
+      return va-vb;
+    }).map(d=>{
+      const mv=trkLatest(d.mnet)||0, yv=trkLatest(d.ytOshi)||0;
+      const [lbl,val]=mv?['mnet',mv]:['YT推し',yv];
+      return `<span class="member-chip" style="background:${color}15;border:1px solid ${color}33;">${d.name} <span style="color:var(--hint);font-size:0.6rem;">${lbl}: ${val.toLocaleString()}</span></span>`;
+    }).join('');
     html+=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
       <div><div style="font-size:0.65rem;color:#c8b8ff;font-family:monospace;margin-bottom:4px;">TEAM 1（${m1.length}名）</div>${chips(m1,'#c8b8ff')}</div>
       <div><div style="font-size:0.65rem;color:#f0c040;font-family:monospace;margin-bottom:4px;">TEAM 2（${m2.length}名）</div>${chips(m2,'#f0c040')}</div>
