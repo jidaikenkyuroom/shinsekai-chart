@@ -500,6 +500,16 @@ def build_tracker_js(src, battle_src, csv_cfg, battle_cfg, gb_team_csv, pos_cfg,
         song = js_str(row[1].strip())
         pos_yt_map[song] = [safe_int(row[i]) if i < len(row) else None for i in pos_yt_vi]
 
+    # ── ポジションバトル フル版 ──
+    pos_full_rows = read_csv(pos_src / pos_cfg["yt_full"])
+    pos_full_vi = view_cols(pos_full_rows[0])
+    pos_full_dates = [pos_full_rows[0][i].replace("_再生数", "") for i in pos_full_vi]
+    pos_full_map = {}
+    for row in pos_full_rows[1:]:
+        if len(row) < 2: continue
+        song = js_str(row[1].strip())
+        pos_full_map[song] = [safe_int(row[i]) if i < len(row) else None for i in pos_full_vi]
+
     # ── ポジションバトル チームメンバー ──
     pos_team_rows = read_csv(pos_src / pos_cfg["team"])
     pos_member = {}
@@ -531,14 +541,15 @@ def build_tracker_js(src, battle_src, csv_cfg, battle_cfg, gb_team_csv, pos_cfg,
         pos_teams.append(
             f'{{"song":"{song}","artist":"{t["artist"]}","broadcast":"{t["broadcast"]}",'
             f'"members":{members_js},'
-            f'"ytHl":{js_int_arr(pos_yt_map.get(song) or [])}}}'
+            f'"ytHl":{js_int_arr(pos_yt_map.get(song) or [])},'
+            f'"ytFull":{js_int_arr(pos_full_map.get(song) or [])}}}'
         )
 
     return "\n".join([
         f"const GB_TRACKER={{oshiDates:{js_dates(mnet_dates)},ytOshiDates:{js_dates(ytoshi_dates)},themeDates:{js_dates(theme_dates)},ytTeamDates:{js_dates(yt_dates)},ytFullDates:{js_dates(full_dates)},ytNocutDates:{js_dates(nocut_dates)},",
         f"indiv:[{','.join(gb_indiv)}],",
         f"teams:[{','.join(gb_teams)}]}};",
-        f"const POS_TRACKER={{oshiDates:{js_dates(pos_oshi_dates)},ytHlDates:{js_dates(pos_yt_dates)},",
+        f"const POS_TRACKER={{oshiDates:{js_dates(pos_oshi_dates)},ytHlDates:{js_dates(pos_yt_dates)},ytFullDates:{js_dates(pos_full_dates)},",
         f"indiv:[{','.join(pos_indiv)}],",
         f"teams:[{','.join(pos_teams)}]}};",
     ])

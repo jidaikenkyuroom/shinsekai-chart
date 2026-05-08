@@ -2140,13 +2140,18 @@ function renderPosCompare() {
   if(typeof POS_TRACKER==='undefined'){ document.getElementById('pos-compare-content').innerHTML='<p style="color:var(--hint)">データ読み込み中</p>'; return; }
   const songStats = POS_TRACKER.teams.map(t => {
     const members = POS_TRACKER.indiv.filter(d => d.song===t.song);
-    return { ...t, members, oshiTotal: members.reduce((s,d)=>s+(trkLatest(d.oshi)||0),0), hlViews: trkLatest(t.ytHl)||0 };
+    return { ...t, members,
+      oshiTotal: members.reduce((s,d)=>s+(trkLatest(d.oshi)||0),0),
+      hlViews:   trkLatest(t.ytHl)||0,
+      fullViews: trkLatest(t.ytFull)||0 };
   }).sort((a,b) => b.oshiTotal - a.oshiTotal);
 
   const maxOshi = Math.max(...songStats.map(s=>s.oshiTotal), 1);
   const maxHl   = Math.max(...songStats.map(s=>s.hlViews), 1);
+  const maxFull = Math.max(...songStats.map(s=>s.fullViews), 1);
   const lastOshi = POS_TRACKER.oshiDates[POS_TRACKER.oshiDates.length-1]??'';
   const lastHl   = POS_TRACKER.ytHlDates[POS_TRACKER.ytHlDates.length-1]??'';
+  const lastFull = (POS_TRACKER.ytFullDates??[]).slice(-1)[0]??'';
 
   let html = '';
   songStats.forEach(t => {
@@ -2154,7 +2159,7 @@ function renderPosCompare() {
     const bc   = t.broadcast==='前半組'?'#60c8e0':'#e080c0';
     const bcBg = t.broadcast==='前半組'?'rgba(96,200,224,0.13)':'rgba(224,128,192,0.13)';
     const chips = t.members.sort((a,b)=>(trkLatest(b.oshi)||0)-(trkLatest(a.oshi)||0))
-      .map(d=>`<span class="member-chip" style="background:${sc}15;border:1px solid ${sc}33;">${d.name} <span style="color:var(--hint);font-size:0.6rem;">${(trkLatest(d.oshi)||0).toLocaleString()}</span></span>`).join('');
+      .map(d=>`<span class="member-chip" style="background:${sc}15;border:1px solid ${sc}33;">${d.name} <span style="color:var(--hint);font-size:0.6rem;">推しカメ: ${(trkLatest(d.oshi)||0).toLocaleString()}</span></span>`).join('');
     html += `<div class="song-card">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:1rem;flex-wrap:wrap;">
         <span style="font-size:0.88rem;font-weight:500;color:${sc};">${t.artist||'—'}</span>
@@ -2165,6 +2170,8 @@ function renderPosCompare() {
         ${teamBarHtml('合計',t.oshiTotal,maxOshi,sc)}</div>
       ${t.hlViews?`<div style="margin-bottom:0.9rem;"><div style="font-size:0.7rem;color:var(--muted);margin-bottom:6px;font-family:monospace;">ハイライト動画（${lastHl}）</div>
         ${teamBarHtml('YT',t.hlViews,maxHl,sc)}</div>`:''}
+      ${t.fullViews?`<div style="margin-bottom:0.9rem;"><div style="font-size:0.7rem;color:var(--muted);margin-bottom:6px;font-family:monospace;">フル版動画（${lastFull}）</div>
+        ${teamBarHtml('YT Full',t.fullViews,maxFull,sc)}</div>`:''}
       <div>${chips}</div>
     </div>`;
   });
