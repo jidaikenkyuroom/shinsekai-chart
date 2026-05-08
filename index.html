@@ -111,6 +111,12 @@ tr:hover td{background:var(--surface);}
 .trk-team-stat .lbl{color:var(--hint);}
 .trk-sort-bar{display:flex;align-items:center;gap:0.5rem;margin-bottom:0.75rem;font-size:0.78rem;color:var(--hint);}
 .trk-sort-bar select{background:var(--surface2);border:1px solid var(--border2);color:var(--text);border-radius:4px;padding:3px 8px;font-size:0.78rem;}
+.trk-toggle{border:none;outline:none;margin:0;}
+.trk-toggle>summary{font-size:0.8rem;color:var(--muted);margin:1.4rem 0 0.6rem;border-bottom:1px solid var(--border2);padding-bottom:0.3rem;cursor:pointer;user-select:none;list-style:none;}
+.trk-toggle>summary::-webkit-details-marker{display:none;}
+.trk-toggle>summary::before{content:'▶  ';font-size:0.72rem;}
+.trk-toggle[open]>summary::before{content:'▼  ';}
+.trk-toggle>summary:first-child{margin-top:0.5rem;}
 .hm-wrap{overflow-x:auto;}
 .hm-header-row{display:flex;align-items:center;gap:3px;margin-bottom:3px;padding-left:96px;}
 .hm-head{flex:1;min-width:70px;font-size:0.62rem;color:var(--muted);text-align:center;font-family:monospace;}
@@ -564,25 +570,32 @@ tr:hover td{background:var(--surface);}
     </div>
 
     <div id="trk-gb">
-      <h3 class="pos-group-label">▼ 個人動画トラッカー</h3>
-      <div class="trk-sort-bar">
-        ソート:
-        <select id="trk-gb-sort" onchange="renderGbIndiv()">
-          <option value="mnet">推しカメラ (mnetplus)</option>
-          <option value="ytOshi">推しカメラ (YouTube)</option>
-          <option value="theme">テーマ曲</option>
-        </select>
-      </div>
-      <div style="overflow-x:auto;"><div id="trk-gb-indiv"></div></div>
-      <h3 class="pos-group-label" style="margin-top:1.5rem;">▼ チーム動画</h3>
-      <div id="trk-gb-teams"></div>
+      <details class="trk-toggle" open>
+        <summary>個人動画トラッカー</summary>
+        <div class="trk-sort-bar">
+          ソート:
+          <select id="trk-gb-sort" onchange="renderGbIndiv()">
+            <option value="mnet">推しカメラ (mnetplus)</option>
+            <option value="ytOshi">推しカメラ (YouTube)</option>
+          </select>
+        </div>
+        <div style="overflow-x:auto;"><div id="trk-gb-indiv"></div></div>
+      </details>
+      <details class="trk-toggle" open>
+        <summary>チーム動画</summary>
+        <div id="trk-gb-teams"></div>
+      </details>
     </div>
 
     <div id="trk-pos" style="display:none;">
-      <h3 class="pos-group-label">▼ 個人推しカメラ</h3>
-      <div style="overflow-x:auto;"><div id="trk-pos-indiv"></div></div>
-      <h3 class="pos-group-label" style="margin-top:1.5rem;">▼ ハイライト動画</h3>
-      <div id="trk-pos-teams"></div>
+      <details class="trk-toggle" open>
+        <summary>個人推しカメラ</summary>
+        <div style="overflow-x:auto;"><div id="trk-pos-indiv"></div></div>
+      </details>
+      <details class="trk-toggle" open>
+        <summary>ハイライト動画</summary>
+        <div id="trk-pos-teams"></div>
+      </details>
     </div>
   </div>
 
@@ -1959,21 +1972,16 @@ function renderGbTracker() {
 function renderGbIndiv() {
   const sortKey = document.getElementById('trk-gb-sort').value;
   const sorted = [...GB_TRACKER.indiv].sort((a,b)=>{
-    const va = (sortKey==='theme'?trkLatest(a.theme):trkLatest(a[sortKey]))??-1;
-    const vb = (sortKey==='theme'?trkLatest(b.theme):trkLatest(b[sortKey]))??-1;
-    return vb-va;
+    return (trkLatest(b[sortKey])??-1)-(trkLatest(a[sortKey])??-1);
   });
-  const lastTheme  = GB_TRACKER.themeDates[GB_TRACKER.themeDates.length-1]??'';
   const lastMnet   = GB_TRACKER.oshiDates[GB_TRACKER.oshiDates.length-1]??'';
   const lastYtOshi = GB_TRACKER.ytOshiDates[GB_TRACKER.ytOshiDates.length-1]??'';
   let html=`<table class="trk-table"><thead><tr>
     <th>名前</th><th>放送</th>
-    <th>テーマ曲推しカメラ<br><span style="opacity:0.55;font-weight:normal;">${lastTheme}</span></th>
     <th>GB推しカメラ mnet<br><span style="opacity:0.55;font-weight:normal;">${lastMnet}</span></th>
     <th>GB推しカメラ YT<br><span style="opacity:0.55;font-weight:normal;">${lastYtOshi}</span></th>
   </tr></thead><tbody>`;
   sorted.forEach(d=>{
-    const tL=trkLatest(d.theme), tP=trkPrev(d.theme);
     const mL=trkLatest(d.mnet),  mP=trkPrev(d.mnet);
     const yL=trkLatest(d.ytOshi),yP=trkPrev(d.ytOshi);
     const bc=d.broadcast==='前半組'?'#60c8e0':'#e080c0';
@@ -1981,7 +1989,6 @@ function renderGbIndiv() {
       <td><span style="cursor:pointer;text-decoration:underline dotted;" onclick="openPanel('${d.name}')">${d.name}</span><br>
           <span style="font-size:0.6rem;color:var(--hint)">${d.reading}</span></td>
       <td style="color:${bc};font-size:0.72rem;white-space:nowrap">${d.broadcast}</td>
-      <td>${trkValStr(tL,true)}${trkDeltaHtml(tL,tP,true)}</td>
       <td>${trkValStr(mL,false)}${trkDeltaHtml(mL,mP,false)}</td>
       <td>${trkValStr(yL,false)}${trkDeltaHtml(yL,yP,false)}</td>
     </tr>`;
