@@ -2319,17 +2319,18 @@ function renderBattleCompare() {
   const lastYtOs = GB_TRACKER.ytOshiDates[GB_TRACKER.ytOshiDates.length-1]??'';
 
   const sections = [
-    {id:'bc-c-yt', title:'YouTube 通常版',     date:lastYt,   key:'yt'  },
-    {id:'bc-c-fu', title:'YouTube 完全版',     date:lastFull, key:'full'},
-    {id:'bc-c-nc', title:'YouTube NOCUT版',    date:lastNc,   key:'nc'  },
-    {id:'bc-c-mn', title:'推しカメラ mnetplus', date:lastMnet, key:'mn'  },
-    {id:'bc-c-yo', title:'推しカメラ YouTube',  date:lastYtOs, key:'yo'  },
+    {id:'bc-c-yt', title:'YouTube 通常版',     date:lastYt,   key:'yt',   note:''},
+    {id:'bc-c-fu', title:'YouTube 完全版',     date:lastFull, key:'full', note:''},
+    {id:'bc-c-nc', title:'YouTube NOCUT版',    date:lastNc,   key:'nc',   note:''},
+    {id:'bc-c-mn', title:'推しカメラ mnetplus', date:lastMnet, key:'mn',   note:'チームメンバー全員の個人推しカメラ再生数の合計'},
+    {id:'bc-c-yo', title:'推しカメラ YouTube',  date:lastYtOs, key:'yo',   note:'チームメンバー全員の個人推しカメラ再生数の合計'},
   ];
 
   let html = '';
   sections.forEach(sec => {
     html += `<div style="margin-bottom:2.5rem;">
-      <div style="font-size:0.78rem;font-weight:500;color:var(--accent);font-family:monospace;margin-bottom:0.6rem;padding-bottom:0.4rem;border-bottom:1px solid var(--border2);">${sec.title}（${sec.date}）</div>
+      <div style="font-size:0.78rem;font-weight:500;color:var(--accent);font-family:monospace;margin-bottom:0.3rem;padding-bottom:0.4rem;border-bottom:1px solid var(--border2);">${sec.title}（${sec.date}）</div>
+      ${sec.note?`<div style="font-size:0.68rem;color:var(--hint);font-family:monospace;margin-bottom:0.5rem;">${sec.note}</div>`:''}
       <div style="position:relative;height:300px;"><canvas id="${sec.id}"></canvas></div>
     </div>`;
   });
@@ -2421,7 +2422,8 @@ function renderPosCompare() {
       </div>`;
     });
     return `<div style="margin-bottom:2.5rem;">
-      <div style="font-size:0.78rem;font-weight:500;color:var(--accent);font-family:monospace;margin-bottom:0.6rem;padding-bottom:0.4rem;border-bottom:1px solid var(--border2);">${title}（${dateStr}）</div>
+      <div style="font-size:0.78rem;font-weight:500;color:var(--accent);font-family:monospace;margin-bottom:0.3rem;padding-bottom:0.4rem;border-bottom:1px solid var(--border2);">${title}（${dateStr}）</div>
+      ${showChips?'<div style="font-size:0.68rem;color:var(--hint);font-family:monospace;margin-bottom:0.5rem;">チームメンバー全員の個人推しカメラ再生数の合計</div>':''}
       ${rows}
     </div>`;
   }
