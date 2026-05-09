@@ -2290,75 +2290,90 @@ function teamBarHtml(label, value, maxValue, color) {
   </div>`;
 }
 
+let bcCharts = [];
 function renderBattleCompare() {
   if(typeof GB_TRACKER==='undefined'){ document.getElementById('bc-content').innerHTML='<p style="color:var(--hint)">データ読み込み中</p>'; return; }
-  let html = '';
+  bcCharts.forEach(c=>c.destroy()); bcCharts=[];
+
+  // Build flat 16-entry team list
+  const teams = [];
   SONGS_INFO.forEach(({artist, song, broadcast}) => {
-    const sc   = SONG_COLORS[song] || '#888';
-    const bc   = broadcast==='前半組' ? '#60c8e0' : '#e080c0';
-    const bcBg = broadcast==='前半組' ? 'rgba(96,200,224,0.13)' : 'rgba(224,128,192,0.13)';
+    const sc = SONG_COLORS[song] || '#888';
+    [1,2].forEach(team => {
+      const gbT = GB_TRACKER.teams.find(t => t.song===song && t.team===team);
+      const m   = GB_TRACKER.indiv.filter(d => d.song===song && d.team===team);
+      teams.push({ song, artist, broadcast, team, sc,
+        yt:   trkLatest(gbT?.ytTeam)||0,
+        full: trkLatest(gbT?.ytFull)||0,
+        nc:   trkLatest(gbT?.ytNocut)||0,
+        mn:   m.reduce((s,d)=>s+(trkLatest(d.mnet)||0),0),
+        yo:   m.reduce((s,d)=>s+(trkLatest(d.ytOshi)||0),0),
+      });
+    });
+  });
 
-    const gbT1 = GB_TRACKER.teams.find(t => t.song===song && t.team===1);
-    const gbT2 = GB_TRACKER.teams.find(t => t.song===song && t.team===2);
-    const m1 = GB_TRACKER.indiv.filter(d => d.song===song && d.team===1);
-    const m2 = GB_TRACKER.indiv.filter(d => d.song===song && d.team===2);
+  const lastYt   = GB_TRACKER.ytTeamDates[GB_TRACKER.ytTeamDates.length-1]??'';
+  const lastFull = GB_TRACKER.ytFullDates[GB_TRACKER.ytFullDates.length-1]??'';
+  const lastNc   = GB_TRACKER.ytNocutDates[GB_TRACKER.ytNocutDates.length-1]??'';
+  const lastMnet = GB_TRACKER.oshiDates[GB_TRACKER.oshiDates.length-1]??'';
+  const lastYtOs = GB_TRACKER.ytOshiDates[GB_TRACKER.ytOshiDates.length-1]??'';
 
-    const yt1=trkLatest(gbT1?.ytTeam)||0, yt2=trkLatest(gbT2?.ytTeam)||0;
-    const fu1=trkLatest(gbT1?.ytFull)||0, fu2=trkLatest(gbT2?.ytFull)||0;
-    const nc1=trkLatest(gbT1?.ytNocut)||0,nc2=trkLatest(gbT2?.ytNocut)||0;
-    const mn1=m1.reduce((s,d)=>s+(trkLatest(d.mnet)||0),0);
-    const mn2=m2.reduce((s,d)=>s+(trkLatest(d.mnet)||0),0);
-    const yo1=m1.reduce((s,d)=>s+(trkLatest(d.ytOshi)||0),0);
-    const yo2=m2.reduce((s,d)=>s+(trkLatest(d.ytOshi)||0),0);
+  const sections = [
+    {id:'bc-c-yt', title:'YouTube 通常版',     date:lastYt,   key:'yt'  },
+    {id:'bc-c-fu', title:'YouTube 完全版',     date:lastFull, key:'full'},
+    {id:'bc-c-nc', title:'YouTube NOCUT版',    date:lastNc,   key:'nc'  },
+    {id:'bc-c-mn', title:'推しカメラ mnetplus', date:lastMnet, key:'mn'  },
+    {id:'bc-c-yo', title:'推しカメラ YouTube',  date:lastYtOs, key:'yo'  },
+  ];
 
-    const lastYt   = GB_TRACKER.ytTeamDates[GB_TRACKER.ytTeamDates.length-1]??'';
-    const lastFull = GB_TRACKER.ytFullDates[GB_TRACKER.ytFullDates.length-1]??'';
-    const lastNc   = GB_TRACKER.ytNocutDates[GB_TRACKER.ytNocutDates.length-1]??'';
-    const lastMnet = GB_TRACKER.oshiDates[GB_TRACKER.oshiDates.length-1]??'';
-    const lastYtOs = GB_TRACKER.ytOshiDates[GB_TRACKER.ytOshiDates.length-1]??'';
-
-    html += `<div class="song-card">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:1rem;flex-wrap:wrap;">
-        <span style="font-size:0.88rem;font-weight:500;color:${sc};">${artist}</span>
-        <span style="font-size:0.8rem;color:var(--muted);">♪${song}</span>
-        <span style="font-size:0.62rem;padding:1px 6px;border-radius:3px;background:${bcBg};color:${bc};">${broadcast}</span>
-      </div>`;
-
-    if(yt1||yt2) {
-      html+=`<div style="margin-bottom:0.9rem;"><div style="font-size:0.7rem;color:var(--muted);margin-bottom:6px;font-family:monospace;">YouTube 通常版（${lastYt}）</div>
-        ${teamBarHtml('TEAM 1',yt1,Math.max(yt1,yt2,1),'#c8b8ff')}${teamBarHtml('TEAM 2',yt2,Math.max(yt1,yt2,1),'#f0c040')}</div>`;
-    } else {
-      html+=`<div style="font-size:0.7rem;color:var(--hint);margin-bottom:0.9rem;font-family:monospace;">YouTube: 著作権により非公開（${artist}）</div>`;
-    }
-    if(fu1||fu2) html+=`<div style="margin-bottom:0.9rem;"><div style="font-size:0.7rem;color:var(--muted);margin-bottom:6px;font-family:monospace;">YouTube 完全版（${lastFull}）</div>
-      ${teamBarHtml('TEAM 1',fu1,Math.max(fu1,fu2,1),'#c8b8ff')}${teamBarHtml('TEAM 2',fu2,Math.max(fu1,fu2,1),'#f0c040')}</div>`;
-    if(nc1||nc2) html+=`<div style="margin-bottom:0.9rem;"><div style="font-size:0.7rem;color:var(--muted);margin-bottom:6px;font-family:monospace;">YouTube NOCUT版（${lastNc}）</div>
-      ${teamBarHtml('TEAM 1',nc1,Math.max(nc1,nc2,1),'#c8b8ff')}${teamBarHtml('TEAM 2',nc2,Math.max(nc1,nc2,1),'#f0c040')}</div>`;
-
-    if(mn1||mn2) {
-      html+=`<div style="margin-bottom:0.9rem;"><div style="font-size:0.7rem;color:var(--muted);margin-bottom:6px;font-family:monospace;">推しカメラ合計 mnetplus（${lastMnet}）</div>
-        ${teamBarHtml('TEAM 1 計',mn1,Math.max(mn1,mn2,1),'#c8b8ff')}${teamBarHtml('TEAM 2 計',mn2,Math.max(mn1,mn2,1),'#f0c040')}</div>`;
-    } else {
-      html+=`<div style="font-size:0.7rem;color:var(--hint);margin-bottom:0.9rem;font-family:monospace;">mnetplus: 非対応楽曲（${artist}）</div>`;
-    }
-    if(yo1||yo2) html+=`<div style="margin-bottom:0.9rem;"><div style="font-size:0.7rem;color:var(--muted);margin-bottom:6px;font-family:monospace;">推しカメラ合計 YouTube（${lastYtOs}）</div>
-      ${teamBarHtml('TEAM 1 計',yo1,Math.max(yo1,yo2,1),'#c8b8ff')}${teamBarHtml('TEAM 2 計',yo2,Math.max(yo1,yo2,1),'#f0c040')}</div>`;
-
-    const chips=(arr,color)=>arr.sort((a,b)=>{
-      const va=(trkLatest(b.mnet)||0)||(trkLatest(b.ytOshi)||0);
-      const vb=(trkLatest(a.mnet)||0)||(trkLatest(a.ytOshi)||0);
-      return va-vb;
-    }).map(d=>{
-      const mv=trkLatest(d.mnet)||0, yv=trkLatest(d.ytOshi)||0;
-      const [lbl,val]=mv?['mnet',mv]:['YT推し',yv];
-      return `<span class="member-chip" style="background:${color}15;border:1px solid ${color}33;">${d.name} <span style="color:var(--hint);font-size:0.6rem;">${lbl}: ${val.toLocaleString()}</span></span>`;
-    }).join('');
-    html+=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-      <div><div style="font-size:0.65rem;color:#c8b8ff;font-family:monospace;margin-bottom:4px;">TEAM 1（${m1.length}名）</div>${chips(m1,'#c8b8ff')}</div>
-      <div><div style="font-size:0.65rem;color:#f0c040;font-family:monospace;margin-bottom:4px;">TEAM 2（${m2.length}名）</div>${chips(m2,'#f0c040')}</div>
-    </div></div>`;
+  let html = '';
+  sections.forEach(sec => {
+    html += `<div style="margin-bottom:2.5rem;">
+      <div style="font-size:0.78rem;font-weight:500;color:var(--accent);font-family:monospace;margin-bottom:0.6rem;padding-bottom:0.4rem;border-bottom:1px solid var(--border2);">${sec.title}（${sec.date}）</div>
+      <div style="position:relative;height:300px;"><canvas id="${sec.id}"></canvas></div>
+    </div>`;
   });
   document.getElementById('bc-content').innerHTML = html;
+
+  const shortLabel = s => s.length>9 ? s.slice(0,8)+'…' : s;
+  sections.forEach(sec => {
+    const sorted = [...teams].sort((a,b) => b[sec.key]-a[sec.key]);
+    bcCharts.push(new Chart(document.getElementById(sec.id), {
+      type:'bar',
+      data:{
+        labels: sorted.map(t=>`${shortLabel(t.song)} T${t.team}`),
+        datasets:[{
+          data: sorted.map(t=>t[sec.key]),
+          backgroundColor: sorted.map(t=>t.sc+(t.team===1?'99':'cc')),
+          borderColor: sorted.map(t=>t.sc),
+          borderWidth:2, borderRadius:3,
+        }]
+      },
+      options:{
+        responsive:true, maintainAspectRatio:false,
+        plugins:{
+          legend:{display:false},
+          tooltip:{callbacks:{
+            title: items => { const t=sorted[items[0].dataIndex]; return `${t.artist} ♪${t.song}  TEAM ${t.team}`; },
+            label: item => `${item.raw.toLocaleString()} 再生`,
+            afterLabel: item => sorted[item.dataIndex].broadcast,
+          }}
+        },
+        scales:{
+          x:{
+            ticks:{color:'#888884',font:{size:10,family:'monospace'},maxRotation:45,minRotation:30},
+            grid:{color:'rgba(255,255,255,0.04)'},
+            border:{color:'rgba(255,255,255,0.1)'},
+          },
+          y:{
+            ticks:{color:'#888884',font:{size:10,family:'monospace'},callback:v=>v>=1000?(v/1000).toFixed(0)+'K':v},
+            grid:{color:'rgba(255,255,255,0.06)'},
+            border:{color:'rgba(255,255,255,0.1)'},
+          }
+        }
+      }
+    }));
+  });
 }
 
 function renderPosCompare() {
