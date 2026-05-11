@@ -510,6 +510,18 @@ def build_tracker_js(src, battle_src, csv_cfg, battle_cfg, gb_team_csv, pos_cfg,
         song = js_str(row[1].strip())
         pos_full_map[song] = [safe_int(row[i]) if i < len(row) else None for i in pos_full_vi]
 
+    # ── ポジションバトル NOCUT版 ──
+    pos_nocut_dates = []
+    pos_nocut_map = {}
+    if pos_cfg.get("yt_nocut"):
+        pos_nocut_rows = read_csv(pos_src / pos_cfg["yt_nocut"])
+        pos_nocut_vi = view_cols(pos_nocut_rows[0])
+        pos_nocut_dates = [pos_nocut_rows[0][i].replace("_再生数", "") for i in pos_nocut_vi]
+        for row in pos_nocut_rows[1:]:
+            if len(row) < 2: continue
+            song = js_str(row[1].strip())
+            pos_nocut_map[song] = [safe_int(row[i]) if i < len(row) else None for i in pos_nocut_vi]
+
     # ── ポジションバトル チームメンバー ──
     pos_team_rows = read_csv(pos_src / pos_cfg["team"])
     pos_member = {}
@@ -542,14 +554,15 @@ def build_tracker_js(src, battle_src, csv_cfg, battle_cfg, gb_team_csv, pos_cfg,
             f'{{"song":"{song}","artist":"{t["artist"]}","broadcast":"{t["broadcast"]}",'
             f'"members":{members_js},'
             f'"ytHl":{js_int_arr(pos_yt_map.get(song) or [])},'
-            f'"ytFull":{js_int_arr(pos_full_map.get(song) or [])}}}'
+            f'"ytFull":{js_int_arr(pos_full_map.get(song) or [])},'
+            f'"ytNocut":{js_int_arr(pos_nocut_map.get(song) or [])}}}'
         )
 
     return "\n".join([
         f"const GB_TRACKER={{oshiDates:{js_dates(mnet_dates)},ytOshiDates:{js_dates(ytoshi_dates)},themeDates:{js_dates(theme_dates)},ytTeamDates:{js_dates(yt_dates)},ytFullDates:{js_dates(full_dates)},ytNocutDates:{js_dates(nocut_dates)},",
         f"indiv:[{','.join(gb_indiv)}],",
         f"teams:[{','.join(gb_teams)}]}};",
-        f"const POS_TRACKER={{oshiDates:{js_dates(pos_oshi_dates)},ytHlDates:{js_dates(pos_yt_dates)},ytFullDates:{js_dates(pos_full_dates)},",
+        f"const POS_TRACKER={{oshiDates:{js_dates(pos_oshi_dates)},ytHlDates:{js_dates(pos_yt_dates)},ytFullDates:{js_dates(pos_full_dates)},ytNocutDates:{js_dates(pos_nocut_dates)},",
         f"indiv:[{','.join(pos_indiv)}],",
         f"teams:[{','.join(pos_teams)}]}};",
     ])

@@ -15,6 +15,7 @@
     "team": "新世界_ポジションバトルチーム.csv",
     "yt_highlight": "新世界_ポジションバトルYouTubeハイライト再生数.csv",
     "yt_full": "新世界_ポジションバトルYouTubeフル版再生数.csv",
+    "yt_nocut": "新世界_ポジションバトルYouTube_NOCUT版再生数.csv",
     "oshi_cam": "新世界_ポジションバトル推しカメラ再生数.csv"
   },
   "battle_csv": {

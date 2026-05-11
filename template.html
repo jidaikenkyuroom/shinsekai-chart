@@ -2157,14 +2157,16 @@ function renderPosCompare() {
   const songStats = POS_TRACKER.teams.map(t => {
     const members = POS_TRACKER.indiv.filter(d => d.song===t.song);
     return { ...t, members,
-      oshiTotal: members.reduce((s,d)=>s+(trkLatest(d.oshi)||0),0),
-      hlViews:   trkLatest(t.ytHl)||0,
-      fullViews: trkLatest(t.ytFull)||0 };
+      oshiTotal:  members.reduce((s,d)=>s+(trkLatest(d.oshi)||0),0),
+      hlViews:    trkLatest(t.ytHl)||0,
+      fullViews:  trkLatest(t.ytFull)||0,
+      nocutViews: trkLatest(t.ytNocut)||0 };
   });
 
-  const lastOshi = POS_TRACKER.oshiDates[POS_TRACKER.oshiDates.length-1]??'';
-  const lastHl   = POS_TRACKER.ytHlDates[POS_TRACKER.ytHlDates.length-1]??'';
-  const lastFull = (POS_TRACKER.ytFullDates??[]).slice(-1)[0]??'';
+  const lastOshi  = POS_TRACKER.oshiDates[POS_TRACKER.oshiDates.length-1]??'';
+  const lastHl    = POS_TRACKER.ytHlDates[POS_TRACKER.ytHlDates.length-1]??'';
+  const lastFull  = (POS_TRACKER.ytFullDates??[]).slice(-1)[0]??'';
+  const lastNocut = (POS_TRACKER.ytNocutDates??[]).slice(-1)[0]??'';
 
   function rankSection(title, dateStr, sorted, valFn, showChips) {
     const maxVal = Math.max(...sorted.map(s=>valFn(s)), 1);
@@ -2203,14 +2205,16 @@ function renderPosCompare() {
     </div>`;
   }
 
-  const byOshi = [...songStats].sort((a,b) => b.oshiTotal - a.oshiTotal);
-  const byHl   = [...songStats].sort((a,b) => b.hlViews   - a.hlViews);
-  const byFull = [...songStats].sort((a,b) => b.fullViews  - a.fullViews);
+  const byOshi  = [...songStats].sort((a,b) => b.oshiTotal  - a.oshiTotal);
+  const byHl    = [...songStats].sort((a,b) => b.hlViews    - a.hlViews);
+  const byFull  = [...songStats].sort((a,b) => b.fullViews  - a.fullViews);
+  const byNocut = [...songStats].sort((a,b) => b.nocutViews - a.nocutViews);
 
   document.getElementById('pos-compare-content').innerHTML =
-    rankSection('推しカメラ合計', lastOshi, byOshi, s=>s.oshiTotal, true) +
-    rankSection('YTハイライト',   lastHl,   byHl,   s=>s.hlViews,   false) +
-    rankSection('YTフル版',       lastFull, byFull, s=>s.fullViews,  false);
+    rankSection('推しカメラ合計', lastOshi,  byOshi,  s=>s.oshiTotal,  true) +
+    rankSection('YTハイライト',   lastHl,    byHl,    s=>s.hlViews,    false) +
+    rankSection('YTフル版',       lastFull,  byFull,  s=>s.fullViews,  false) +
+    (lastNocut ? rankSection('YT NOCUT版', lastNocut, byNocut, s=>s.nocutViews, false) : '');
 }
 
 // ── 個人票データ（個人獲得票数＋FREE PART獲得票数の合計順位）──
