@@ -529,8 +529,10 @@ tr:hover td{background:var(--surface);}
       <button class="g-tab active" onclick="switchPosTab('list')">チーム一覧</button>
       <button class="g-tab" onclick="switchPosTab('oshi')">推しカメラ</button>
       <button class="g-tab" onclick="switchPosTab('compare')">チーム比較</button>
+      <button class="g-tab" onclick="switchPosTab('contrib')">チーム寄与度</button>
     </div>
     <div id="ptab-compare" style="display:none;"><div id="pos-compare-content"></div></div>
+    <div id="ptab-contrib" style="display:none;"><div id="pos-contrib-content"></div></div>
     <div id="ptab-list">
       <div id="pos-list"></div>
     </div>
@@ -1844,14 +1846,15 @@ const POS_SONG_COLORS = {
 
 function switchPosTab(tab) {
   currentPosTab = tab;
-  ['list','oshi','compare'].forEach(t => {
+  ['list','oshi','compare','contrib'].forEach(t => {
     document.getElementById('ptab-'+t).style.display = t===tab ? '' : 'none';
   });
   document.querySelectorAll('#pos-tabs .g-tab').forEach((el,i) => {
-    el.classList.toggle('active', ['list','oshi','compare'][i]===tab);
+    el.classList.toggle('active', ['list','oshi','compare','contrib'][i]===tab);
   });
   if(tab==='oshi') renderPosOshi();
   if(tab==='compare') renderPosCompare();
+  if(tab==='contrib') renderPosContrib();
 }
 
 // ===== トラッカーヘルパー（チーム比較で使用）=====
@@ -2440,6 +2443,105 @@ function renderPosCompare() {
     rankSection('YTハイライト',   lastHl,    byHl,    s=>s.hlViews,    false) +
     rankSection('YTフル版',       lastFull,  byFull,  s=>s.fullViews,  false) +
     (lastNocut ? rankSection('YT NOCUT版', lastNocut, byNocut, s=>s.nocutViews, false) : '');
+}
+
+function renderPosContrib() {
+  if(typeof POS_TRACKER==='undefined'){
+    document.getElementById('pos-contrib-content').innerHTML='<p style="color:var(--hint)">データ読み込み中</p>';
+    return;
+  }
+  const lastNocut = (POS_TRACKER.ytNocutDates??[]).slice(-1)[0]??'';
+  const lastOshi  = POS_TRACKER.oshiDates[POS_TRACKER.oshiDates.length-1]??'';
+
+  const teams = POS_TRACKER.teams.map(t => {
+    const members = POS_TRACKER.indiv
+      .filter(d => d.song===t.song)
+      .map(d => ({reading:d.reading, name:d.name, views:trkLatest(d.oshi)||0}))
+      .sort((a,b) => b.views-a.views);
+    const oshiTotal  = members.reduce((s,m)=>s+m.views, 0);
+    const nocutViews = trkLatest(t.ytNocut)||0;
+    const fullViews  = trkLatest(t.ytFull)||0;
+    return {...t, members, oshiTotal, nocutViews, fullViews};
+  }).sort((a,b) => b.nocutViews-a.nocutViews);
+
+  function concLabel(t1pct, gap) {
+    if(t1pct>=50) return ['★★★ 1人依存','#ff9060'];
+    if(gap>=15)   return ['★★  やや集中','#e0c060'];
+    return           ['★   分散型',  '#60c8a0'];
+  }
+
+  let html = `<p class="sub-label" style="margin-bottom:0.5rem;">チーム内占有率 ＝ そのメンバーの推しカメラ ÷ チーム全員の推しカメラ合計。占有率が高いメンバーがチーム動画の再生数を牽引している可能性を示す。</p>
+<p class="sub-label" style="opacity:0.55;margin-bottom:1.5rem;">推しカメラ基準日: ${lastOshi}　NOCUT版基準日: ${lastNocut}</p>
+<div class="tbl-wrap" style="margin-bottom:2rem;">
+<table><thead><tr>
+  <th style="text-align:left;">楽曲</th><th style="text-align:left;">放送</th>
+  <th>NOCUT再生数</th><th>推しカメラ合計</th>
+  <th style="text-align:left;">TOP1</th><th>TOP1占有率</th><th style="text-align:left;">集中度</th>
+</tr></thead><tbody>`;
+
+  teams.forEach(t => {
+    if(!t.members.length||t.oshiTotal===0) return;
+    const sc   = POS_SONG_COLORS[t.song]||'#888';
+    const bc   = t.broadcast==='前半組'?'#60c8e0':'#e080c0';
+    const bcBg = t.broadcast==='前半組'?'rgba(96,200,224,0.13)':'rgba(224,128,192,0.13)';
+    const t1   = t.members[0], t2 = t.members[1];
+    const t1pct = t1.views/t.oshiTotal*100;
+    const gap   = t2 ? t1pct-t2.views/t.oshiTotal*100 : t1pct;
+    const [cl,clr] = concLabel(t1pct, gap);
+    html += `<tr>
+      <td style="color:${sc};font-size:0.73rem;">♪${t.song}</td>
+      <td><span style="font-size:0.6rem;padding:1px 4px;border-radius:3px;background:${bcBg};color:${bc};">${t.broadcast}</span></td>
+      <td>${t.nocutViews.toLocaleString()}</td><td>${t.oshiTotal.toLocaleString()}</td>
+      <td style="text-align:left;font-size:0.72rem;">${t1.reading}</td>
+      <td>${t1pct.toFixed(0)}%</td>
+      <td style="text-align:left;font-size:0.67rem;color:${clr};">${cl}</td>
+    </tr>`;
+  });
+  html += `</tbody></table></div>`;
+  html += `<div style="font-size:0.78rem;font-weight:500;color:var(--accent);font-family:monospace;margin-bottom:1.25rem;padding-bottom:0.4rem;border-bottom:1px solid var(--border2);">チーム別詳細</div>`;
+
+  teams.forEach(t => {
+    if(!t.members.length||t.oshiTotal===0) return;
+    const sc   = POS_SONG_COLORS[t.song]||'#888';
+    const bc   = t.broadcast==='前半組'?'#60c8e0':'#e080c0';
+    const bcBg = t.broadcast==='前半組'?'rgba(96,200,224,0.13)':'rgba(224,128,192,0.13)';
+    const t1   = t.members[0], t2 = t.members[1];
+    const t1pct = t1.views/t.oshiTotal*100;
+    const gap   = t2 ? t1pct-t2.views/t.oshiTotal*100 : t1pct;
+    const [cl,clr] = concLabel(t1pct, gap);
+    const ratio = t.nocutViews>0 ? (t.nocutViews/t.oshiTotal).toFixed(2) : '—';
+    let bars = '';
+    t.members.forEach((m,i) => {
+      const pct = m.views/t.oshiTotal*100;
+      const top = i===0;
+      bars += `<div style="display:flex;align-items:center;gap:7px;margin-bottom:3px;">
+        <div style="width:74px;font-size:0.68rem;color:${top?sc:'var(--muted)'};font-family:monospace;text-align:right;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${m.name}">${m.reading}</div>
+        <div style="width:30px;font-size:0.64rem;color:var(--hint);font-family:monospace;text-align:right;flex-shrink:0;">${pct.toFixed(0)}%</div>
+        <div style="flex:1;background:rgba(255,255,255,0.05);border-radius:2px;height:12px;overflow:hidden;">
+          <div style="width:${pct.toFixed(1)}%;background:${sc}${top?'bb':'40'};height:100%;${top?'border-right:2px solid '+sc+';':''}min-width:2px;border-radius:2px;"></div>
+        </div>
+        <div style="width:72px;font-size:0.65rem;font-family:monospace;color:${top?sc:'var(--hint)'};text-align:right;flex-shrink:0;">${m.views.toLocaleString()}</div>
+      </div>`;
+    });
+    html += `<div style="background:var(--surface);border-radius:8px;padding:0.85rem 1rem;margin-bottom:0.85rem;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:0.55rem;flex-wrap:wrap;">
+        <div style="width:3px;border-radius:2px;background:${sc};align-self:stretch;min-height:20px;flex-shrink:0;"></div>
+        <div style="flex:1;min-width:0;">
+          <span style="font-size:0.78rem;font-weight:600;color:${sc};">${t.artist||t.song}</span>
+          ${t.artist?`<span style="font-size:0.65rem;color:var(--muted);margin-left:4px;">♪${t.song}</span>`:''}
+          <span style="font-size:0.6rem;padding:1px 4px;border-radius:3px;background:${bcBg};color:${bc};margin-left:5px;">${t.broadcast}</span>
+        </div>
+        <div style="font-size:0.65rem;color:${clr};font-family:monospace;flex-shrink:0;">${cl}</div>
+      </div>
+      <div style="display:flex;gap:1.2rem;font-size:0.65rem;color:var(--muted);font-family:monospace;margin-bottom:0.65rem;flex-wrap:wrap;">
+        <span>NOCUT <b style="color:var(--text);">${t.nocutViews.toLocaleString()}</b></span>
+        <span>推しカメラ計 <b style="color:var(--text);">${t.oshiTotal.toLocaleString()}</b></span>
+        <span>動画/推しカメ比 <b style="color:var(--text);">${ratio}x</b></span>
+      </div>
+      ${bars}
+    </div>`;
+  });
+  document.getElementById('pos-contrib-content').innerHTML = html;
 }
 
 // ── 個人票データ（個人獲得票数＋FREE PART獲得票数の合計順位）──
