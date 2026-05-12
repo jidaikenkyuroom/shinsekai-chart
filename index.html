@@ -2081,8 +2081,8 @@ function renderGbContrib() {
   }).sort((a,b) => b.nocutViews-a.nocutViews);
 
   function concLabel(t1pct, gap) {
-    if(t1pct>=50) return ['★★★ 1人依存','#ff9060'];
-    if(gap>=15)   return ['★★  やや集中','#e0c060'];
+    if(t1pct>=45) return ['★★★ 1人依存','#ff9060'];
+    if(gap>=12)   return ['★★  やや集中','#e0c060'];
     return           ['★   分散型',  '#60c8a0'];
   }
 
@@ -2576,8 +2576,8 @@ function renderPosContrib() {
   }).sort((a,b) => b.nocutViews-a.nocutViews);
 
   function concLabel(t1pct, gap) {
-    if(t1pct>=50) return ['★★★ 1人依存','#ff9060'];
-    if(gap>=15)   return ['★★  やや集中','#e0c060'];
+    if(t1pct>=45) return ['★★★ 1人依存','#ff9060'];
+    if(gap>=12)   return ['★★  やや集中','#e0c060'];
     return           ['★   分散型',  '#60c8a0'];
   }
 
