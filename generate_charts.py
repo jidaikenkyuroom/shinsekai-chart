@@ -255,21 +255,20 @@ def build_pos_js(source_dir, pos_cfg):
 
 
 def build_battle_snap_js(source_dir, battle_cfg):
-    mnet = read_csv(source_dir / battle_cfg["mnetplus"])
-    header = mnet[0]
-    n = len(header)
-    latest_label = header[n - 3].replace("_再生数", "")
+    ytoshi = read_csv(source_dir / battle_cfg["yt_oshicam"])
+    header = ytoshi[0]
+    view_idx = [i for i, h in enumerate(header) if h.endswith("_再生数")]
+    latest_idx = view_idx[-1] if view_idx else len(header) - 1
+    latest_label = header[latest_idx].replace("_再生数", "")
     oshi_entries = []
-    for row in mnet[1:]:
-        if len(row) < 4:
+    for row in ytoshi[1:]:
+        if len(row) < 2:
             continue
-        reading = row[1]
-        lv = int_or_null(row[n - 3]) if n - 3 < len(row) else "null"
-        ll = int_or_null(row[n - 2]) if n - 2 < len(row) else "null"
-        lc = int_or_null(row[n - 1]) if n - 1 < len(row) else "null"
-        oshi_entries.append(f'"{reading}":[{lv},{ll},{lc}]')
+        reading = row[0].strip()
+        lv = int_or_null(row[latest_idx]) if latest_idx < len(row) else "null"
+        oshi_entries.append(f'"{reading}":[{lv}]')
     raw_oshi = (
-        f"// 推しカメラ再生数（mnetplus {latest_label}）: reading → [views, likes, comments]\n"
+        f"// 推しカメラ再生数（YouTube {latest_label}）: reading → [views]\n"
         f'const rawOshiCam = {{{",".join(oshi_entries)}}};'
     )
 
@@ -291,8 +290,8 @@ def build_battle_snap_js(source_dir, battle_cfg):
 
 
 def build_battle_dates_js(source_dir, battle_cfg):
-    mnet = read_csv(source_dir / battle_cfg["mnetplus"])
-    push_dates = [mnet[0][i].replace("_再生数", "") for i in range(2, len(mnet[0]), 3)]
+    ytoshi = read_csv(source_dir / battle_cfg["yt_oshicam"])
+    push_dates = [ytoshi[0][i].replace("_再生数", "") for i in range(len(ytoshi[0])) if ytoshi[0][i].endswith("_再生数")]
 
     yt = read_csv(source_dir / battle_cfg["yt_team"])
     yt_dates = [c.replace("_再生数", "") for c in yt[0][4:]]
@@ -315,14 +314,13 @@ def build_battle_dates_js(source_dir, battle_cfg):
 
 
 def build_battle_series_js(source_dir, battle_cfg):
-    mnet = read_csv(source_dir / battle_cfg["mnetplus"])
-    n_header = len(mnet[0])
-    view_indices = list(range(2, n_header, 3))
+    ytoshi = read_csv(source_dir / battle_cfg["yt_oshicam"])
+    view_indices = [i for i, h in enumerate(ytoshi[0]) if h.endswith("_再生数")]
     push_entries = []
-    for row in mnet[1:]:
-        if len(row) < 4:
+    for row in ytoshi[1:]:
+        if len(row) < 2:
             continue
-        reading = row[1]
+        reading = row[0].strip()
         views = [int_or_null(row[i]) if i < len(row) else "null" for i in view_indices]
         push_entries.append(f'"{reading}":[{",".join(views)}]')
     raw_push = f'const rawPushViews = {{{",".join(push_entries)}}};'
@@ -405,16 +403,6 @@ def build_tracker_js(src, battle_src, csv_cfg, battle_cfg, gb_team_csv, pos_cfg,
         if r:
             theme_map[r] = [safe_float(row[i]) if i < len(row) else None for i in range(2, len(theme_rows[0]))]
 
-    # ── GB mnetplus 推しカメラ ──
-    mnet_rows = read_csv(battle_src / battle_cfg["mnetplus"])
-    mnet_vi = view_cols(mnet_rows[0])
-    mnet_dates = [mnet_rows[0][i].replace("_再生数", "") for i in mnet_vi]
-    mnet_map = {}
-    for row in mnet_rows[1:]:
-        r = row[1].strip() if len(row) > 1 else ""
-        if r:
-            mnet_map[r] = [safe_int(row[i]) if i < len(row) else None for i in mnet_vi]
-
     # ── GB YouTube 推しカメラ ──
     ytoshi_rows = read_csv(battle_src / battle_cfg["yt_oshicam"])
     ytoshi_vi = view_cols(ytoshi_rows[0])
@@ -439,7 +427,6 @@ def build_tracker_js(src, battle_src, csv_cfg, battle_cfg, gb_team_csv, pos_cfg,
         gb_indiv.append(
             f'{{"reading":"{r}","name":"{js_str(m["name"])}","broadcast":"{m["broadcast"]}",'
             f'"song":"{m["song"]}","artist":"{m["artist"]}","team":{m["team"]},'
-            f'"mnet":{js_int_arr(mnet_map.get(r) or [])},'
             f'"ytOshi":{js_int_arr(ytoshi_map.get(r) or [])},'
             f'"theme":{js_float_arr(theme_map.get(r) or [])}}}'
         )
@@ -559,7 +546,7 @@ def build_tracker_js(src, battle_src, csv_cfg, battle_cfg, gb_team_csv, pos_cfg,
         )
 
     return "\n".join([
-        f"const GB_TRACKER={{oshiDates:{js_dates(mnet_dates)},ytOshiDates:{js_dates(ytoshi_dates)},themeDates:{js_dates(theme_dates)},ytTeamDates:{js_dates(yt_dates)},ytFullDates:{js_dates(full_dates)},ytNocutDates:{js_dates(nocut_dates)},",
+        f"const GB_TRACKER={{ytOshiDates:{js_dates(ytoshi_dates)},themeDates:{js_dates(theme_dates)},ytTeamDates:{js_dates(yt_dates)},ytFullDates:{js_dates(full_dates)},ytNocutDates:{js_dates(nocut_dates)},",
         f"indiv:[{','.join(gb_indiv)}],",
         f"teams:[{','.join(gb_teams)}]}};",
         f"const POS_TRACKER={{oshiDates:{js_dates(pos_oshi_dates)},ytHlDates:{js_dates(pos_yt_dates)},ytFullDates:{js_dates(pos_full_dates)},ytNocutDates:{js_dates(pos_nocut_dates)},",
