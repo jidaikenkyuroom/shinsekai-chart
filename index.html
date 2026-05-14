@@ -278,8 +278,8 @@ tr:hover td{background:var(--surface);}
       </blockquote>
       <div class="chart-wrap" style="height:460px;"><canvas id="chartClassRank"></canvas></div>
       <div style="margin-top:0.75rem;font-size:0.7rem;color:var(--muted);display:flex;gap:1rem;flex-wrap:wrap;">
-        <span><span style="color:#4ec87a;">●</span> 通過（1〜50位）</span>
-        <span><span style="color:rgba(100,100,100,0.6);">●</span> 脱落（51位〜）</span>
+        <span><span style="color:#4ec87a;">●</span> 通過（1〜35位）</span>
+        <span><span style="color:rgba(100,100,100,0.6);">●</span> 脱落（36位〜）</span>
       </div>
     </div>
 
@@ -307,8 +307,8 @@ tr:hover td{background:var(--surface);}
         <span class="label">通過状況:</span>
         <select id="scatter-survival" onchange="renderScatter()">
           <option value="all">脱落含む全員</option>
-          <option value="survived">通過者のみ（〜50位）</option>
-          <option value="elim">脱落者のみ（51位〜）</option>
+          <option value="survived">通過者のみ（〜35位）</option>
+          <option value="elim">脱落者のみ（36位〜）</option>
         </select>
       </div>
       <div class="row">
@@ -779,6 +779,7 @@ indiv:[{"reading":"ADAM","name":"アダム・ナガイ","broadcast":"後半組",
 teams:[{"song":"My Grandfather's Clock","artist":"","broadcast":"後半組","members":["ADAM","ARCHER","KAIMU","MAKI","YUTA"],"ytHl":[null,4696,120843],"ytFull":[3570,36207],"ytNocut":[23442]},{"song":"ベテルギウス","artist":"優里","broadcast":"後半組","members":["AYUMU.S","HYUNJAE","ISSA","KAICHI"],"ytHl":[null,4525,116338],"ytFull":[3787,36674],"ytNocut":[14040]},{"song":"Natural","artist":"Imagine Dragons","broadcast":"前半組","members":["CHISATO","KOTARO","RICKEY","RYOTA","WEIZE","YURA"],"ytHl":[161918,373935,445818],"ytFull":[4261,41309],"ytNocut":[41563]},{"song":"Doctor!Doctor!","artist":"ZEROBASEONE","broadcast":"後半組","members":["DAIKI.K","OSUKE","SHINHAENG","SIYOUNG","YOSHIKI"],"ytHl":[null,3997,147410],"ytFull":[4272,49615],"ytNocut":[33653]},{"song":"BE CLASSIC","artist":"JO1","broadcast":"後半組","members":["DONGMIN","GOTEN","JUNSEI","KINARI","REN.KO","RIKUTO.I","YUMA"],"ytHl":[null,4668,91268],"ytFull":[2705,24325],"ytNocut":[18494]},{"song":"WORK HARD","artist":"ちゃんみな","broadcast":"後半組","members":["GIUSEPPE","KANAME","MEI","SHU.N","TAKUTO.K","TOWA"],"ytHl":[null,4691,110001],"ytFull":[3271,31640],"ytNocut":[17736]},{"song":"Super","artist":"SEVENTEEN","broadcast":"前半組","members":["HYEONSEUNG","JAY","KOSHIRO","KOSUKE","RINTO","SENA","TAIGA.M"],"ytHl":[152681,345022,392896],"ytFull":[2421,26365],"ytNocut":[26383]},{"song":"宿命","artist":"Official髭男dism","broadcast":"前半組","members":["JAEYONG","KEITO","RYOGA","TATSUYA","YUKI"],"ytHl":[178386,483983,525679],"ytFull":[2800,25219],"ytNocut":[12605]},{"song":"DOMINANCE","artist":"INI","broadcast":"前半組","members":["RYUJI","SHU.Y","SORA.T","TAIGA.F","YUSEI.O"],"ytHl":[116309,282002,310849],"ytFull":[2038,21116],"ytNocut":[11262]}]};
 
 const RANK_423_IDX = VOTE_DATES.indexOf("4月23日");
+const LATEST_RANK_IDX = VOTE_DATES.length - 1;
 
 // スキップ日付を除いたヒートマップ用インデックスペア
 const hmKeepIdx = PLAY_DATES.reduce((acc,d,i)=>{ if(!HM_SKIP_DATES.includes(d)) acc.push(i); return acc; }, []);
@@ -969,7 +970,7 @@ function sortList(list, sort, weekIdx){
     });
   }
   else if(sort==='growabs') list.sort((a,b)=>(b.growAbs||0)-(a.growAbs||0));
-  else if(sort==='rank') list.sort((a,b)=>{const ai=RANK_423_IDX>=0&&a.votes[RANK_423_IDX]!=null?a.votes[RANK_423_IDX]:999;const bi=RANK_423_IDX>=0&&b.votes[RANK_423_IDX]!=null?b.votes[RANK_423_IDX]:999;return ai-bi;});
+  else if(sort==='rank') list.sort((a,b)=>{const ai=a.votes.length?a.votes[LATEST_RANK_IDX]??999:999;const bi=b.votes.length?b.votes[LATEST_RANK_IDX]??999:999;return (ai===-1?9999:ai)-(bi===-1?9999:bi);});
   else if(sort==='eval-class') list.sort((a,b)=>{
     const ao=CLASS_ORDER[a.classEval]??5, bo=CLASS_ORDER[b.classEval]??5;
     if(ao!==bo) return ao-bo;
@@ -1062,7 +1063,7 @@ function renderWatch(){
     const br = rawBattleResult[d.reading];
     const battleBadge = br ? (br.result==='WIN' ? '<span class="badge badge-rise">G：WIN</span>' : '<span class="badge badge-hot">G：LOSE</span>') : '';
     const latestRank = d.votes.length ? d.votes[d.votes.length-1] : null;
-    const elimBadge = (latestRank === -1 || (latestRank != null && latestRank >= 51)) ? ' <span class="badge badge-elim">脱落</span>' : '';
+    const elimBadge = (latestRank === -1 || (latestRank != null && latestRank >= 36)) ? ' <span class="badge badge-elim">脱落</span>' : '';
     const posRow = typeof rawPosBattle !== 'undefined' && rawPosBattle.find(r => r[1] === d.reading);
     const posPosRank = posRow ? posRow[10] : null;
     const posBenefit = posRow ? parseInt(posRow[8]) : 0;
@@ -1141,7 +1142,7 @@ function renderAll(){
   const sort=document.getElementById('all-sort').value;
   const filter=document.getElementById('all-filter').value;
   let list=[...data];
-  if(filter==='active') list=list.filter(d=>{const l=d.votes.length?d.votes[d.votes.length-1]:null;return l!==-1&&!(l!=null&&l>=51);});
+  if(filter==='active') list=list.filter(d=>{const l=d.votes.length?d.votes[d.votes.length-1]:null;return l!==-1&&!(l!=null&&l>=36);});
   if(filter==='hot') list=list.filter(d=>d.tier==='hot');
   if(filter==='rise') list=list.filter(d=>d.tier==='hot'||d.tier==='rise');
   if(filter==='cls-up') list=list.filter(d=>d.clsLabel==='up');
@@ -1165,7 +1166,7 @@ function renderAll(){
     const posBcTxt = posBc==='前半組' ? '#60c8e0' : posBc==='後半組' ? '#e080c0' : 'var(--hint)';
     const posBcCell = posBc ? `<span style="font-size:0.65rem;padding:1px 6px;border-radius:3px;background:${posBcBg};color:${posBcTxt};">${posBc}</span>` : '-';
     const latestRankAll = d.votes.length ? d.votes[d.votes.length-1] : null;
-    const isElim = latestRankAll === -1 || (latestRankAll != null && latestRankAll >= 51);
+    const isElim = latestRankAll === -1 || (latestRankAll != null && latestRankAll >= 36);
     const elimBadgeAll = isElim ? ' <span class="badge badge-elim">脱落</span>' : '';
     const elimRowCls = isElim ? ' class="elim-row"' : '';
     html+=`<tr${elimRowCls}>
@@ -1410,8 +1411,8 @@ function renderScatter(){
   // 絞り込み
   let list = [...scatterAllList];
   const survival = document.getElementById('scatter-survival').value;
-  if(survival==='survived') list = list.filter(d => d.votes[d.votes.length-1] <= 50);
-  else if(survival==='elim') list = list.filter(d => d.votes[d.votes.length-1] >= 51);
+  if(survival==='survived') list = list.filter(d => d.votes[d.votes.length-1] <= 35);
+  else if(survival==='elim') list = list.filter(d => d.votes[d.votes.length-1] >= 36);
   if(filter==='aa') list = list.filter(d => d.clsLabel==='aa');
   else if(filter==='up') list = list.filter(d => d.clsLabel==='up');
   else if(filter==='keep') list = list.filter(d => d.clsLabel==='keep');
@@ -2348,9 +2349,9 @@ function renderBattleList() {
     list.sort((a,b) => b.oshiViews - a.oshiViews);
   } else if(sort==='rank') {
     list.sort((a,b) => {
-      const av = RANK_423_IDX>=0 && a.votes[RANK_423_IDX]!=null ? a.votes[RANK_423_IDX] : 999;
-      const bv = RANK_423_IDX>=0 && b.votes[RANK_423_IDX]!=null ? b.votes[RANK_423_IDX] : 999;
-      return av - bv;
+      const av = a.votes.length ? a.votes[LATEST_RANK_IDX]??999 : 999;
+      const bv = b.votes.length ? b.votes[LATEST_RANK_IDX]??999 : 999;
+      return (av===-1?9999:av) - (bv===-1?9999:bv);
     });
   } else if(sort==='battlerank') {
     list.sort((a,b) => a.battleRank - b.battleRank);
@@ -3191,6 +3192,8 @@ const REPORTS = [
 
 // type: 'vote'=投票, 'broadcast'=配信, 'release'=公開, 'record'=収録, 'announce'=発表
 const TIMELINE = [
+  { date:'2026-05-14', label:'第二回順位発表式（配信第八話）', type:'broadcast', note:'35位まで生存、36位以下は脱落' },
+  { date:'2026-05-08', label:'SHINSEKAI 第2回投票締め切り', type:'vote', note:'4/23〜5/8の積算が第二回順位に反映' },
   { date:'2026-04-24', label:'第2回現場評価 番組収録', type:'record', note:'この辺でようやく配信と現場収録のタイミングが合ってくる' },
   { date:'2026-04-23', label:'第一回順位発表式（配信第五話）', type:'broadcast', note:'50位まで生存、51位以下は脱落' },
   { date:'2026-04-19', label:'グループバトル推しカメラ YouTubeで公開', type:'release', note:'Mnetplus先行公開から1週間後にYouTubeでも公開（101名分）' },
@@ -3419,7 +3422,7 @@ function renderClassRank(){
     bodyColor:'#f0f0ee',bodyFont:{family:'monospace',size:12},padding:10,displayColors:false,
     callbacks:{label:ctx=>{
       const p=ctx.raw;
-      return[`${p.name}（${p.reading}）`,`再評価クラス: ${p.evalCls}　順位: ${p.rank}位`,p.survived?'通過（〜50位）':'脱落（51位〜）'];
+      return[`${p.name}（${p.reading}）`,`再評価クラス: ${p.evalCls}　順位: ${p.rank}位`,p.survived?'通過（〜35位）':'脱落（36位〜）'];
     }}
   };
   const points=rawRank1.map(r=>{
@@ -3612,7 +3615,7 @@ function buildTPHTML(d) {
   const posRow = typeof rawPosBattle !== 'undefined' && rawPosBattle.find(r => r[1] === d.reading);
 
   const latestVote = d.votes.length ? d.votes[d.votes.length - 1] : null;
-  const isElim = latestVote === -1 || (latestVote != null && latestVote >= 51);
+  const isElim = latestVote === -1 || (latestVote != null && latestVote >= 36);
   const elimBadge = isElim ? ' <span class="badge badge-elim">脱落</span>' : '';
 
   const imgSrc = `images/${d.reading}.jpg`;
