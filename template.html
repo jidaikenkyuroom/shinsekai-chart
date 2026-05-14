@@ -542,7 +542,7 @@ tr:hover td{background:var(--surface);}
       <div id="pos-list"></div>
     </div>
     <div id="ptab-oshi" style="display:none">
-      <p class="sub-label">推しカメラ再生数（前後半組）と4/23投票順位の相関。点の色は楽曲。<span id="pos-oshi-scatter-date" style="margin-left:0.6em;opacity:0.55;font-size:0.85em;"></span></p>
+      <p class="sub-label">推しカメラ再生数（前後半組）と最新投票順位の相関。点の色は楽曲。<span id="pos-oshi-scatter-date" style="margin-left:0.6em;opacity:0.55;font-size:0.85em;"></span></p>
       <p class="sub-label" style="opacity:0.6;font-size:0.76rem;margin-top:0.1rem;">※ 前半組（5/1公開）は後半組（5/3公開）より2日早く視聴可能</p>
       <div class="chart-wrap" style="height:460px;"><canvas id="chartPosOshiScatter"></canvas></div>
       <h3 class="pos-group-label" style="margin-top:1.5rem;">▼ 再生数ランキング <span id="pos-oshi-bar-date" style="font-size:0.72rem;font-weight:normal;opacity:0.55;margin-left:0.4rem;"></span></h3>
@@ -1689,8 +1689,8 @@ function renderPosOshi() {
       let latestViews = null;
       for (let i = oshi.length - 1; i >= 1; i--) { if (oshi[i] != null) { latestViews = oshi[i]; break; } }
       const votes = voteMap[name] || [];
-      const rank423 = RANK_423_IDX >= 0 ? votes[RANK_423_IDX] : null;
-      return {name, reading, song, artist, broadcast, videoId, latestViews, rank423};
+      const latestRank = votes.length > 0 ? votes[LATEST_RANK_IDX] : null;
+      return {name, reading, song, artist, broadcast, videoId, latestViews, latestRank};
     });
 
   // データ更新日をグループ別に計算して表示
@@ -1715,8 +1715,8 @@ function renderPosOshi() {
   const scatterDatasets = songs.map(song => {
     const color = POS_SONG_COLORS[song] || '#888';
     const pts = posOshiData
-      .filter(d => d.song===song && d.rank423!=null && d.rank423>0 && d.latestViews!=null)
-      .map(d => ({x:d.rank423, y:d.latestViews, name:d.name, reading:d.reading, song:d.song}));
+      .filter(d => d.song===song && d.latestRank!=null && d.latestRank>0 && d.latestRank!==-1 && d.latestViews!=null)
+      .map(d => ({x:d.latestRank, y:d.latestViews, name:d.name, reading:d.reading, song:d.song}));
     return {
       label: song,
       data: pts,
@@ -2144,8 +2144,8 @@ function renderBattleList() {
     const sc  = SONG_COLORS[d.song] || '#888';
     const bc  = d.broadcast==='前半組' ? '#60c8e0' : '#e080c0';
     const bcBg = d.broadcast==='前半組' ? 'rgba(96,200,224,0.13)' : 'rgba(224,128,192,0.13)';
-    const gbRank = RANK_423_IDX>=0 ? d.votes[RANK_423_IDX] : null;
-    const latestVote = gbRank!=null ? gbRank+'位' : '-';
+    const gbRank = d.votes.length ? d.votes[LATEST_RANK_IDX] : null;
+    const latestVote = (gbRank!=null && gbRank!==-1) ? gbRank+'位' : gbRank===-1 ? '脱落' : '-';
     const winColor = d.battleResult==='WIN' ? '#4ec87a' : d.battleResult==='LOSE' ? '#ff5c35' : '#888';
     const winBg   = d.battleResult==='WIN' ? 'rgba(78,200,122,0.12)' : d.battleResult==='LOSE' ? 'rgba(255,92,53,0.12)' : 'transparent';
     const resultLabel = d.battleResult || '-';
@@ -2726,9 +2726,9 @@ function renderBattleScatter() {
   const datasets = songList.map(({artist, song, broadcast}) => {
     const color = SONG_COLORS[song] || '#888';
     const pts = battleData
-      .filter(d => d.song===song && RANK_423_IDX>=0 && d.votes[RANK_423_IDX]!=null)
+      .filter(d => d.song===song && d.votes.length && d.votes[LATEST_RANK_IDX]!=null && d.votes[LATEST_RANK_IDX]!==-1)
       .map(d => ({
-        x: d.votes[RANK_423_IDX], y: d.oshiViews,
+        x: d.votes[LATEST_RANK_IDX], y: d.oshiViews,
         name:d.name, reading:d.reading, song:d.song, team:d.team, broadcast:d.broadcast,
         oshiViews:d.oshiViews,
       }));
@@ -2907,8 +2907,8 @@ function renderBattleTiming() {
   const ko  = battleData.filter(d => d.broadcast==='後半組');
   const avgViews = arr => arr.length ? Math.round(arr.reduce((s,d)=>s+d.oshiViews,0)/arr.length) : 0;
   const avgRank  = arr => {
-    const w = arr.filter(d=>RANK_423_IDX>=0 && d.votes[RANK_423_IDX]!=null);
-    return w.length ? (w.reduce((s,d)=>s+d.votes[RANK_423_IDX],0)/w.length).toFixed(1) : '-';
+    const w = arr.filter(d=>d.votes.length && d.votes[LATEST_RANK_IDX]!=null && d.votes[LATEST_RANK_IDX]!==-1);
+    return w.length ? (w.reduce((s,d)=>s+d.votes[LATEST_RANK_IDX],0)/w.length).toFixed(1) : '-';
   };
   const topViews = arr => arr.length ? Math.max(...arr.map(d=>d.oshiViews)) : 0;
 
