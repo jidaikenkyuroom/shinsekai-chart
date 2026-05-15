@@ -256,6 +256,11 @@ tr:hover td{background:var(--surface);}
       <button class="g-tab" id="atab-scatter" onclick="switchAnalysisTab('scatter')">再生数 vs 順位</button>
       <button class="g-tab" id="atab-gap" onclick="switchAnalysisTab('gap')">票差分析</button>
     </div>
+    <div id="analysis-event-bar" style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.75rem;font-size:0.72rem;color:var(--muted);">
+      <span style="opacity:0.7;">順位発表式:</span>
+      <button class="g-tab active" id="aev-btn-1" onclick="setAnalysisEvent('第1回')">第1回（4/23）</button>
+      <button class="g-tab" id="aev-btn-2" onclick="setAnalysisEvent('第2回')">第2回（5/14）</button>
+    </div>
 
     <!-- 国民 vs SEKAI票 -->
     <div id="asec-vote" class="asec active">
@@ -923,6 +928,17 @@ const clsColor={up:'#4ec87a',keep:'#888884',down:'#ff5c35'};
 
 let selected=[], chartTrend=null, chartScatter=null, currentGraph='play';
 let chartVoteBreakdown=null, chartClassRank=null, chartBroadcastTiming=null, chartVoteGap=null;
+let analysisEventKey = '第1回';
+
+function setAnalysisEvent(key){
+  analysisEventKey = key;
+  document.getElementById('aev-btn-1').classList.toggle('active', key==='第1回');
+  document.getElementById('aev-btn-2').classList.toggle('active', key==='第2回');
+  const active = ['vote','class','gap'].find(t => document.getElementById('asec-'+t).classList.contains('active'));
+  if(active==='vote') renderVoteBreakdown();
+  else if(active==='class') renderClassRank();
+  else if(active==='gap') renderVoteGap();
+}
 
 function saveSelection(){
   try{ localStorage.setItem('shinsekai_selected', JSON.stringify(selected)); }catch(e){}
@@ -3245,7 +3261,8 @@ function closeTimelineModal(){
 }
 
 function renderVoteGap(){
-  const ranked = rawRank1.filter(r=>r[3]!=null).sort((a,b)=>a[1]-b[1]);
+  const evData = rawRankData[analysisEventKey] || rawRank1;
+  const ranked = evData.filter(r=>r[3]!=null).sort((a,b)=>a[1]-b[1]);
   const gaps = [];
   for(let i=1;i<ranked.length;i++){
     const prev=ranked[i-1],curr=ranked[i];
@@ -3292,13 +3309,17 @@ function renderVoteGap(){
       }
     }
   });
-  // 全50名テーブル（グループ別）
-  const groups=[
+  // テーブル（グループ別）
+  const groups = analysisEventKey === '第1回' ? [
     {label:'1〜12位（デビュー圏内）',min:1,max:12},
     {label:'13〜20位',min:13,max:20},
     {label:'21〜30位',min:21,max:30},
     {label:'31〜40位',min:31,max:40},
     {label:'41〜50位',min:41,max:50},
+  ] : [
+    {label:'1〜12位（デビュー圏内）',min:1,max:12},
+    {label:'13〜20位',min:13,max:20},
+    {label:'21〜35位',min:21,max:35},
   ];
   const diffMap={};
   for(let i=1;i<ranked.length;i++){
@@ -3346,6 +3367,7 @@ function switchAnalysisTab(t){
     document.getElementById('asec-'+id).classList.toggle('active',id===t);
     document.getElementById('atab-'+id).classList.toggle('active',id===t);
   });
+  document.getElementById('analysis-event-bar').style.display = ['vote','class','gap'].includes(t) ? 'flex' : 'none';
   if(t==='vote') renderVoteBreakdown();
   if(t==='class') renderClassRank();
   if(t==='timing') renderBroadcastTiming();
@@ -3365,7 +3387,8 @@ function renderVoteBreakdown(){
       return[`${p.name}（${p.reading}）`,`順位: ${p.rank}位${gr}`,`国民: ${p.x.toFixed(1)}万 / SEKAI: ${p.y.toFixed(1)}万`,`SEKAI比率: ${ratio}%`];
     }}
   };
-  const points=rawRank1.filter(r=>r[3]!=null).map(r=>{
+  const evData = rawRankData[analysisEventKey] || rawRank1;
+  const points=evData.filter(r=>r[3]!=null).map(r=>{
     const rd=r[0],info=readingClassMap[rd]||{};
     return{x:r[3]/10000,y:r[4]/10000,rank:r[1],grRank:r[2],reading:rd,
       fanStr:(attrMap[rd]||{fanStr:'low'}).fanStr,isGR:r[2]!=null,name:info.name||rd};
@@ -3417,21 +3440,23 @@ function renderVoteBreakdown(){
 
 function renderClassRank(){
   const clsX={A:0,B:1,C:2,D:3,F:4};
+  const evData = rawRankData[analysisEventKey] || rawRank1;
+  const cutoff = analysisEventKey === '第1回' ? 50 : 35;
   const tooltipCfg={
     backgroundColor:'#1f1f24',borderColor:'rgba(255,255,255,0.13)',borderWidth:1,
     bodyColor:'#f0f0ee',bodyFont:{family:'monospace',size:12},padding:10,displayColors:false,
     callbacks:{label:ctx=>{
       const p=ctx.raw;
-      return[`${p.name}（${p.reading}）`,`再評価クラス: ${p.evalCls}　順位: ${p.rank}位`,p.survived?'通過（〜35位）':'脱落（36位〜）'];
+      return[`${p.name}（${p.reading}）`,`再評価クラス: ${p.evalCls}　順位: ${p.rank}位`,p.survived?`通過（〜${cutoff}位）`:`脱落（${cutoff+1}位〜）`];
     }}
   };
-  const points=rawRank1.map(r=>{
+  const points=evData.filter(r=>r[1]!=null).map(r=>{
     const rd=r[0],info=readingClassMap[rd];
     if(!info)return null;
     const ec=info.eval;
     if(!(ec in clsX))return null;
     return{x:clsX[ec]+(Math.random()-0.5)*0.55,y:102-r[1],rank:r[1],reading:rd,
-      evalCls:ec,survived:r[1]<=50,name:info.name||rd};
+      evalCls:ec,survived:r[1]<=cutoff,name:info.name||rd};
   }).filter(Boolean);
   const ctx=document.getElementById('chartClassRank').getContext('2d');
   if(chartClassRank){chartClassRank.destroy();chartClassRank=null;}
