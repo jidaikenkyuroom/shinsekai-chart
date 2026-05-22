@@ -3910,10 +3910,32 @@ function renderConceptBenefit() {
     return;
   }
   const sorted = [...CONCEPT_TRACKER.indiv].sort((a,b)=>(a.conceptRank||99)-(b.conceptRank||99));
+
+  // 推しカメラの最新日付と各メンバーの最新再生数を取得
+  let oshiLatestIdx = -1;
+  for(let i=CONCEPT_TRACKER.oshiDates.length-1; i>=0; i--){
+    if(CONCEPT_TRACKER.indiv.some(d => d.oshi[i]!=null)){ oshiLatestIdx=i; break; }
+  }
+  const oshiDateLabel = oshiLatestIdx>=0 ? CONCEPT_TRACKER.oshiDates[oshiLatestIdx] : null;
+  const oshiHeader = oshiDateLabel
+    ? `推しカメラ<br><span style="font-size:0.6rem;font-weight:normal;color:var(--muted);">${oshiDateLabel}</span>`
+    : `推しカメラ<br><span style="font-size:0.6rem;font-weight:normal;color:var(--muted);">未取得</span>`;
+
+  function latestOshi(d) {
+    if(oshiLatestIdx<0) return null;
+    return d.oshi[oshiLatestIdx]??null;
+  }
+  function fmtViews(v) {
+    if(v==null) return '-';
+    if(v>=10000) return (v/10000).toFixed(1)+'万';
+    if(v>=1000)  return (v/1000).toFixed(1)+'k';
+    return String(v);
+  }
+
   let html=`<p class="sub-label" style="margin-bottom:1rem;">ベネフィット票なし順位と最終コンセプトバトル個人順位の比較。1位チーム（BLACK ANGEL）のメンバーがベネフィットでどれだけ順位を上げたかを可視化。</p>
 <div class="tbl-wrap"><table><thead><tr>
   <th>#</th><th style="text-align:left;">名前</th><th style="text-align:left;">楽曲</th>
-  <th>個人票</th><th>ベネフィット</th><th>合計票</th><th>ベネなし順位</th><th>最終順位</th><th>変動</th>
+  <th>個人票</th><th>ベネフィット</th><th>合計票</th><th>ベネなし順位</th><th>最終順位</th><th>変動</th><th>${oshiHeader}</th>
 </tr></thead><tbody>`;
   sorted.forEach((d,i)=>{
     const sc  = CONCEPT_SONG_COLORS[d.song]||'#888';
@@ -3928,6 +3950,10 @@ function renderConceptBenefit() {
       if(delta!==0){ chg=(delta>0?'↑':'↓')+Math.abs(delta); chgColor=delta>0?'#4ec87a':'#ff5c35'; }
       else chg='─';
     }
+    const oshiVal = latestOshi(d);
+    const oshiCell = oshiVal!=null
+      ? `<span style="color:var(--text);">${fmtViews(oshiVal)}</span>`
+      : `<span style="color:var(--muted);font-size:0.7rem;">-</span>`;
     html+=`<tr>
       <td style="color:var(--muted);font-size:0.72rem;">${i+1}</td>
       <td style="text-align:left;">${dispName}</td>
@@ -3938,6 +3964,7 @@ function renderConceptBenefit() {
       <td style="color:var(--muted);">${nr}</td>
       <td style="font-weight:600;">${cr}</td>
       <td style="color:${chgColor};font-weight:600;">${chg}</td>
+      <td style="font-size:0.78rem;">${oshiCell}</td>
     </tr>`;
   });
   html+=`</tbody></table></div>`;
