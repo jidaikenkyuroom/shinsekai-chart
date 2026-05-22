@@ -3672,6 +3672,7 @@ function buildTPHTML(d) {
   const lv = typeof rawLevelData !== 'undefined' && rawLevelData[d.reading];
   const gb = typeof rawGroupBattleData !== 'undefined' && rawGroupBattleData[d.reading];
   const posRow = typeof rawPosBattle !== 'undefined' && rawPosBattle.find(r => r[1] === d.reading);
+  const conceptRow = typeof CONCEPT_TRACKER !== 'undefined' && CONCEPT_TRACKER.indiv.find(r => r.reading === d.reading);
 
   const latestVote = d.votes.length ? d.votes[d.votes.length - 1] : null;
   const isElim = latestVote === -1 || (latestVote != null && latestVote >= 36);
@@ -3737,6 +3738,37 @@ function buildTPHTML(d) {
       ${posTotalVotes ? `<div class="tp-row"><span class="tp-key">総獲得票数</span><span class="tp-val">${Number(posTotalVotes).toLocaleString()}票</span></div>` : ''}
       ${posPosRank ? `<div class="tp-row"><span class="tp-key">ポジバトル順位</span><span class="tp-val">${posPosRank}位</span></div>` : ''}
       <div class="tp-row"><span class="tp-key">チームメンバー</span><span class="tp-val">${posTeammates || '-'}</span></div>
+    </div>`;
+  }
+
+  if (conceptRow) {
+    const sc = CONCEPT_SONG_COLORS[conceptRow.song] || '#888';
+    const conceptTeammates = CONCEPT_TRACKER.indiv
+      .filter(r => r.song === conceptRow.song && r.reading !== d.reading)
+      .sort((a, b) => (a.teamRank||99) - (b.teamRank||99))
+      .map(r => tpLink(r.reading)).join('　');
+    const benefitDisp = conceptRow.benefit
+      ? `<span style="font-size:0.7rem;padding:1px 5px;border-radius:3px;background:rgba(255,215,0,0.2);color:#ffd700;margin-left:6px;">+${Number(conceptRow.benefit).toLocaleString()}票</span>` : '';
+    const winnerBadge = conceptRow.song === 'BLACK ANGEL'
+      ? ` <span style="font-size:0.62rem;padding:1px 4px;border-radius:3px;background:rgba(255,215,0,0.18);color:#ffd700;">🏆1位チーム</span>` : '';
+    let oshiLatest = null, oshiDate = '';
+    for(let i = CONCEPT_TRACKER.oshiDates.length - 1; i >= 0; i--){
+      if(conceptRow.oshi[i] != null){ oshiLatest = conceptRow.oshi[i]; oshiDate = CONCEPT_TRACKER.oshiDates[i]; break; }
+    }
+    const oshiDisp = oshiLatest != null
+      ? (oshiLatest >= 10000 ? (oshiLatest/10000).toFixed(1)+'万回' : oshiLatest.toLocaleString()+'回')
+        + (oshiDate ? ` <span style="font-size:0.68rem;color:var(--muted);">(${oshiDate})</span>` : '')
+      : null;
+    html += `<div class="tp-section">▼ コンセプトバトル</div>
+    <div class="tp-grid">
+      <div class="tp-row"><span class="tp-key">楽曲</span><span class="tp-val" style="color:${sc};font-weight:600;">${conceptRow.song}${winnerBadge}</span></div>
+      <div class="tp-row"><span class="tp-key">ポジション</span><span class="tp-val">${conceptRow.pos}</span></div>
+      ${conceptRow.teamRank != null ? `<div class="tp-row"><span class="tp-key">チーム内順位</span><span class="tp-val">${conceptRow.teamRank}位${benefitDisp}</span></div>` : ''}
+      ${conceptRow.indivVotes != null ? `<div class="tp-row"><span class="tp-key">個人獲得票数</span><span class="tp-val">${Number(conceptRow.indivVotes).toLocaleString()}票</span></div>` : ''}
+      ${conceptRow.totalVotes != null ? `<div class="tp-row"><span class="tp-key">総獲得票数</span><span class="tp-val">${Number(conceptRow.totalVotes).toLocaleString()}票</span></div>` : ''}
+      ${conceptRow.conceptRank != null ? `<div class="tp-row"><span class="tp-key">コンセプトバトル順位</span><span class="tp-val">${conceptRow.conceptRank}位</span></div>` : ''}
+      ${oshiDisp ? `<div class="tp-row"><span class="tp-key">推しカメラ再生数</span><span class="tp-val">${oshiDisp}</span></div>` : ''}
+      <div class="tp-row"><span class="tp-key">チームメンバー</span><span class="tp-val">${conceptTeammates || '-'}</span></div>
     </div>`;
   }
 
