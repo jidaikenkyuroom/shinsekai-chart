@@ -576,7 +576,7 @@ tr:hover td{background:var(--surface);}
       <p class="sub-label">推しカメラ再生数とコンセプトバトル個人順位の相関。点の色は楽曲。<span id="concept-oshi-date" style="margin-left:0.6em;opacity:0.55;font-size:0.85em;"></span></p>
       <div class="chart-wrap" style="height:460px;"><canvas id="chartConceptOshiScatter"></canvas></div>
       <h3 class="pos-group-label" style="margin-top:1.5rem;">▼ 推しカメラ再生数ランキング <span id="concept-oshi-bar-date" style="font-size:0.72rem;font-weight:normal;opacity:0.55;margin-left:0.4rem;"></span></h3>
-      <div class="chart-wrap" style="height:460px;"><canvas id="chartConceptOshiBar"></canvas></div>
+      <div class="chart-wrap" id="concept-oshi-bar-wrap"><canvas id="chartConceptOshiBar"></canvas></div>
     </div>
     <div id="ctab-highlight" style="display:none">
       <p class="sub-label">チーム別ハイライト・One Take Cam・NO CUT版再生数。</p>
@@ -3887,6 +3887,7 @@ function renderConceptOshi() {
 
   const barData = [...data].sort((a,b)=>(b.latestViews||0)-(a.latestViews||0));
   const barColors = barData.map(d=>CONCEPT_SONG_COLORS[d.song]||'#888');
+  document.getElementById('concept-oshi-bar-wrap').style.height = (barData.length * 26 + 60) + 'px';
   if(chartConceptOshiBar) chartConceptOshiBar.destroy();
   chartConceptOshiBar = new Chart(document.getElementById('chartConceptOshiBar'),{
     type:'bar',
