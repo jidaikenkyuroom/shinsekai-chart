@@ -177,7 +177,7 @@ tr:hover td{background:var(--surface);}
         <option value="abc">ABC順</option>
         <option value="cur">再生数順</option>
         <option value="growth">伸び率順</option>
-        <option value="rank">最新投票順位順</option>
+        <option value="rank" selected>最新投票順位順</option>
       </select>
       <button onclick="clearSelection()" style="font-size:0.72rem;padding:5px 10px;border-radius:5px;border:1px solid var(--border2);background:transparent;color:var(--muted);cursor:pointer;font-family:inherit;">クリア</button>
     </div>
@@ -1227,7 +1227,7 @@ function renderAll(){
     const elimBadgeAll = isElim ? ' <span class="badge badge-elim">脱落</span>' : '';
     const elimRowCls = isElim ? ' class="elim-row"' : '';
     html+=`<tr${elimRowCls}>
-      <td><span class="trainee-link" onclick="openTraineePanel('${d.reading}')">${d.name}</span>${elimBadgeAll}</td>
+      <td style="white-space:nowrap;"><span class="trainee-link" onclick="openTraineePanel('${d.reading}')">${d.name}</span>${elimBadgeAll}</td>
       <td style="color:var(--hint);font-size:0.7rem;">${d.reading}</td>
       <td style="text-align:center;">${d.classFirst}</td>
       <td style="text-align:center;" class="${cc}">${d.classEval}${arrow}</td>
