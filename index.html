@@ -3973,27 +3973,54 @@ function renderConceptHL() {
   }
 }
 
-function renderConceptBenefit() {
+let conceptBenefitSortKey = 'conceptRank';
+
+function renderConceptBenefit(sortKey) {
+  if(sortKey) conceptBenefitSortKey = sortKey;
   if(typeof CONCEPT_TRACKER==='undefined'){
     document.getElementById('concept-benefit-content').innerHTML='<p style="color:var(--muted)">データ読み込み中</p>';
     return;
   }
-  const sorted = [...CONCEPT_TRACKER.indiv].sort((a,b)=>(a.conceptRank||99)-(b.conceptRank||99));
 
-  // 推しカメラの最新日付と各メンバーの最新再生数を取得
+  // 推しカメラの最新インデックス
   let oshiLatestIdx = -1;
   for(let i=CONCEPT_TRACKER.oshiDates.length-1; i>=0; i--){
     if(CONCEPT_TRACKER.indiv.some(d => d.oshi[i]!=null)){ oshiLatestIdx=i; break; }
   }
+  function latestOshi(d) {
+    if(oshiLatestIdx<0) return null;
+    return d.oshi[oshiLatestIdx]??null;
+  }
+
+  const SORT_OPTIONS = [
+    {key:'conceptRank', label:'最終順位'},
+    {key:'nobenRank',   label:'ベネなし順位'},
+    {key:'oshi',        label:'推しカメラ再生数'},
+    {key:'name',        label:'名前'},
+  ];
+
+  function cmp(a, b) {
+    switch(conceptBenefitSortKey) {
+      case 'conceptRank': return (a.conceptRank||99)-(b.conceptRank||99);
+      case 'nobenRank':   return (a.nobenRank||99)-(b.nobenRank||99);
+      case 'oshi': {
+        const av=latestOshi(a)??-1, bv=latestOshi(b)??-1;
+        return bv-av;
+      }
+      case 'name': {
+        const an=(readingClassMap[a.reading]?.name||a.name), bn=(readingClassMap[b.reading]?.name||b.name);
+        return an.localeCompare(bn, 'ja');
+      }
+      default: return 0;
+    }
+  }
+  const sorted = [...CONCEPT_TRACKER.indiv].sort(cmp);
+
   const oshiDateLabel = oshiLatestIdx>=0 ? CONCEPT_TRACKER.oshiDates[oshiLatestIdx] : null;
   const oshiHeader = oshiDateLabel
     ? `推しカメラ<br><span style="font-size:0.6rem;font-weight:normal;color:var(--muted);">${oshiDateLabel}</span>`
     : `推しカメラ<br><span style="font-size:0.6rem;font-weight:normal;color:var(--muted);">未取得</span>`;
 
-  function latestOshi(d) {
-    if(oshiLatestIdx<0) return null;
-    return d.oshi[oshiLatestIdx]??null;
-  }
   function fmtViews(v) {
     if(v==null) return '-';
     if(v>=10000) return (v/10000).toFixed(1)+'万';
@@ -4001,7 +4028,12 @@ function renderConceptBenefit() {
     return String(v);
   }
 
-  let html=`<p class="sub-label" style="margin-bottom:1rem;">ベネフィット票なし順位と最終コンセプトバトル個人順位の比較。1位チーム（BLACK ANGEL）のメンバーがベネフィットでどれだけ順位を上げたかを可視化。</p>
+  const sortBtns = SORT_OPTIONS.map(o =>
+    `<button onclick="renderConceptBenefit('${o.key}')" style="font-size:0.72rem;padding:3px 10px;border-radius:12px;border:1px solid ${conceptBenefitSortKey===o.key?'var(--accent)':'rgba(255,255,255,0.15)'};background:${conceptBenefitSortKey===o.key?'rgba(200,184,255,0.18)':'transparent'};color:${conceptBenefitSortKey===o.key?'var(--accent)':'var(--muted)'};cursor:pointer;">${o.label}</button>`
+  ).join('');
+
+  let html=`<p class="sub-label" style="margin-bottom:0.6rem;">ベネフィット票なし順位と最終コンセプトバトル個人順位の比較。1位チーム（BLACK ANGEL）のメンバーがベネフィットでどれだけ順位を上げたかを可視化。</p>
+<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:1rem;">${sortBtns}</div>
 <div class="tbl-wrap"><table><thead><tr>
   <th>#</th><th style="text-align:left;">名前</th><th style="text-align:left;">楽曲</th>
   <th>個人票</th><th>ベネフィット</th><th>合計票</th><th>ベネなし順位</th><th>最終順位</th><th>変動</th><th>${oshiHeader}</th>
