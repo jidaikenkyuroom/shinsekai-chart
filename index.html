@@ -3822,8 +3822,6 @@ function renderConceptBattle() {
     const isWinner = t.song === 'BLACK ANGEL';
     const winnerBadge = isWinner
       ? `<span style="font-size:0.58rem;padding:1px 5px;border-radius:3px;background:rgba(255,215,0,0.18);color:#ffd700;margin-left:5px;">🏆 1位チーム</span>` : '';
-    const hlLink = t.hlVid
-      ? ` <a href="https://youtu.be/${t.hlVid}" target="_blank" rel="noopener" style="font-size:0.6rem;color:var(--muted);text-decoration:none;margin-left:4px;">▶HL</a>` : '';
     const memberHtml = members.map(m => {
       const mc = readingClassMap[m.reading];
       const dispName = mc ? mc.name : m.name;
@@ -3833,7 +3831,7 @@ function renderConceptBattle() {
       return `<div class="pos-member" style="display:flex;align-items:center;">${rankBadge}<span style="flex:1;">${dispName}${benefitBadge}</span>${rankEnd}</div>`;
     }).join('');
     return `<div class="pos-card" style="border-left:3px solid ${sc};">
-      <div class="pos-card-song" style="color:${sc};">${t.song}${winnerBadge}${hlLink}</div>
+      <div class="pos-card-song" style="color:${sc};">${t.song}${winnerBadge}</div>
       <div style="margin-top:0.5rem;">${memberHtml}</div>
     </div>`;
   }
