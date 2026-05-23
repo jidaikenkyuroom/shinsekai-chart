@@ -579,8 +579,13 @@ tr:hover td{background:var(--surface);}
       <div class="chart-wrap" style="height:460px;"><canvas id="chartConceptOshiBar"></canvas></div>
     </div>
     <div id="ctab-highlight" style="display:none">
-      <p class="sub-label">チーム別ハイライト動画再生数。<span id="concept-hl-date" style="margin-left:0.6em;opacity:0.55;font-size:0.85em;"></span></p>
-      <div class="chart-wrap" style="height:360px;"><canvas id="chartConceptHL"></canvas></div>
+      <p class="sub-label">チーム別ハイライト・One Take Cam・NO CUT版再生数。</p>
+      <h3 class="pos-group-label">▼ ハイライト <span id="concept-hl-date" style="font-size:0.72rem;font-weight:normal;opacity:0.55;margin-left:0.4rem;"></span></h3>
+      <div class="chart-wrap" style="height:320px;"><canvas id="chartConceptHL"></canvas></div>
+      <h3 class="pos-group-label" style="margin-top:1.5rem;">▼ One Take Cam <span id="concept-otc-date" style="font-size:0.72rem;font-weight:normal;opacity:0.55;margin-left:0.4rem;"></span></h3>
+      <div class="chart-wrap" style="height:320px;"><canvas id="chartConceptOTC"></canvas></div>
+      <h3 class="pos-group-label" style="margin-top:1.5rem;">▼ NO CUT版 <span id="concept-nocut-date" style="font-size:0.72rem;font-weight:normal;opacity:0.55;margin-left:0.4rem;"></span></h3>
+      <div class="chart-wrap" style="height:320px;"><canvas id="chartConceptNOCUT"></canvas></div>
     </div>
     <div id="ctab-benefit" style="display:none">
       <div id="concept-benefit-content"></div>
@@ -812,8 +817,10 @@ teams:[{"song":"My Grandfather's Clock","artist":"","broadcast":"後半組","mem
 const CONCEPT_TRACKER={
   oshiDates:[],
   hlDates:[],
+  otcDates:[],
+  nocutDates:[],
   indiv:[{"reading":"ADAM","name":"アダム・ナガイ","song":"DREAMER","pos":"ラッパー➀","indivVotes":4,"teamRank":7,"benefit":null,"totalVotes":4,"nobenRank":34,"conceptRank":34,"oshi":[]},{"reading":"AYUMU.S","name":"篠ヶ谷 歩夢","song":"Neko(ねこ)","pos":"サブボーカル④","indivVotes":5,"teamRank":7,"benefit":null,"totalVotes":5,"nobenRank":28,"conceptRank":28,"oshi":[]},{"reading":"CHISATO","name":"小林 千悟","song":"KICK","pos":"ラッパー③","indivVotes":5,"teamRank":6,"benefit":null,"totalVotes":5,"nobenRank":28,"conceptRank":28,"oshi":[]},{"reading":"DAIKI.K","name":"加藤 大樹","song":"Neko(ねこ)","pos":"サブボーカル②","indivVotes":11,"teamRank":4,"benefit":null,"totalVotes":11,"nobenRank":14,"conceptRank":15,"oshi":[]},{"reading":"GIUSEPPE","name":"小笠原 ジュゼッペ 慧","song":"Fuego","pos":"メインボーカル","indivVotes":5,"teamRank":5,"benefit":null,"totalVotes":5,"nobenRank":28,"conceptRank":28,"oshi":[]},{"reading":"GOTEN","name":"倉橋 吾槙","song":"KICK","pos":"ラッパー➀","indivVotes":15,"teamRank":1,"benefit":null,"totalVotes":15,"nobenRank":11,"conceptRank":13,"oshi":[]},{"reading":"HYEONSEUNG","name":"ユ・ヒョンスン","song":"Fuego","pos":"ラッパー③","indivVotes":7,"teamRank":3,"benefit":null,"totalVotes":7,"nobenRank":22,"conceptRank":22,"oshi":[]},{"reading":"HYUNJAE","name":"イ・ヒョンジェ","song":"Neko(ねこ)","pos":"サブボーカル➀","indivVotes":7,"teamRank":5,"benefit":null,"totalVotes":7,"nobenRank":22,"conceptRank":22,"oshi":[]},{"reading":"ISSA","name":"柳谷 伊冴","song":"DREAMER","pos":"サブボーカル➀","indivVotes":7,"teamRank":5,"benefit":null,"totalVotes":7,"nobenRank":22,"conceptRank":22,"oshi":[]},{"reading":"JAEYONG","name":"ユン・ジェヨン","song":"DREAMER","pos":"メインボーカル","indivVotes":11,"teamRank":3,"benefit":null,"totalVotes":11,"nobenRank":14,"conceptRank":15,"oshi":[]},{"reading":"KAICHI","name":"リュウ・カイチ","song":"DREAMER","pos":"サブボーカル④","indivVotes":5,"teamRank":6,"benefit":null,"totalVotes":5,"nobenRank":28,"conceptRank":28,"oshi":[]},{"reading":"KANAME","name":"横山 奏夢","song":"KICK","pos":"サブボーカル③","indivVotes":5,"teamRank":6,"benefit":null,"totalVotes":5,"nobenRank":28,"conceptRank":28,"oshi":[]},{"reading":"KEITO","name":"小野 慶人","song":"DREAMER","pos":"サブボーカル③","indivVotes":11,"teamRank":3,"benefit":null,"totalVotes":11,"nobenRank":14,"conceptRank":15,"oshi":[]},{"reading":"KINARI","name":"釼持 吉成","song":"BLACK ANGEL","pos":"ラッパー➀","indivVotes":27,"teamRank":2,"benefit":50000,"totalVotes":50027,"nobenRank":3,"conceptRank":2,"oshi":[]},{"reading":"KOSHIRO","name":"青沼 昂史朗","song":"DREAMER","pos":"サブボーカル②","indivVotes":17,"teamRank":2,"benefit":null,"totalVotes":17,"nobenRank":10,"conceptRank":12,"oshi":[]},{"reading":"KOSUKE","name":"照井 康祐","song":"Fuego","pos":"ラッパー②","indivVotes":19,"teamRank":1,"benefit":null,"totalVotes":19,"nobenRank":8,"conceptRank":10,"oshi":[]},{"reading":"KOTARO","name":"浅香 孝太郎","song":"KICK","pos":"サブボーカル②","indivVotes":7,"teamRank":5,"benefit":null,"totalVotes":7,"nobenRank":22,"conceptRank":22,"oshi":[]},{"reading":"MAKI","name":"田中 蒔","song":"Fuego","pos":"サブボーカル➀","indivVotes":2,"teamRank":7,"benefit":null,"totalVotes":2,"nobenRank":35,"conceptRank":35,"oshi":[]},{"reading":"OSUKE","name":"土田 央修","song":"Neko(ねこ)","pos":"サブボーカル③","indivVotes":21,"teamRank":2,"benefit":null,"totalVotes":21,"nobenRank":6,"conceptRank":9,"oshi":[]},{"reading":"REN.KO","name":"小清水 蓮","song":"Neko(ねこ)","pos":"ラッパー②","indivVotes":7,"teamRank":5,"benefit":null,"totalVotes":7,"nobenRank":22,"conceptRank":22,"oshi":[]},{"reading":"RICKEY","name":"チェン・リッキー","song":"Fuego","pos":"サブボーカル②","indivVotes":14,"teamRank":2,"benefit":null,"totalVotes":14,"nobenRank":12,"conceptRank":14,"oshi":[]},{"reading":"RIKUTO.I","name":"今江 陸斗","song":"Fuego","pos":"ラッパー➀","indivVotes":5,"teamRank":5,"benefit":null,"totalVotes":5,"nobenRank":28,"conceptRank":28,"oshi":[]},{"reading":"RYOGA","name":"飯塚 亮賀","song":"BLACK ANGEL","pos":"サブボーカル③","indivVotes":20,"teamRank":4,"benefit":30000,"totalVotes":30020,"nobenRank":7,"conceptRank":4,"oshi":[]},{"reading":"RYOTA","name":"石田 亮太","song":"KICK","pos":"サブボーカル➀","indivVotes":8,"teamRank":4,"benefit":null,"totalVotes":8,"nobenRank":21,"conceptRank":21,"oshi":[]},{"reading":"RYUJI","name":"杉山 竜司","song":"KICK","pos":"メインボーカル","indivVotes":9,"teamRank":2,"benefit":null,"totalVotes":9,"nobenRank":19,"conceptRank":19,"oshi":[]},{"reading":"SHINHAENG","name":"オ・シンヘン","song":"BLACK ANGEL","pos":"メインボーカル","indivVotes":32,"teamRank":1,"benefit":100000,"totalVotes":100032,"nobenRank":1,"conceptRank":1,"oshi":[]},{"reading":"SHU.Y","name":"山下 柊","song":"Neko(ねこ)","pos":"ラッパー➀","indivVotes":18,"teamRank":3,"benefit":null,"totalVotes":18,"nobenRank":9,"conceptRank":11,"oshi":[]},{"reading":"SIYOUNG","name":"パク・シヨン","song":"BLACK ANGEL","pos":"サブボーカル②","indivVotes":22,"teamRank":3,"benefit":40000,"totalVotes":40022,"nobenRank":4,"conceptRank":3,"oshi":[]},{"reading":"TAKUTO.K","name":"熊部 拓斗","song":"DREAMER","pos":"ラッパー②","indivVotes":22,"teamRank":1,"benefit":null,"totalVotes":22,"nobenRank":4,"conceptRank":8,"oshi":[]},{"reading":"TOWA","name":"濱田 永遠","song":"Fuego","pos":"メインラッパー","indivVotes":7,"teamRank":3,"benefit":null,"totalVotes":7,"nobenRank":22,"conceptRank":22,"oshi":[]},{"reading":"YOSHIKI","name":"矢田 佳暉","song":"Neko(ねこ)","pos":"メインボーカル","indivVotes":31,"teamRank":1,"benefit":null,"totalVotes":31,"nobenRank":2,"conceptRank":7,"oshi":[]},{"reading":"YUKI","name":"後藤 結","song":"BLACK ANGEL","pos":"ラッパー②","indivVotes":10,"teamRank":7,"benefit":0,"totalVotes":10,"nobenRank":18,"conceptRank":18,"oshi":[]},{"reading":"YUMA","name":"岡田 侑磨","song":"BLACK ANGEL","pos":"サブボーカル④","indivVotes":11,"teamRank":6,"benefit":10000,"totalVotes":10011,"nobenRank":14,"conceptRank":6,"oshi":[]},{"reading":"YURA","name":"安部 結蘭","song":"BLACK ANGEL","pos":"サブボーカル➀","indivVotes":13,"teamRank":5,"benefit":20000,"totalVotes":20013,"nobenRank":13,"conceptRank":5,"oshi":[]},{"reading":"YUSEI.O","name":"大林 悠成","song":"KICK","pos":"ラッパー②","indivVotes":9,"teamRank":2,"benefit":null,"totalVotes":9,"nobenRank":19,"conceptRank":19,"oshi":[]}],
-  teams:[{"song":"DREAMER","members":["ADAM","ISSA","JAEYONG","KAICHI","KEITO","KOSHIRO","TAKUTO.K"],"hlVid":"SPzdcBVXPfQ","hlViews":[]},{"song":"Neko(ねこ)","members":["AYUMU.S","DAIKI.K","HYUNJAE","OSUKE","REN.KO","SHU.Y","YOSHIKI"],"hlVid":"qgBdnwTw6Rg","hlViews":[]},{"song":"KICK","members":["CHISATO","GOTEN","KANAME","KOTARO","RYOTA","RYUJI","YUSEI.O"],"hlVid":"XYJ_SB9glSc","hlViews":[]},{"song":"Fuego","members":["GIUSEPPE","HYEONSEUNG","KOSUKE","MAKI","RICKEY","RIKUTO.I","TOWA"],"hlVid":"84zROYzQHkc","hlViews":[]},{"song":"BLACK ANGEL","members":["KINARI","RYOGA","SHINHAENG","SIYOUNG","YUKI","YUMA","YURA"],"hlVid":"DdJMFfLVDXk","hlViews":[]}]
+  teams:[{"song":"DREAMER","members":["ADAM","ISSA","JAEYONG","KAICHI","KEITO","KOSHIRO","TAKUTO.K"],"hlVid":"SPzdcBVXPfQ","hlViews":[],"otcVid":"","otcViews":[],"nocutVid":"","nocutViews":[]},{"song":"Neko(ねこ)","members":["AYUMU.S","DAIKI.K","HYUNJAE","OSUKE","REN.KO","SHU.Y","YOSHIKI"],"hlVid":"qgBdnwTw6Rg","hlViews":[],"otcVid":"","otcViews":[],"nocutVid":"","nocutViews":[]},{"song":"KICK","members":["CHISATO","GOTEN","KANAME","KOTARO","RYOTA","RYUJI","YUSEI.O"],"hlVid":"XYJ_SB9glSc","hlViews":[],"otcVid":"","otcViews":[],"nocutVid":"","nocutViews":[]},{"song":"Fuego","members":["GIUSEPPE","HYEONSEUNG","KOSUKE","MAKI","RICKEY","RIKUTO.I","TOWA"],"hlVid":"84zROYzQHkc","hlViews":[],"otcVid":"","otcViews":[],"nocutVid":"","nocutViews":[]},{"song":"BLACK ANGEL","members":["KINARI","RYOGA","SHINHAENG","SIYOUNG","YUKI","YUMA","YURA"],"hlVid":"DdJMFfLVDXk","hlViews":[],"otcVid":"","otcViews":[],"nocutVid":"","nocutViews":[]}]
 };
 
 const RANK_423_IDX = VOTE_DATES.indexOf("4月23日");
@@ -3785,7 +3792,7 @@ const CONCEPT_SONG_COLORS = {
 };
 
 let currentConceptTab = 'list';
-let chartConceptOshiScatter = null, chartConceptOshiBar = null, chartConceptHL = null;
+let chartConceptOshiScatter = null, chartConceptOshiBar = null, chartConceptHL = null, chartConceptOTC = null, chartConceptNOCUT = null;
 
 function switchConceptTab(tab) {
   currentConceptTab = tab;
@@ -3902,38 +3909,70 @@ function renderConceptOshi() {
 
 function renderConceptHL() {
   if(typeof CONCEPT_TRACKER==='undefined') return;
-  function latestHL(t){ for(let i=t.hlViews.length-1;i>=0;i--){if(t.hlViews[i]!=null)return t.hlViews[i];}return null; }
-  const teams = CONCEPT_TRACKER.teams.filter(t=>latestHL(t)!=null);
-  if(!teams.length){
-    document.getElementById('ctab-highlight').innerHTML+=
-      '<p style="color:var(--muted);padding:1rem 0;">ハイライトデータはまだありません。次回の自動更新後に表示されます。</p>';
-    return;
-  }
-  const lastDate = CONCEPT_TRACKER.hlDates.slice(-1)[0]||'';
-  document.getElementById('concept-hl-date').textContent = `データ基準: ${lastDate}`;
-  const sorted = [...teams].sort((a,b)=>(latestHL(b)||0)-(latestHL(a)||0));
-  if(chartConceptHL) chartConceptHL.destroy();
-  chartConceptHL = new Chart(document.getElementById('chartConceptHL'),{
-    type:'bar',
-    data:{
-      labels:sorted.map(t=>t.song),
-      datasets:[{
-        label:'ハイライト再生数',
-        data:sorted.map(t=>latestHL(t)),
-        backgroundColor:sorted.map(t=>(CONCEPT_SONG_COLORS[t.song]||'#888')+'99'),
-        borderColor:sorted.map(t=>CONCEPT_SONG_COLORS[t.song]||'#888'),
-        borderWidth:1,
-      }]
-    },
-    options:{
-      responsive:true, maintainAspectRatio:false,
-      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.parsed.y!=null?c.parsed.y.toLocaleString()+'回':'-'}}},
-      scales:{
-        x:{ticks:{color:'#ccc'},grid:{display:false}},
-        y:{ticks:{color:'#888',callback:v=>v>=10000?+(v/10000).toFixed(1)+'万':v},grid:{color:'rgba(255,255,255,0.05)'}},
+
+  function latestViews(arr){ for(let i=arr.length-1;i>=0;i--){if(arr[i]!=null)return arr[i];}return null; }
+
+  function renderBarChart(canvasId, teams, getViews, label) {
+    const data = teams.filter(t=>getViews(t)!=null);
+    if(!data.length) return false;
+    const sorted = [...data].sort((a,b)=>(getViews(b)||0)-(getViews(a)||0));
+    const existing = Chart.getChart(canvasId);
+    if(existing) existing.destroy();
+    new Chart(document.getElementById(canvasId),{
+      type:'bar',
+      data:{
+        labels:sorted.map(t=>t.song),
+        datasets:[{
+          label,
+          data:sorted.map(t=>getViews(t)),
+          backgroundColor:sorted.map(t=>(CONCEPT_SONG_COLORS[t.song]||'#888')+'99'),
+          borderColor:sorted.map(t=>CONCEPT_SONG_COLORS[t.song]||'#888'),
+          borderWidth:1,
+        }]
+      },
+      options:{
+        responsive:true, maintainAspectRatio:false,
+        plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.parsed.y!=null?c.parsed.y.toLocaleString()+'回':'-'}}},
+        scales:{
+          x:{ticks:{color:'#ccc'},grid:{display:false}},
+          y:{ticks:{color:'#888',callback:v=>v>=10000?+(v/10000).toFixed(1)+'万':v},grid:{color:'rgba(255,255,255,0.05)'}},
+        }
       }
-    }
-  });
+    });
+    return true;
+  }
+
+  const teams = CONCEPT_TRACKER.teams;
+
+  // ハイライト
+  const hlOk = renderBarChart('chartConceptHL', teams, t=>latestViews(t.hlViews), 'ハイライト再生数');
+  if(hlOk){
+    const lastDate = CONCEPT_TRACKER.hlDates.slice(-1)[0]||'';
+    document.getElementById('concept-hl-date').textContent = `基準: ${lastDate}`;
+  }
+
+  // One Take Cam
+  const otcOk = renderBarChart('chartConceptOTC', teams, t=>latestViews(t.otcViews||[]), 'One Take Cam再生数');
+  if(otcOk){
+    const lastDate = (CONCEPT_TRACKER.otcDates||[]).slice(-1)[0]||'';
+    document.getElementById('concept-otc-date').textContent = `基準: ${lastDate}`;
+  } else {
+    document.getElementById('concept-otc-date').textContent = '（データ未取得）';
+  }
+
+  // NO CUT
+  const nocutOk = renderBarChart('chartConceptNOCUT', teams, t=>latestViews(t.nocutViews||[]), 'NO CUT版再生数');
+  if(nocutOk){
+    const lastDate = (CONCEPT_TRACKER.nocutDates||[]).slice(-1)[0]||'';
+    document.getElementById('concept-nocut-date').textContent = `基準: ${lastDate}`;
+  } else {
+    document.getElementById('concept-nocut-date').textContent = '（データ未取得）';
+  }
+
+  if(!hlOk && !otcOk && !nocutOk){
+    document.getElementById('ctab-highlight').insertAdjacentHTML('beforeend',
+      '<p style="color:var(--muted);padding:1rem 0;">動画データはまだありません。次回の自動更新後に表示されます。</p>');
+  }
 }
 
 function renderConceptBenefit() {
