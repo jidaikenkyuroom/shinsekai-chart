@@ -159,6 +159,8 @@ tr:hover td{background:var(--surface);}
   <button class="tab" onclick="switchTab('analysis')">背景分析</button>
   <button class="tab" onclick="switchTab('battle')">グループバトル</button>
   <button class="tab" onclick="switchTab('pos')">ポジションバトル</button>
+  <button class="tab" onclick="switchTab('concept')">コンセプトバトル</button>
+  <button class="tab" onclick="switchTab('voteanalysis')">票数分析</button>
 </div>
 <div class="main">
 
@@ -176,7 +178,7 @@ tr:hover td{background:var(--surface);}
         <option value="abc">ABC順</option>
         <option value="cur">再生数順</option>
         <option value="growth">伸び率順</option>
-        <option value="rank">最新投票順位順</option>
+        <option value="rank" selected>最新投票順位順</option>
       </select>
       <button onclick="clearSelection()" style="font-size:0.72rem;padding:5px 10px;border-radius:5px;border:1px solid var(--border2);background:transparent;color:var(--muted);cursor:pointer;font-family:inherit;">クリア</button>
     </div>
@@ -560,6 +562,157 @@ tr:hover td{background:var(--surface);}
     </div>
   </div>
 
+  <div id="tab-concept" class="section">
+    <blockquote style="border-left:3px solid var(--border2);background:var(--surface);padding:0.8rem 1.1rem;margin-bottom:1.25rem;border-radius:0 5px 5px 0;font-size:0.76rem;color:var(--text);opacity:0.75;line-height:1.8;">
+      書き下ろしオリジナル楽曲5曲でチームに分かれてパフォーマンス。国民プロデューサー投票でチーム内順位が決定。1位チーム全体に25万ptのベネフィットが付与（1位→10万pt・2位→5万pt・3位→4万pt・4位→3万pt・5位→2万pt・6位→1万pt・7位→0pt）。全チーム終了翌週に第三回順位発表式（21位以下脱落、20名通過）。
+    </blockquote>
+    <div class="g-tabs" id="concept-tabs">
+      <button class="g-tab active" onclick="switchConceptTab('list')">チーム一覧</button>
+      <button class="g-tab" onclick="switchConceptTab('oshi')">推しカメラ</button>
+      <button class="g-tab" onclick="switchConceptTab('highlight')">チーム別動画再生数</button>
+      <button class="g-tab" onclick="switchConceptTab('contrib')">チーム寄与度</button>
+      <button class="g-tab" onclick="switchConceptTab('benefit')">ベネフィット効果</button>
+    </div>
+    <div id="ctab-list"><div id="concept-list"></div></div>
+    <div id="ctab-oshi" style="display:none">
+      <p class="sub-label">推しカメラ再生数とコンセプトバトル個人順位の相関。点の色は楽曲。<span id="concept-oshi-date" style="margin-left:0.6em;opacity:0.55;font-size:0.85em;"></span></p>
+      <div class="chart-wrap" style="height:460px;"><canvas id="chartConceptOshiScatter"></canvas></div>
+      <h3 class="pos-group-label" style="margin-top:1.5rem;">▼ 推しカメラ再生数ランキング <span id="concept-oshi-bar-date" style="font-size:0.72rem;font-weight:normal;opacity:0.55;margin-left:0.4rem;"></span></h3>
+      <div class="chart-wrap" id="concept-oshi-bar-wrap"><canvas id="chartConceptOshiBar"></canvas></div>
+    </div>
+    <div id="ctab-highlight" style="display:none">
+      <p class="sub-label">チーム別ハイライト・One Take Cam・NO CUT版再生数。</p>
+      <h3 class="pos-group-label">▼ ハイライト <span id="concept-hl-date" style="font-size:0.72rem;font-weight:normal;opacity:0.55;margin-left:0.4rem;"></span></h3>
+      <div class="chart-wrap" style="height:320px;"><canvas id="chartConceptHL"></canvas></div>
+      <h3 class="pos-group-label" style="margin-top:1.5rem;">▼ One Take Cam <span id="concept-otc-date" style="font-size:0.72rem;font-weight:normal;opacity:0.55;margin-left:0.4rem;"></span></h3>
+      <div class="chart-wrap" style="height:320px;"><canvas id="chartConceptOTC"></canvas></div>
+      <h3 class="pos-group-label" style="margin-top:1.5rem;">▼ NO CUT版 <span id="concept-nocut-date" style="font-size:0.72rem;font-weight:normal;opacity:0.55;margin-left:0.4rem;"></span></h3>
+      <div class="chart-wrap" style="height:320px;"><canvas id="chartConceptNOCUT"></canvas></div>
+      <h3 class="pos-group-label" style="margin-top:1.5rem;">▼ RELAY DANCE ver. <span id="concept-rd-date" style="font-size:0.72rem;font-weight:normal;opacity:0.55;margin-left:0.4rem;"></span></h3>
+      <div class="chart-wrap" style="height:320px;"><canvas id="chartConceptRD"></canvas></div>
+      <h3 class="pos-group-label" style="margin-top:1.5rem;">▼ Full ver. <span id="concept-full-date" style="font-size:0.72rem;font-weight:normal;opacity:0.55;margin-left:0.4rem;"></span></h3>
+      <div class="chart-wrap" style="height:320px;"><canvas id="chartConceptFull"></canvas></div>
+    </div>
+    <div id="ctab-contrib" style="display:none">
+      <div id="concept-contrib-content"></div>
+    </div>
+    <div id="ctab-benefit" style="display:none">
+      <div id="concept-benefit-content"></div>
+    </div>
+  </div>
+
+  <div id="tab-voteanalysis" class="section">
+    <blockquote style="border-left:3px solid var(--border2);background:var(--surface);padding:0.8rem 1.1rem;margin-bottom:1.25rem;border-radius:0 5px 5px 0;font-size:0.76rem;color:var(--text);opacity:0.75;line-height:1.8;">
+      各順位発表式での国民pt・SEKAIptの内訳を分析します。第1〜4回の順位発表データから、誰が「国民型」「SEKAI型」かを可視化します。★印はグローバルランカー対象（GR枠上位12位以内）。<br>
+      グラフは <span style="color:#f09878;">■ 国民pt</span> ＋ <span style="color:#60c8e0;">■ SEKAIpt</span> ＋ <span style="color:#ffd700;">■ ベネフィット</span> の積み上げで構成。ベネフィットはバトルステージの現場投票で獲得した加算票（第1回＝グループバトル、第2回＝ポジションバトル、第3回＝コンセプトバトル）。ベネフィットを多く受けた練習生ほど金色部分が大きく表示されます。
+    </blockquote>
+    <div class="g-tabs" id="va-tabs">
+      <button class="g-tab active" onclick="switchVoteTab('ratio')">① 国民/SEKAI割合</button>
+      <button class="g-tab" onclick="switchVoteTab('scatter')">② 散布図</button>
+      <button class="g-tab" onclick="switchVoteTab('trend')">③ 順位推移</button>
+      <button class="g-tab" onclick="switchVoteTab('rankdiff')">④ ランク差テーブル</button>
+    </div>
+    <div id="vatab-ratio">
+      <div class="row" style="margin-bottom:1rem;flex-wrap:wrap;gap:0.5rem;">
+        <span class="label">回:</span>
+        <select id="va-ratio-event" onchange="renderVoteRatio()"></select>
+        <span class="label">並び替え:</span>
+        <select id="va-ratio-sort" onchange="renderVoteRatio()">
+          <option value="sekai">SEKAI比率順（高い順）</option>
+          <option value="nat">国民比率順（高い順）</option>
+          <option value="rank" selected>総合順位順</option>
+          <option value="abc">ABC順</option>
+        </select>
+        <select id="va-ratio-filter" onchange="renderVoteRatio()">
+          <option value="active">通過者のみ</option>
+          <option value="all">全員</option>
+        </select>
+      </div>
+      <div id="va-ratio-legend" style="display:flex;gap:1.2rem;font-size:0.72rem;color:var(--muted);margin-bottom:0.75rem;flex-wrap:wrap;">
+        <span><span style="display:inline-block;width:12px;height:12px;background:#f09878;border-radius:2px;margin-right:4px;vertical-align:middle;"></span>国民pt</span>
+        <span><span style="display:inline-block;width:12px;height:12px;background:#60c8e0;border-radius:2px;margin-right:4px;vertical-align:middle;"></span>SEKAIpt</span>
+        <span><span style="display:inline-block;width:12px;height:12px;background:#ffd700;border-radius:2px;margin-right:4px;vertical-align:middle;"></span>ベネフィット</span>
+        <span style="color:#ffd700;">★ = GR対象（GR枠1〜12位）</span>
+      </div>
+      <div class="chart-wrap" id="va-ratio-wrap"><canvas id="va-ratio-chart"></canvas></div>
+    </div>
+    <div id="vatab-scatter" style="display:none;">
+      <div class="row" style="margin-bottom:1rem;flex-wrap:wrap;gap:0.5rem;">
+        <span class="label">回:</span>
+        <select id="va-scatter-event" onchange="renderVoteScatter()"></select>
+        <select id="va-scatter-filter" onchange="renderVoteScatter()">
+          <option value="active">通過者のみ</option>
+          <option value="all">全員</option>
+        </select>
+      </div>
+      <p class="sub-label" style="margin-bottom:1.2rem;">X軸＝国民pt、Y軸＝SEKAIpt。右上ほど両方から支持。点の色は順位帯（<span style="color:#c8b8ff;">■ 1〜12位</span> <span style="color:#88aacc;">■ 13〜35位</span> <span style="color:#556677;">■ 36位以下</span>）。枠線金色はGR対象。クリックで個人カードを表示。</p>
+      <div class="chart-wrap" style="height:500px;"><canvas id="va-scatter-chart"></canvas></div>
+    </div>
+    <div id="vatab-trend" style="display:none;">
+      <div style="background:var(--surface);border:1px solid var(--border2);border-radius:8px;padding:0.85rem 1.1rem;margin-bottom:1rem;font-size:0.76rem;line-height:2;color:var(--text);">
+        <div style="font-weight:bold;color:#ccc;margin-bottom:0.3rem;font-size:0.8rem;">グラフの見方 / 操作手順</div>
+        <div><span style="display:inline-block;background:#2a4a6a;color:#a8c8f0;border-radius:4px;padding:1px 8px;font-size:0.7rem;font-weight:bold;margin-right:6px;vertical-align:middle;">Step 1</span>下の練習生リストからクリックして選択（最大8名）。名前/コードで絞り込み可。</div>
+        <div><span style="display:inline-block;background:#2a4a6a;color:#a8c8f0;border-radius:4px;padding:1px 8px;font-size:0.7rem;font-weight:bold;margin-right:6px;vertical-align:middle;">Step 2</span>必要に応じて「表示する線」ボタンで不要な線種を非表示に切り替え。</div>
+        <div style="margin-top:0.4rem;display:flex;gap:1.4rem;flex-wrap:wrap;color:var(--muted);font-size:0.72rem;">
+          <span>─── 総合順位（実線）</span>
+          <span>╌╌╌ 国民pt順位（破線）</span>
+          <span>··· SEKAIpt順位（点線）</span>
+        </div>
+      </div>
+      <div class="row" style="margin-bottom:0.6rem;flex-wrap:wrap;gap:0.5rem;align-items:center;">
+        <input type="text" id="va-trend-search" placeholder="名前 or ABCで絞り込み..." oninput="filterVaTrendPicker()" style="width:200px;">
+        <button onclick="clearVaTrendSelection()" style="font-size:0.72rem;padding:5px 10px;border-radius:5px;border:1px solid var(--border2);background:transparent;color:var(--muted);cursor:pointer;font-family:inherit;">クリア</button>
+        <span id="va-trend-count" style="font-size:0.72rem;color:var(--muted);">0 / 8 選択中</span>
+      </div>
+      <div class="picker" id="va-trend-picker" style="margin-bottom:1rem;"></div>
+      <div style="display:flex;gap:0.5rem;margin-bottom:0.9rem;flex-wrap:wrap;align-items:center;">
+        <span style="font-size:0.72rem;color:var(--muted);white-space:nowrap;">表示する線:</span>
+        <button id="va-line-toggle-overall" onclick="toggleVaTrendLine('overall')"
+          style="font-size:0.72rem;padding:5px 13px;border-radius:5px;border:1px solid #666;background:rgba(255,255,255,0.1);color:#ddd;cursor:pointer;font-family:inherit;transition:opacity .15s;">─── 総合順位</button>
+        <button id="va-line-toggle-nat" onclick="toggleVaTrendLine('nat')"
+          style="font-size:0.72rem;padding:5px 13px;border-radius:5px;border:1px solid #666;background:rgba(240,152,120,0.15);color:#f09878;cursor:pointer;font-family:inherit;transition:opacity .15s;">╌╌╌ 国民pt順位</button>
+        <button id="va-line-toggle-sekai" onclick="toggleVaTrendLine('sekai')"
+          style="font-size:0.72rem;padding:5px 13px;border-radius:5px;border:1px solid #666;background:rgba(96,200,224,0.12);color:#60c8e0;cursor:pointer;font-family:inherit;transition:opacity .15s;">··· SEKAIpt順位</button>
+      </div>
+      <div class="chart-wrap" style="height:480px;"><canvas id="va-trend-chart"></canvas></div>
+    </div>
+    <div id="vatab-rankdiff" style="display:none;">
+      <p class="sub-label" style="margin-bottom:0.75rem;">国民pt順位とSEKAIpt順位の差を一覧表示。差分＝国民pt順位−SEKAIpt順位。正の値はSEKAIが相対的に高い（SEKAI型）、負の値は国民が相対的に高い（国民型）。列見出しクリックで並び替え。</p>
+      <div class="row" style="margin-bottom:1rem;flex-wrap:wrap;gap:0.5rem;">
+        <span class="label">回:</span>
+        <select id="va-rd-event" onchange="renderVoteRankDiff()"></select>
+        <select id="va-rd-filter" onchange="renderVoteRankDiff()">
+          <option value="active">通過者のみ</option>
+          <option value="all">全員</option>
+        </select>
+      </div>
+      <div style="overflow-x:auto;">
+        <table id="va-rd-table" style="width:100%;border-collapse:collapse;font-size:0.8rem;">
+          <thead>
+            <tr>
+              <th onclick="sortVaRankDiff('rank')" style="cursor:pointer;padding:7px 10px;text-align:center;border-bottom:1px solid var(--border2);color:var(--muted);white-space:nowrap;">総合順位 <span id="va-rd-sort-rank"></span></th>
+              <th onclick="sortVaRankDiff('name')" style="cursor:pointer;padding:7px 10px;text-align:left;border-bottom:1px solid var(--border2);color:var(--muted);white-space:nowrap;">名前 <span id="va-rd-sort-name"></span></th>
+              <th onclick="sortVaRankDiff('natRank')" style="cursor:pointer;padding:7px 10px;text-align:center;border-bottom:1px solid var(--border2);color:#f09878;white-space:nowrap;">国民pt順位 <span id="va-rd-sort-natRank"></span></th>
+              <th onclick="sortVaRankDiff('sekaiRank')" style="cursor:pointer;padding:7px 10px;text-align:center;border-bottom:1px solid var(--border2);color:#60c8e0;white-space:nowrap;">SEKAIpt順位 <span id="va-rd-sort-sekaiRank"></span></th>
+              <th onclick="sortVaRankDiff('diff')" style="cursor:pointer;padding:7px 10px;text-align:center;border-bottom:1px solid var(--border2);color:var(--muted);white-space:nowrap;">差分<br><span style="font-size:0.65rem;font-weight:normal;">（国民順位−SEKAI順位）</span> <span id="va-rd-sort-diff"></span></th>
+              <th style="padding:7px 10px;text-align:center;border-bottom:1px solid var(--border2);color:var(--muted);white-space:nowrap;">タイプ</th>
+            </tr>
+          </thead>
+          <tbody id="va-rd-tbody"></tbody>
+        </table>
+      </div>
+      <p style="font-size:0.7rem;color:var(--muted);margin-top:1rem;line-height:1.8;">
+        タイプ判定：差分≥+5 →
+        <span style="background:#1a3a5a;color:#60c8e0;border-radius:4px;padding:2px 7px;font-size:0.68rem;">SEKAI型</span>
+        、差分≤−5 →
+        <span style="background:#3a2010;color:#f09878;border-radius:4px;padding:2px 7px;font-size:0.68rem;">国民型</span>
+        、それ以外 →
+        <span style="background:#2a2a2a;color:#aaa;border-radius:4px;padding:2px 7px;font-size:0.68rem;">均衡型</span>
+        。差分の絶対値が大きいほど一方向への偏りが強い。
+      </p>
+    </div>
+  </div>
+
 </div>
 <div id="trendTooltip" style="display:none;position:fixed;pointer-events:none;z-index:300;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:11px 14px;min-width:190px;max-width:230px;box-shadow:0 4px 20px rgba(0,0,0,0.5);"></div>
 <script>
@@ -569,6 +722,7 @@ tr:hover td{background:var(--surface);}
 // {{AUTO_LEVEL_DATA}}
 // {{AUTO_GROUP_BATTLE_DATA}}
 // {{AUTO_TRACKER_DATA}}
+// {{AUTO_CONCEPT_DATA}}
 
 const RANK_423_IDX = VOTE_DATES.indexOf("4月23日");
 const LATEST_RANK_IDX = VOTE_DATES.length - 1;
@@ -737,7 +891,7 @@ function loadSelection(){
 }
 
 function switchTab(t){
-  ['watch','all','trend','heat','analysis','battle','pos'].forEach((id,i)=>{
+  ['watch','all','trend','heat','analysis','battle','pos','concept','voteanalysis'].forEach((id,i)=>{
     document.getElementById('tab-'+id).classList.toggle('active',id===t);
     document.querySelectorAll('.tab')[i].classList.toggle('active',id===t);
   });
@@ -747,6 +901,8 @@ function switchTab(t){
   if(t==='heat') renderHeatmap();
   if(t==='analysis') renderVoteBreakdown();
   if(t==='battle') renderBattle();
+  if(t==='concept') renderConceptBattle();
+  if(t==='voteanalysis') initVoteAnalysis();
 }
 
 function switchGraph(type){
@@ -971,7 +1127,7 @@ function renderAll(){
     const elimBadgeAll = isElim ? ' <span class="badge badge-elim">脱落</span>' : '';
     const elimRowCls = isElim ? ' class="elim-row"' : '';
     html+=`<tr${elimRowCls}>
-      <td><span class="trainee-link" onclick="openTraineePanel('${d.reading}')">${d.name}</span>${elimBadgeAll}</td>
+      <td style="white-space:nowrap;"><span class="trainee-link" onclick="openTraineePanel('${d.reading}')">${d.name}</span>${elimBadgeAll}</td>
       <td style="color:var(--hint);font-size:0.7rem;">${d.reading}</td>
       <td style="text-align:center;">${d.classFirst}</td>
       <td style="text-align:center;" class="${cc}">${d.classEval}${arrow}</td>
@@ -2975,6 +3131,8 @@ function renderBattleTiming() {
 
 // ── レポートアーカイブ ──
 const REPORTS = [
+  { date:'2026/05/14', title:'ポジションバトル 推しカメラ・YouTube数値 分析', file:'reports/pos_battle_report_20260514.html' },
+  { date:'2026/05/14', title:'第二回順位発表式 票差・票構造 分析', file:'reports/rank2_report_20260514.html' },
   { date:'2026/04/23', title:'第一回順位発表式 票差・票構造 分析', file:'reports/rank1_report_20260423.html' },
   { date:'2026/04/17', title:'動画再生数×クラス 相関分析', file:'reports/battle_report_20260417.html' },
   { date:'2026/04/16', title:'グループバトル後半組 放送直前 数値分析', file:'reports/battle_report_20260416.html' },
@@ -2983,6 +3141,10 @@ const REPORTS = [
 
 // type: 'vote'=投票, 'broadcast'=配信, 'release'=公開, 'record'=収録, 'announce'=発表
 const TIMELINE = [
+  { date:'2026-06-06', label:'ファイナル（最終回・番組生放送）', type:'broadcast', note:'上位12名がグループメンバーとしてデビュー決定' },
+  { date:'2026-05-28', label:'第三回順位発表式（配信第十話）', type:'broadcast' },
+  { date:'2026-05-24', label:'SHINSEKAI 第3回投票締め切り', type:'vote', note:'5/14〜5/21の積算が第三回順位に反映' },
+  { date:'2026-05-23', label:'コンセプトバトル（配信第九話）', type:'broadcast' },
   { date:'2026-05-14', label:'第二回順位発表式（配信第八話）', type:'broadcast', note:'35位まで生存、36位以下は脱落' },
   { date:'2026-05-08', label:'SHINSEKAI 第2回投票締め切り', type:'vote', note:'4/23〜5/8の積算が第二回順位に反映' },
   { date:'2026-04-24', label:'第2回現場評価 番組収録', type:'record', note:'この辺でようやく配信と現場収録のタイミングが合ってくる' },
@@ -3413,6 +3575,7 @@ function buildTPHTML(d) {
   const lv = typeof rawLevelData !== 'undefined' && rawLevelData[d.reading];
   const gb = typeof rawGroupBattleData !== 'undefined' && rawGroupBattleData[d.reading];
   const posRow = typeof rawPosBattle !== 'undefined' && rawPosBattle.find(r => r[1] === d.reading);
+  const conceptRow = typeof CONCEPT_TRACKER !== 'undefined' && CONCEPT_TRACKER.indiv.find(r => r.reading === d.reading);
 
   const latestVote = d.votes.length ? d.votes[d.votes.length - 1] : null;
   const isElim = latestVote === -1 || (latestVote != null && latestVote >= 36);
@@ -3481,8 +3644,957 @@ function buildTPHTML(d) {
     </div>`;
   }
 
+  if (conceptRow) {
+    const sc = CONCEPT_SONG_COLORS[conceptRow.song] || '#888';
+    const conceptTeammates = CONCEPT_TRACKER.indiv
+      .filter(r => r.song === conceptRow.song && r.reading !== d.reading)
+      .sort((a, b) => (a.teamRank||99) - (b.teamRank||99))
+      .map(r => tpLink(r.reading)).join('　');
+    const benefitDisp = conceptRow.benefit
+      ? `<span style="font-size:0.7rem;padding:1px 5px;border-radius:3px;background:rgba(255,215,0,0.2);color:#ffd700;margin-left:6px;">+${Number(conceptRow.benefit).toLocaleString()}票</span>` : '';
+    const winnerBadge = conceptRow.song === 'BLACK ANGEL'
+      ? ` <span style="font-size:0.62rem;padding:1px 4px;border-radius:3px;background:rgba(255,215,0,0.18);color:#ffd700;">🏆1位チーム</span>` : '';
+    let oshiLatest = null, oshiDate = '';
+    for(let i = CONCEPT_TRACKER.oshiDates.length - 1; i >= 0; i--){
+      if(conceptRow.oshi[i] != null){ oshiLatest = conceptRow.oshi[i]; oshiDate = CONCEPT_TRACKER.oshiDates[i]; break; }
+    }
+    const oshiDisp = oshiLatest != null
+      ? (oshiLatest >= 10000 ? (oshiLatest/10000).toFixed(1)+'万回' : oshiLatest.toLocaleString()+'回')
+        + (oshiDate ? ` <span style="font-size:0.68rem;color:var(--muted);">(${oshiDate})</span>` : '')
+      : null;
+    html += `<div class="tp-section">▼ コンセプトバトル</div>
+    <div class="tp-grid">
+      <div class="tp-row"><span class="tp-key">楽曲</span><span class="tp-val" style="color:${sc};font-weight:600;">${conceptRow.song}${winnerBadge}</span></div>
+      <div class="tp-row"><span class="tp-key">ポジション</span><span class="tp-val">${conceptRow.pos}</span></div>
+      ${conceptRow.teamRank != null ? `<div class="tp-row"><span class="tp-key">チーム内順位</span><span class="tp-val">${conceptRow.teamRank}位${benefitDisp}</span></div>` : ''}
+      ${conceptRow.indivVotes != null ? `<div class="tp-row"><span class="tp-key">個人獲得票数</span><span class="tp-val">${Number(conceptRow.indivVotes).toLocaleString()}票</span></div>` : ''}
+      ${conceptRow.totalVotes != null ? `<div class="tp-row"><span class="tp-key">総獲得票数</span><span class="tp-val">${Number(conceptRow.totalVotes).toLocaleString()}票</span></div>` : ''}
+      ${conceptRow.conceptRank != null ? `<div class="tp-row"><span class="tp-key">コンセプトバトル順位</span><span class="tp-val">${conceptRow.conceptRank}位</span></div>` : ''}
+      ${oshiDisp ? `<div class="tp-row"><span class="tp-key">推しカメラ再生数</span><span class="tp-val">${oshiDisp}</span></div>` : ''}
+      <div class="tp-row"><span class="tp-key">チームメンバー</span><span class="tp-val">${conceptTeammates || '-'}</span></div>
+    </div>`;
+  }
+
   return html;
 }
+
+// ===== コンセプトバトル =====
+const CONCEPT_SONG_COLORS = {
+  'BLACK ANGEL': '#c8b8ff',
+  'DREAMER':     '#60c8e0',
+  'Fuego':       '#f09878',
+  'KICK':        '#4ec87a',
+  'Neko(ねこ)':  '#f0c040',
+};
+
+let currentConceptTab = 'list';
+let chartConceptOshiScatter = null, chartConceptOshiBar = null, chartConceptHL = null, chartConceptOTC = null, chartConceptNOCUT = null, chartConceptRD = null, chartConceptFull = null;
+
+function switchConceptTab(tab) {
+  currentConceptTab = tab;
+  ['list','oshi','highlight','contrib','benefit'].forEach(t => {
+    document.getElementById('ctab-'+t).style.display = t===tab ? '' : 'none';
+  });
+  document.querySelectorAll('#concept-tabs .g-tab').forEach((el,i) => {
+    el.classList.toggle('active', ['list','oshi','highlight','contrib','benefit'][i]===tab);
+  });
+  if(tab==='oshi')      renderConceptOshi();
+  if(tab==='highlight') renderConceptHL();
+  if(tab==='contrib')   renderConceptContrib();
+  if(tab==='benefit')   renderConceptBenefit();
+}
+
+function renderConceptBattle() {
+  if(typeof CONCEPT_TRACKER==='undefined'){
+    document.getElementById('concept-list').innerHTML='<p style="color:var(--muted);padding:1rem 0;">データ読み込み中</p>';
+    return;
+  }
+  const indivMap = {};
+  CONCEPT_TRACKER.indiv.forEach(d => { indivMap[d.reading] = d; });
+
+  function teamCard(t) {
+    const sc = CONCEPT_SONG_COLORS[t.song] || '#888';
+    const members = t.members.map(r => indivMap[r]).filter(Boolean)
+      .sort((a,b) => (a.teamRank||99)-(b.teamRank||99));
+    const isWinner = t.song === 'BLACK ANGEL';
+    const winnerBadge = isWinner
+      ? `<span style="font-size:0.58rem;padding:1px 5px;border-radius:3px;background:rgba(255,215,0,0.18);color:#ffd700;margin-left:5px;">🏆 1位チーム</span>` : '';
+    const memberHtml = members.map(m => {
+      const mc = readingClassMap[m.reading];
+      const dispName = mc ? mc.name : m.name;
+      const rankBadge = m.teamRank!=null ? `<span style="font-size:0.6rem;color:#aaa;margin-right:3px;">${m.teamRank}位</span>` : '';
+      const benefitBadge = m.benefit ? `<span style="font-size:0.56rem;padding:0 3px;border-radius:3px;background:rgba(255,215,0,0.18);color:#ffd700;margin-left:2px;">+${Number(m.benefit).toLocaleString()}</span>` : '';
+      const rankEnd = m.conceptRank!=null ? `<span style="font-size:0.6rem;color:var(--muted);margin-left:auto;">${m.conceptRank}位</span>` : '';
+      return `<div class="pos-member" style="display:flex;align-items:center;">${rankBadge}<span style="flex:1;">${dispName}${benefitBadge}</span>${rankEnd}</div>`;
+    }).join('');
+    return `<div class="pos-card" style="border-left:3px solid ${sc};">
+      <div class="pos-card-song" style="color:${sc};">${t.song}${winnerBadge}</div>
+      <div style="margin-top:0.5rem;">${memberHtml}</div>
+    </div>`;
+  }
+
+  const songOrder = ['BLACK ANGEL','DREAMER','Fuego','KICK','Neko(ねこ)'];
+  const sorted = [...songOrder.map(s=>CONCEPT_TRACKER.teams.find(t=>t.song===s)).filter(Boolean),
+                  ...CONCEPT_TRACKER.teams.filter(t=>!songOrder.includes(t.song))];
+  document.getElementById('concept-list').innerHTML =
+    `<div class="pos-grid">${sorted.map(teamCard).join('')}</div>`;
+}
+
+function renderConceptOshi() {
+  if(typeof CONCEPT_TRACKER==='undefined') return;
+  const data = CONCEPT_TRACKER.indiv.map(d => {
+    let lv = null;
+    for(let i=d.oshi.length-1;i>=0;i--){ if(d.oshi[i]!=null){lv=d.oshi[i];break;} }
+    return {...d, latestViews:lv};
+  }).filter(d => d.latestViews!=null);
+
+  if(!data.length){
+    document.getElementById('ctab-oshi').innerHTML=
+      `<p style="color:var(--muted);padding:2rem 0;">推しカメラデータはまだありません。次回の自動更新後に表示されます。</p>`;
+    return;
+  }
+  const lastDate = CONCEPT_TRACKER.oshiDates.slice(-1)[0]||'';
+  document.getElementById('concept-oshi-date').textContent = `データ基準: ${lastDate}`;
+  document.getElementById('concept-oshi-bar-date').textContent = lastDate;
+
+  const songSet = [...new Set(data.map(d=>d.song))];
+  const scDS = songSet.map(song => {
+    const sc = CONCEPT_SONG_COLORS[song]||'#888';
+    return {
+      label: song,
+      data: data.filter(d=>d.song===song).map(d=>({x:d.latestViews,y:d.conceptRank,label:d.name,reading:d.reading})),
+      backgroundColor: sc+'bb', borderColor: sc, pointRadius: 6,
+    };
+  });
+  if(chartConceptOshiScatter) chartConceptOshiScatter.destroy();
+  chartConceptOshiScatter = new Chart(document.getElementById('chartConceptOshiScatter'),{
+    type:'scatter', data:{datasets:scDS},
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{
+        legend:{labels:{color:'#aaa',font:{size:11}}},
+        tooltip:{callbacks:{label:c=>`${c.raw.label}（${c.raw.reading}）: ${c.parsed.x.toLocaleString()}回 / ${c.parsed.y}位`}}
+      },
+      scales:{
+        x:{ticks:{color:'#888'},grid:{color:'rgba(255,255,255,0.05)'},title:{display:true,text:'推しカメラ再生数',color:'#888'}},
+        y:{reverse:true,ticks:{color:'#888',callback:v=>v+'位'},grid:{color:'rgba(255,255,255,0.05)'},title:{display:true,text:'コンセプトバトル個人順位',color:'#888'}},
+      }
+    }
+  });
+
+  const barData = [...data].sort((a,b)=>(b.latestViews||0)-(a.latestViews||0));
+  const barColors = barData.map(d=>CONCEPT_SONG_COLORS[d.song]||'#888');
+  document.getElementById('concept-oshi-bar-wrap').style.height = (barData.length * 26 + 60) + 'px';
+  if(chartConceptOshiBar) chartConceptOshiBar.destroy();
+  chartConceptOshiBar = new Chart(document.getElementById('chartConceptOshiBar'),{
+    type:'bar',
+    data:{
+      labels:barData.map(d=>d.name),
+      datasets:[{data:barData.map(d=>d.latestViews),backgroundColor:barColors.map(c=>c+'99'),borderColor:barColors,borderWidth:1}]
+    },
+    options:{
+      indexAxis:'y', responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.parsed.x.toLocaleString()+'回'}}},
+      scales:{
+        x:{ticks:{color:'#888',callback:v=>v>=10000?+(v/10000).toFixed(1)+'万':v},grid:{color:'rgba(255,255,255,0.05)'}},
+        y:{ticks:{color:'#ccc',font:{size:10}}},
+      }
+    }
+  });
+}
+
+function renderConceptHL() {
+  if(typeof CONCEPT_TRACKER==='undefined') return;
+
+  function latestViews(arr){ for(let i=arr.length-1;i>=0;i--){if(arr[i]!=null)return arr[i];}return null; }
+
+  function renderBarChart(canvasId, teams, getViews, label) {
+    const data = teams.filter(t=>getViews(t)!=null);
+    if(!data.length) return false;
+    const sorted = [...data].sort((a,b)=>(getViews(b)||0)-(getViews(a)||0));
+    const existing = Chart.getChart(canvasId);
+    if(existing) existing.destroy();
+    new Chart(document.getElementById(canvasId),{
+      type:'bar',
+      data:{
+        labels:sorted.map(t=>t.song),
+        datasets:[{
+          label,
+          data:sorted.map(t=>getViews(t)),
+          backgroundColor:sorted.map(t=>(CONCEPT_SONG_COLORS[t.song]||'#888')+'99'),
+          borderColor:sorted.map(t=>CONCEPT_SONG_COLORS[t.song]||'#888'),
+          borderWidth:1,
+        }]
+      },
+      options:{
+        responsive:true, maintainAspectRatio:false,
+        plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.parsed.y!=null?c.parsed.y.toLocaleString()+'回':'-'}}},
+        scales:{
+          x:{ticks:{color:'#ccc'},grid:{display:false}},
+          y:{ticks:{color:'#888',callback:v=>v>=10000?+(v/10000).toFixed(1)+'万':v},grid:{color:'rgba(255,255,255,0.05)'}},
+        }
+      }
+    });
+    return true;
+  }
+
+  const teams = CONCEPT_TRACKER.teams;
+
+  // ハイライト
+  const hlOk = renderBarChart('chartConceptHL', teams, t=>latestViews(t.hlViews), 'ハイライト再生数');
+  if(hlOk){
+    const lastDate = CONCEPT_TRACKER.hlDates.slice(-1)[0]||'';
+    document.getElementById('concept-hl-date').textContent = `基準: ${lastDate}`;
+  }
+
+  // One Take Cam
+  const otcOk = renderBarChart('chartConceptOTC', teams, t=>latestViews(t.otcViews||[]), 'One Take Cam再生数');
+  if(otcOk){
+    const lastDate = (CONCEPT_TRACKER.otcDates||[]).slice(-1)[0]||'';
+    document.getElementById('concept-otc-date').textContent = `基準: ${lastDate}`;
+  } else {
+    document.getElementById('concept-otc-date').textContent = '（データ未取得）';
+  }
+
+  // NO CUT
+  const nocutOk = renderBarChart('chartConceptNOCUT', teams, t=>latestViews(t.nocutViews||[]), 'NO CUT版再生数');
+  if(nocutOk){
+    const lastDate = (CONCEPT_TRACKER.nocutDates||[]).slice(-1)[0]||'';
+    document.getElementById('concept-nocut-date').textContent = `基準: ${lastDate}`;
+  } else {
+    document.getElementById('concept-nocut-date').textContent = '（データ未取得）';
+  }
+
+  // RELAY DANCE
+  const rdOk = renderBarChart('chartConceptRD', teams, t=>latestViews(t.rdViews||[]), 'RELAY DANCE再生数');
+  if(rdOk){
+    const lastDate = (CONCEPT_TRACKER.rdDates||[]).slice(-1)[0]||'';
+    document.getElementById('concept-rd-date').textContent = `基準: ${lastDate}`;
+  } else {
+    document.getElementById('concept-rd-date').textContent = '（データ未取得）';
+  }
+
+  // Full ver.
+  const fullOk = renderBarChart('chartConceptFull', teams, t=>latestViews(t.fullViews||[]), 'Full ver.再生数');
+  if(fullOk){
+    const lastDate = (CONCEPT_TRACKER.fullDates||[]).slice(-1)[0]||'';
+    document.getElementById('concept-full-date').textContent = `基準: ${lastDate}`;
+  } else {
+    document.getElementById('concept-full-date').textContent = '（データ未取得）';
+  }
+
+  if(!hlOk && !otcOk && !nocutOk && !rdOk && !fullOk){
+    document.getElementById('ctab-highlight').insertAdjacentHTML('beforeend',
+      '<p style="color:var(--muted);padding:1rem 0;">動画データはまだありません。次回の自動更新後に表示されます。</p>');
+  }
+}
+
+function renderConceptContrib() {
+  if(typeof CONCEPT_TRACKER==='undefined'){
+    document.getElementById('concept-contrib-content').innerHTML='<p style="color:var(--hint)">データ読み込み中</p>';
+    return;
+  }
+
+  // 最新推しカメラインデックス
+  let oshiLatestIdx = -1;
+  for(let i=CONCEPT_TRACKER.oshiDates.length-1; i>=0; i--){
+    if(CONCEPT_TRACKER.indiv.some(d=>d.oshi[i]!=null)){ oshiLatestIdx=i; break; }
+  }
+  const lastOshi = oshiLatestIdx>=0 ? CONCEPT_TRACKER.oshiDates[oshiLatestIdx] : '';
+
+  if(oshiLatestIdx<0){
+    document.getElementById('concept-contrib-content').innerHTML=
+      '<p style="color:var(--muted);padding:1rem 0;">推しカメラデータはまだありません。次回の自動更新後に表示されます。</p>';
+    return;
+  }
+
+  const indivMap = {};
+  CONCEPT_TRACKER.indiv.forEach(d=>{ indivMap[d.reading]=d; });
+
+  const songOrder = ['BLACK ANGEL','DREAMER','Fuego','KICK','Neko(ねこ)'];
+  const teams = CONCEPT_TRACKER.teams.map(t => {
+    const members = t.members
+      .map(r => { const d=indivMap[r]; return d ? {reading:r, name:d.name, views:d.oshi[oshiLatestIdx]??0} : null; })
+      .filter(Boolean)
+      .sort((a,b)=>b.views-a.views);
+    const oshiTotal = members.reduce((s,m)=>s+m.views,0);
+    return {...t, members, oshiTotal};
+  }).sort((a,b)=>b.oshiTotal-a.oshiTotal);
+
+  function concLabel(t1pct, gap) {
+    if(t1pct>=45) return ['★★★ 1人依存','#ff9060'];
+    if(gap>=12)   return ['★★  やや集中','#e0c060'];
+    return           ['★   分散型',  '#60c8a0'];
+  }
+
+  // サマリーテーブル
+  let html=`<p class="sub-label" style="margin-bottom:0.5rem;">チーム内占有率 ＝ そのメンバーの推しカメラ ÷ チーム全員の推しカメラ合計。</p>
+<p class="sub-label" style="opacity:0.55;margin-bottom:1.5rem;">推しカメラ基準日: ${lastOshi}</p>
+<div class="tbl-wrap" style="margin-bottom:2rem;">
+<table><thead><tr>
+  <th style="text-align:left;">楽曲</th><th>推しカメラ合計</th>
+  <th style="text-align:left;">TOP1</th><th>TOP1占有率</th><th style="text-align:left;">集中度</th>
+</tr></thead><tbody>`;
+
+  teams.forEach(t=>{
+    if(!t.members.length||t.oshiTotal===0) return;
+    const sc   = CONCEPT_SONG_COLORS[t.song]||'#888';
+    const t1   = t.members[0], t2 = t.members[1];
+    const t1pct = t1.views/t.oshiTotal*100;
+    const gap   = t2 ? t1pct-t2.views/t.oshiTotal*100 : t1pct;
+    const [cl,clr] = concLabel(t1pct,gap);
+    html+=`<tr>
+      <td style="color:${sc};font-size:0.73rem;">♪${t.song}</td>
+      <td>${t.oshiTotal.toLocaleString()}</td>
+      <td style="text-align:left;font-size:0.72rem;">${t1.reading}</td>
+      <td>${t1pct.toFixed(0)}%</td>
+      <td style="text-align:left;font-size:0.67rem;color:${clr};">${cl}</td>
+    </tr>`;
+  });
+  html+=`</tbody></table></div>`;
+
+  // チーム別棒グラフカード
+  html+=`<div style="font-size:0.78rem;font-weight:500;color:var(--accent);font-family:monospace;margin-bottom:1.25rem;padding-bottom:0.4rem;border-bottom:1px solid var(--border2);">チーム別詳細</div>`;
+
+  const sorted = [...songOrder.map(s=>teams.find(t=>t.song===s)).filter(Boolean),
+                  ...teams.filter(t=>!songOrder.includes(t.song))];
+  sorted.forEach(t=>{
+    if(!t.members.length||t.oshiTotal===0) return;
+    const sc = CONCEPT_SONG_COLORS[t.song]||'#888';
+    const t1 = t.members[0], t2 = t.members[1];
+    const t1pct = t1.views/t.oshiTotal*100;
+    const gap   = t2 ? t1pct-t2.views/t.oshiTotal*100 : t1pct;
+    const [cl,clr] = concLabel(t1pct,gap);
+    let bars='';
+    t.members.forEach((m,i)=>{
+      const pct=m.views/t.oshiTotal*100;
+      const top=i===0;
+      bars+=`<div style="display:flex;align-items:center;gap:7px;margin-bottom:3px;">
+        <div style="width:74px;font-size:0.68rem;color:${top?sc:'var(--muted)'};font-family:monospace;text-align:right;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${m.name}">${m.reading}</div>
+        <div style="width:30px;font-size:0.64rem;color:var(--hint);font-family:monospace;text-align:right;flex-shrink:0;">${pct.toFixed(0)}%</div>
+        <div style="flex:1;background:rgba(255,255,255,0.05);border-radius:2px;height:12px;overflow:hidden;">
+          <div style="width:${pct.toFixed(1)}%;background:${sc}${top?'bb':'40'};height:100%;${top?'border-right:2px solid '+sc+';':''}min-width:2px;border-radius:2px;"></div>
+        </div>
+        <div style="width:72px;font-size:0.65rem;font-family:monospace;color:${top?sc:'var(--hint)'};text-align:right;flex-shrink:0;">${m.views.toLocaleString()}</div>
+      </div>`;
+    });
+    html+=`<div style="background:var(--surface);border-radius:8px;padding:0.85rem 1rem;margin-bottom:0.85rem;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:0.55rem;flex-wrap:wrap;">
+        <div style="width:3px;border-radius:2px;background:${sc};align-self:stretch;min-height:20px;flex-shrink:0;"></div>
+        <span style="font-size:0.78rem;font-weight:600;color:${sc};">${t.song}</span>
+        <span style="font-size:0.65rem;color:${clr};font-family:monospace;margin-left:auto;">${cl}</span>
+      </div>
+      <div style="display:flex;gap:1.2rem;font-size:0.65rem;color:var(--muted);font-family:monospace;margin-bottom:0.65rem;flex-wrap:wrap;">
+        <span>推しカメラ計 <b style="color:var(--text);">${t.oshiTotal.toLocaleString()}</b></span>
+      </div>
+      ${bars}
+    </div>`;
+  });
+  document.getElementById('concept-contrib-content').innerHTML=html;
+}
+
+let conceptBenefitSortKey = 'conceptRank';
+
+function renderConceptBenefit(sortKey) {
+  if(sortKey) conceptBenefitSortKey = sortKey;
+  if(typeof CONCEPT_TRACKER==='undefined'){
+    document.getElementById('concept-benefit-content').innerHTML='<p style="color:var(--muted)">データ読み込み中</p>';
+    return;
+  }
+
+  // 推しカメラの最新インデックス
+  let oshiLatestIdx = -1;
+  for(let i=CONCEPT_TRACKER.oshiDates.length-1; i>=0; i--){
+    if(CONCEPT_TRACKER.indiv.some(d => d.oshi[i]!=null)){ oshiLatestIdx=i; break; }
+  }
+  function latestOshi(d) {
+    if(oshiLatestIdx<0) return null;
+    return d.oshi[oshiLatestIdx]??null;
+  }
+
+  const SORT_OPTIONS = [
+    {key:'conceptRank', label:'最終順位'},
+    {key:'nobenRank',   label:'ベネなし順位'},
+    {key:'oshi',        label:'推しカメラ再生数'},
+    {key:'name',        label:'名前'},
+  ];
+
+  function cmp(a, b) {
+    switch(conceptBenefitSortKey) {
+      case 'conceptRank': return (a.conceptRank||99)-(b.conceptRank||99);
+      case 'nobenRank':   return (a.nobenRank||99)-(b.nobenRank||99);
+      case 'oshi': {
+        const av=latestOshi(a)??-1, bv=latestOshi(b)??-1;
+        return bv-av;
+      }
+      case 'name': {
+        const an=(readingClassMap[a.reading]?.name||a.name), bn=(readingClassMap[b.reading]?.name||b.name);
+        return an.localeCompare(bn, 'ja');
+      }
+      default: return 0;
+    }
+  }
+  const sorted = [...CONCEPT_TRACKER.indiv].sort(cmp);
+
+  const oshiDateLabel = oshiLatestIdx>=0 ? CONCEPT_TRACKER.oshiDates[oshiLatestIdx] : null;
+  const oshiHeader = oshiDateLabel
+    ? `推しカメラ<br><span style="font-size:0.6rem;font-weight:normal;color:var(--muted);">${oshiDateLabel}</span>`
+    : `推しカメラ<br><span style="font-size:0.6rem;font-weight:normal;color:var(--muted);">未取得</span>`;
+
+  function fmtViews(v) {
+    if(v==null) return '-';
+    if(v>=10000) return (v/10000).toFixed(1)+'万';
+    if(v>=1000)  return (v/1000).toFixed(1)+'k';
+    return String(v);
+  }
+
+  const sortBtns = SORT_OPTIONS.map(o =>
+    `<button onclick="renderConceptBenefit('${o.key}')" style="font-size:0.72rem;padding:3px 10px;border-radius:12px;border:1px solid ${conceptBenefitSortKey===o.key?'var(--accent)':'rgba(255,255,255,0.15)'};background:${conceptBenefitSortKey===o.key?'rgba(200,184,255,0.18)':'transparent'};color:${conceptBenefitSortKey===o.key?'var(--accent)':'var(--muted)'};cursor:pointer;">${o.label}</button>`
+  ).join('');
+
+  let html=`<p class="sub-label" style="margin-bottom:0.6rem;">ベネフィット票なし順位と最終コンセプトバトル個人順位の比較。1位チーム（BLACK ANGEL）のメンバーがベネフィットでどれだけ順位を上げたかを可視化。</p>
+<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:1rem;">${sortBtns}</div>
+<div class="tbl-wrap"><table><thead><tr>
+  <th>#</th><th style="text-align:left;">名前</th><th style="text-align:left;">楽曲</th>
+  <th>個人票</th><th>ベネフィット</th><th>合計票</th><th>ベネなし順位</th><th>最終順位</th><th>変動</th><th>${oshiHeader}</th>
+</tr></thead><tbody>`;
+  sorted.forEach((d,i)=>{
+    const sc  = CONCEPT_SONG_COLORS[d.song]||'#888';
+    const mc  = readingClassMap[d.reading];
+    const dispName = mc ? mc.name : d.name;
+    const ben = d.benefit!=null ? `+${Number(d.benefit).toLocaleString()}` : '-';
+    const nr  = d.nobenRank!=null ? d.nobenRank+'位' : '-';
+    const cr  = d.conceptRank!=null ? d.conceptRank+'位' : '-';
+    let chg='-', chgColor='#888';
+    if(d.nobenRank!=null && d.conceptRank!=null){
+      const delta=d.nobenRank-d.conceptRank;
+      if(delta!==0){ chg=(delta>0?'↑':'↓')+Math.abs(delta); chgColor=delta>0?'#4ec87a':'#ff5c35'; }
+      else chg='─';
+    }
+    const oshiVal = latestOshi(d);
+    const oshiCell = oshiVal!=null
+      ? `<span style="color:var(--text);">${fmtViews(oshiVal)}</span>`
+      : `<span style="color:var(--muted);font-size:0.7rem;">-</span>`;
+    html+=`<tr>
+      <td style="color:var(--muted);font-size:0.72rem;">${i+1}</td>
+      <td style="text-align:left;">${dispName}</td>
+      <td><span style="font-size:0.65rem;color:${sc};">♪${d.song}</span></td>
+      <td>${d.indivVotes!=null?d.indivVotes:'-'}</td>
+      <td style="color:#ffd700;font-size:0.72rem;">${ben}</td>
+      <td>${d.totalVotes!=null?Number(d.totalVotes).toLocaleString():'-'}</td>
+      <td style="color:var(--muted);">${nr}</td>
+      <td style="font-weight:600;">${cr}</td>
+      <td style="color:${chgColor};font-weight:600;">${chg}</td>
+      <td style="font-size:0.78rem;">${oshiCell}</td>
+    </tr>`;
+  });
+  html+=`</tbody></table></div>`;
+  document.getElementById('concept-benefit-content').innerHTML=html;
+}
+// ===== コンセプトバトルここまで =====
+
+// ===== 票数分析 =====
+let vaRatioChart = null, vaScatterChart = null;
+let vaInited = false;
+
+// 通過ボーダー（SEKAI枠除く本線）
+const VA_PASS_THRESHOLD = {'第1回': 50, '第2回': 35, '第3回': 20, '第4回': 12};
+
+function initVoteAnalysis() {
+  if(!vaInited) {
+    const sel = document.getElementById('va-ratio-event');
+    if(typeof RANK_EVENT_KEYS !== 'undefined') {
+      ['va-ratio-event','va-scatter-event'].forEach(selId => {
+        const s = document.getElementById(selId);
+        RANK_EVENT_KEYS.forEach(k => {
+          const opt = document.createElement('option');
+          opt.value = k; opt.textContent = k + '順位発表式';
+          s.appendChild(opt);
+        });
+        if(s.options.length) s.selectedIndex = s.options.length - 1;
+      });
+    }
+    vaInited = true;
+  }
+  renderVoteRatio();
+}
+
+function switchVoteTab(tab) {
+  ['ratio','scatter','trend','rankdiff'].forEach(t => {
+    document.getElementById('vatab-'+t).style.display = t===tab ? '' : 'none';
+  });
+  document.querySelectorAll('#va-tabs .g-tab').forEach((el,i) => {
+    el.classList.toggle('active', ['ratio','scatter','trend','rankdiff'][i]===tab);
+  });
+  if(tab==='ratio')    renderVoteRatio();
+  if(tab==='scatter')  renderVoteScatter();
+  if(tab==='trend')    { buildVaTrendPicker(); renderVoteTrend(); }
+  if(tab==='rankdiff') renderVoteRankDiff();
+}
+
+function renderVoteScatter() {
+  if(typeof rawRankData === 'undefined') return;
+  const eventKey = document.getElementById('va-scatter-event').value;
+  const filter   = document.getElementById('va-scatter-filter').value;
+  const thresh   = VA_PASS_THRESHOLD[eventKey] || 999;
+
+  let items = (rawRankData[eventKey] || [])
+    .filter(r => r[3] != null && r[4] != null && r[5] > 0)
+    .map(r => {
+      const [reading, rank, grRank, natPt, sekaiPt, totalPt] = r;
+      const isGR = grRank != null && grRank <= 12;
+      return {reading, rank, grRank, natPt, sekaiPt, totalPt, isGR};
+    });
+
+  if(filter === 'active') items = items.filter(d => d.rank <= thresh || d.isGR);
+
+  // 順位帯で3グループに分けてdatasets化
+  function tierColor(rank) {
+    if(rank <= 12) return '#c8b8ff';
+    if(rank <= 35) return '#88aacc';
+    return '#556677';
+  }
+  function tierLabel(rank) {
+    if(rank <= 12) return '1〜12位';
+    if(rank <= 35) return '13〜35位';
+    return '36位以下';
+  }
+
+  const tierKeys = ['1〜12位','13〜35位','36位以下'];
+  const tierColors = {'1〜12位':'#c8b8ff','13〜35位':'#88aacc','36位以下':'#556677'};
+
+  const grouped = {'1〜12位':[], '13〜35位':[], '36位以下':[]};
+  items.forEach(d => { grouped[tierLabel(d.rank||999)].push(d); });
+
+  const datasets = tierKeys.map(tier => ({
+    label: tier,
+    data: grouped[tier].map(d => ({
+      x: d.natPt, y: d.sekaiPt,
+      reading: d.reading, rank: d.rank, grRank: d.grRank, isGR: d.isGR,
+      name: readingClassMap[d.reading]?.name || d.reading,
+      totalPt: d.totalPt,
+      sekaiPct: d.totalPt > 0 ? (d.sekaiPt/d.totalPt*100).toFixed(1) : '-',
+    })),
+    backgroundColor: tierColors[tier] + 'bb',
+    borderColor: grouped[tier].map(d => d.isGR ? '#ffd700' : tierColors[tier]),
+    borderWidth: grouped[tier].map(d => d.isGR ? 2 : 1),
+    pointRadius: 7,
+    pointHoverRadius: 9,
+  }));
+
+  if(vaScatterChart) { vaScatterChart.destroy(); vaScatterChart = null; }
+  const canvas = document.getElementById('va-scatter-chart');
+  vaScatterChart = new Chart(canvas, {
+    type: 'scatter',
+    data: { datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { labels: { color: '#aaa', font: { size: 11 } } },
+        tooltip: {
+          callbacks: {
+            label: ctx => {
+              const p = ctx.raw;
+              const gr = p.isGR ? ` ★GR${p.grRank}位` : '';
+              return [
+                `${p.name}（${p.reading}）`,
+                `総合: ${p.rank != null ? p.rank+'位' : '-'}${gr}`,
+                `国民pt: ${p.x.toLocaleString()}`,
+                `SEKAIpt: ${p.y.toLocaleString()}（${p.sekaiPct}%）`,
+              ];
+            }
+          }
+        }
+      },
+      onClick: (e, elements) => {
+        if(elements.length) {
+          const p = elements[0].element.$context.raw;
+          if(p.reading) openTraineePanel(p.reading);
+        }
+      },
+      scales: {
+        x: {
+          ticks: { color:'#888', callback: v => v>=1000000?(v/1000000).toFixed(1)+'M':v>=1000?(v/1000).toFixed(0)+'k':v },
+          grid: { color:'rgba(255,255,255,0.05)' },
+          title: { display:true, text:'国民pt', color:'#888' }
+        },
+        y: {
+          ticks: { color:'#888', callback: v => v>=1000000?(v/1000000).toFixed(1)+'M':v>=1000?(v/1000).toFixed(0)+'k':v },
+          grid: { color:'rgba(255,255,255,0.05)' },
+          title: { display:true, text:'SEKAIpt', color:'#888' }
+        }
+      }
+    }
+  });
+}
+
+function renderVoteRatio() {
+  if(typeof rawRankData === 'undefined') return;
+  const eventKey = document.getElementById('va-ratio-event').value;
+  const sort      = document.getElementById('va-ratio-sort').value;
+  const filter    = document.getElementById('va-ratio-filter').value;
+
+  const eventRows = rawRankData[eventKey] || [];
+  // [reading, rank, grRank, natPt, sekaiPt, totalPt]
+
+  const thresh = VA_PASS_THRESHOLD[eventKey] || 999;
+
+  let items = eventRows
+    .filter(r => r[5] != null && r[5] > 0)
+    .map(r => {
+      const [reading, rank, grRank, natPt, sekaiPt, totalPt] = r;
+      const nat = natPt || 0, sekai = sekaiPt || 0, total = (totalPt || 1);
+      const benefit = Math.max(0, total - nat - sekai);
+      const isGR = grRank != null && grRank <= 12;
+      return {reading, rank, grRank, natPt: nat, sekaiPt: sekai, benefit, totalPt: total,
+              natPct: nat/total*100, sekaiPct: sekai/total*100, benefitPct: benefit/total*100, isGR};
+    });
+
+  if(filter === 'active') {
+    items = items.filter(d => d.rank <= thresh || d.isGR);
+  }
+
+  if(sort === 'sekai')      items.sort((a,b) => b.sekaiPct - a.sekaiPct);
+  else if(sort === 'nat')   items.sort((a,b) => b.natPct - a.natPct);
+  else if(sort === 'rank')  items.sort((a,b) => (a.rank||999) - (b.rank||999));
+  else                       items.sort((a,b) => a.reading.localeCompare(b.reading));
+
+  const labels = items.map(d => {
+    const name = readingClassMap[d.reading]?.name || d.reading;
+    return (d.isGR ? '★ ' : '') + name;
+  });
+  const tickColors = items.map(d => d.isGR ? '#ffd700' : '#ccc');
+
+  document.getElementById('va-ratio-wrap').style.height = (items.length * 24 + 60) + 'px';
+
+  if(vaRatioChart) { vaRatioChart.destroy(); vaRatioChart = null; }
+  vaRatioChart = new Chart(document.getElementById('va-ratio-chart'), {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        {
+          label: '国民pt',
+          data: items.map(d => +d.natPct.toFixed(2)),
+          backgroundColor: '#f0987899',
+          borderColor: 'transparent',
+          borderWidth: 0,
+        },
+        {
+          label: 'SEKAIpt',
+          data: items.map(d => +d.sekaiPct.toFixed(2)),
+          backgroundColor: '#60c8e099',
+          borderColor: 'transparent',
+          borderWidth: 0,
+        },
+        {
+          label: 'ベネフィット',
+          data: items.map(d => +d.benefitPct.toFixed(2)),
+          backgroundColor: '#ffd70099',
+          borderColor: 'transparent',
+          borderWidth: 0,
+        }
+      ]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            title: ctx => {
+              const d = items[ctx[0].dataIndex];
+              const name = readingClassMap[d.reading]?.name || d.reading;
+              return `${name}（${d.reading}）${d.isGR ? ' ★GR' + d.grRank + '位' : ''}`;
+            },
+            label: ctx => {
+              const d = items[ctx.dataIndex];
+              if(ctx.datasetIndex === 0) {
+                return [
+                  `総合順位: ${d.rank != null ? d.rank+'位' : '-'}`,
+                  `国民pt: ${d.natPt.toLocaleString()}（${d.natPct.toFixed(1)}%）`,
+                ];
+              } else if(ctx.datasetIndex === 1) {
+                return `SEKAIpt: ${d.sekaiPt.toLocaleString()}（${d.sekaiPct.toFixed(1)}%）`;
+              } else {
+                return d.benefit > 0
+                  ? [`ベネフィット: ${d.benefit.toLocaleString()}（${d.benefitPct.toFixed(1)}%）`,
+                     `総票: ${d.totalPt.toLocaleString()}`]
+                  : `総票: ${d.totalPt.toLocaleString()}`;
+              }
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          stacked: true,
+          max: 100,
+          ticks: { color: '#888', callback: v => v + '%' },
+          grid: { color: 'rgba(255,255,255,0.05)' }
+        },
+        y: {
+          stacked: true,
+          ticks: {
+            color: ctx => tickColors[ctx.index] || '#ccc',
+            font: { size: 10 }
+          }
+        }
+      }
+    }
+  });
+}
+// ── 順位推移タブ ──
+let vaTrendChart = null;
+let vaTrendSelected = [];
+let vaTrendPickerBuilt = false;
+let vaTrendLineVisible = {overall: true, nat: true, sekai: true};
+
+function toggleVaTrendLine(type) {
+  vaTrendLineVisible[type] = !vaTrendLineVisible[type];
+  const btn = document.getElementById('va-line-toggle-' + type);
+  if(btn) {
+    btn.style.opacity   = vaTrendLineVisible[type] ? '1' : '0.35';
+    btn.style.textDecoration = vaTrendLineVisible[type] ? '' : 'line-through';
+  }
+  if(!vaTrendChart) return;
+  const order = ['overall', 'nat', 'sekai'];
+  vaTrendChart.data.datasets.forEach((ds, i) => {
+    ds.hidden = !vaTrendLineVisible[order[i % 3]];
+  });
+  vaTrendChart.update();
+}
+
+function buildVaPtRankMaps() {
+  const maps = {};
+  (typeof RANK_EVENT_KEYS !== 'undefined' ? RANK_EVENT_KEYS : []).forEach(k => {
+    const rows = rawRankData[k] || [];
+    const byNat   = [...rows].filter(r=>r[3]!=null).sort((a,b)=>(b[3]||0)-(a[3]||0));
+    const bySekai = [...rows].filter(r=>r[4]!=null).sort((a,b)=>(b[4]||0)-(a[4]||0));
+    const natMap = {}, sekaiMap = {};
+    byNat.forEach((r,i)   => natMap[r[0]]   = i+1);
+    bySekai.forEach((r,i) => sekaiMap[r[0]] = i+1);
+    maps[k] = {natMap, sekaiMap};
+  });
+  return maps;
+}
+
+function buildVaTrendPicker() {
+  if(vaTrendPickerBuilt) { filterVaTrendPicker(); return; }
+  vaTrendPickerBuilt = true;
+  filterVaTrendPicker();
+}
+
+function filterVaTrendPicker() {
+  const q = (document.getElementById('va-trend-search').value || '').toLowerCase();
+  // 第1回通過者のみ（rank≤50 または GR枠≤12）
+  const r1 = rawRankData['第1回'] || [];
+  const survivors = new Set(
+    r1.filter(r => (r[1] != null && r[1] <= 50) || (r[2] != null && r[2] <= 12))
+      .map(r => r[0])
+  );
+  const latestKey = RANK_EVENT_KEYS[RANK_EVENT_KEYS.length-1];
+  const latestMap = {};
+  (rawRankData[latestKey]||[]).forEach(r => latestMap[r[0]] = r[1] || 999);
+
+  let list = [...survivors]
+    .map(reading => ({ reading, name: readingClassMap[reading]?.name || reading, rank: latestMap[reading]||999 }))
+    .sort((a,b) => a.rank - b.rank);
+
+  if(q) list = list.filter(d => d.name.includes(q) || d.reading.toLowerCase().includes(q));
+
+  document.getElementById('va-trend-picker').innerHTML = list.map(d => {
+    const sel = vaTrendSelected.includes(d.reading);
+    return `<button class="pick-btn ${sel?'selected':''}" onclick="toggleVaTrendPick('${d.reading}')" title="${d.name}（${d.reading}）">${d.name}<span style="display:block;font-size:0.58rem;color:var(--hint);font-family:monospace;">${d.reading}</span></button>`;
+  }).join('');
+}
+
+function toggleVaTrendPick(reading) {
+  if(vaTrendSelected.includes(reading)) {
+    vaTrendSelected = vaTrendSelected.filter(r => r !== reading);
+  } else {
+    if(vaTrendSelected.length >= 8) return;
+    vaTrendSelected.push(reading);
+  }
+  document.getElementById('va-trend-count').textContent = vaTrendSelected.length + ' / 8 選択中';
+  filterVaTrendPicker();
+  renderVoteTrend();
+}
+
+function clearVaTrendSelection() {
+  vaTrendSelected = [];
+  document.getElementById('va-trend-count').textContent = '0 / 8 選択中';
+  filterVaTrendPicker();
+  renderVoteTrend();
+}
+
+function renderVoteTrend() {
+  if(typeof rawRankData === 'undefined') return;
+  const events = RANK_EVENT_KEYS || [];
+  const ptMaps = buildVaPtRankMaps();
+
+  if(vaTrendChart) { vaTrendChart.destroy(); vaTrendChart = null; }
+
+  if(!vaTrendSelected.length) {
+    document.getElementById('va-trend-chart').getContext('2d').clearRect(0,0,9999,9999);
+    return;
+  }
+
+  const datasets = [];
+  vaTrendSelected.forEach((reading, ci) => {
+    const color = palette[ci % palette.length];
+    const name  = readingClassMap[reading]?.name || reading;
+
+    // 各回の順位を取得
+    const overall = events.map(k => {
+      const r = (rawRankData[k]||[]).find(r=>r[0]===reading);
+      return r ? (r[1] || null) : null;
+    });
+    const natRank = events.map(k => ptMaps[k]?.natMap[reading] ?? null);
+    const sekaiRank = events.map(k => ptMaps[k]?.sekaiMap[reading] ?? null);
+
+    datasets.push({
+      label: `${name} 総合`,
+      data: overall,
+      borderColor: color, backgroundColor: 'transparent',
+      borderWidth: 2, borderDash: [],
+      pointRadius: 5, pointBackgroundColor: color,
+      spanGaps: false, tension: 0.2,
+      hidden: !vaTrendLineVisible.overall,
+    });
+    datasets.push({
+      label: `${name} 国民`,
+      data: natRank,
+      borderColor: color + 'bb', backgroundColor: 'transparent',
+      borderWidth: 1.5, borderDash: [6,3],
+      pointRadius: 3, pointBackgroundColor: color + 'bb',
+      spanGaps: false, tension: 0.2,
+      hidden: !vaTrendLineVisible.nat,
+    });
+    datasets.push({
+      label: `${name} SEKAI`,
+      data: sekaiRank,
+      borderColor: color + '88', backgroundColor: 'transparent',
+      borderWidth: 1.5, borderDash: [2,4],
+      pointRadius: 3, pointBackgroundColor: color + '88',
+      spanGaps: false, tension: 0.2,
+      hidden: !vaTrendLineVisible.sekai,
+    });
+  });
+
+  vaTrendChart = new Chart(document.getElementById('va-trend-chart'), {
+    type: 'line',
+    data: { labels: events.map(k => k+'順位発表式'), datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          labels: {
+            color: '#aaa', font: { size: 10 }, boxWidth: 20,
+            filter: item => item.text.endsWith('総合'),  // 凡例は総合線のみ
+          }
+        },
+        tooltip: {
+          callbacks: {
+            title: ctx => ctx[0].label,
+            label: ctx => `${ctx.dataset.label}: ${ctx.parsed.y != null ? ctx.parsed.y+'位' : '未参加'}`,
+          }
+        }
+      },
+      scales: {
+        y: {
+          reverse: true,
+          min: 1,
+          ticks: { color: '#888', callback: v => v+'位', maxTicksLimit: 10 },
+          grid: { color: 'rgba(255,255,255,0.05)' },
+          title: { display: true, text: '順位', color: '#888' }
+        },
+        x: { ticks: { color: '#ccc' }, grid: { display: false } }
+      }
+    }
+  });
+}
+// ── ランク差テーブル ──
+let vaRdSortState = {key: 'rank', asc: true};
+
+function renderVoteRankDiff() {
+  if(typeof rawRankData === 'undefined') return;
+  const rdSel = document.getElementById('va-rd-event');
+  if(!rdSel.options.length && typeof RANK_EVENT_KEYS !== 'undefined') {
+    RANK_EVENT_KEYS.forEach(k => {
+      const opt = document.createElement('option');
+      opt.value = k; opt.textContent = k + '順位発表式';
+      rdSel.appendChild(opt);
+    });
+    if(rdSel.options.length) rdSel.selectedIndex = rdSel.options.length - 1;
+  }
+  const eventKey = rdSel.value;
+  if(!eventKey) return;
+  const filter   = document.getElementById('va-rd-filter').value;
+  const thresh   = VA_PASS_THRESHOLD[eventKey] || 999;
+  const ptMaps   = buildVaPtRankMaps();
+  const natMap   = ptMaps[eventKey]?.natMap   || {};
+  const sekaiMap = ptMaps[eventKey]?.sekaiMap || {};
+
+  let rows = (rawRankData[eventKey] || [])
+    .filter(r => r[3] != null && r[4] != null)
+    .map(r => {
+      const [reading, rank, grRank, natPt, sekaiPt, totalPt] = r;
+      const nr   = natMap[reading]   || 999;
+      const sr   = sekaiMap[reading] || 999;
+      const diff = nr - sr;
+      const type = diff >= 5 ? 'SEKAI型' : diff <= -5 ? '国民型' : '均衡型';
+      const isGR = grRank != null && grRank <= 12;
+      const passes = (rank != null && rank <= thresh) || isGR;
+      return {reading, name: readingClassMap[reading]?.name || reading,
+              rank: rank || 999, grRank, natRank: nr, sekaiRank: sr, diff, type, passes};
+    });
+
+  if(filter === 'active') rows = rows.filter(r => r.passes);
+
+  const {key, asc} = vaRdSortState;
+  rows.sort((a, b) => {
+    const va = a[key], vb = b[key];
+    if(typeof va === 'string') return asc ? va.localeCompare(vb, 'ja') : vb.localeCompare(va, 'ja');
+    return asc ? va - vb : vb - va;
+  });
+
+  ['rank','name','natRank','sekaiRank','diff'].forEach(k => {
+    const el = document.getElementById('va-rd-sort-'+k);
+    if(el) el.textContent = k === key ? (asc ? '▲' : '▼') : '';
+  });
+
+  const tbody = document.getElementById('va-rd-tbody');
+  tbody.innerHTML = '';
+  rows.forEach(r => {
+    const typeBg    = r.type==='SEKAI型' ? '#1a3a5a' : r.type==='国民型' ? '#3a2010' : '#2a2a2a';
+    const typeColor = r.type==='SEKAI型' ? '#60c8e0'  : r.type==='国民型' ? '#f09878'  : '#aaa';
+    const diffColor = r.diff > 0 ? '#60c8e0' : r.diff < 0 ? '#f09878' : '#888';
+    const diffStr   = r.diff > 0 ? '+' + r.diff : String(r.diff);
+    const rankStr   = r.rank < 900 ? r.rank + '位' : '−';
+    const grStr     = (r.grRank != null && r.grRank <= 12)
+                      ? ` <span style="color:#ffd700;font-size:0.65rem;">★GR${r.grRank}位</span>` : '';
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td style="padding:6px 10px;text-align:center;border-bottom:1px solid var(--border2);color:#ccc;">${rankStr}${grStr}</td>
+      <td style="padding:6px 10px;white-space:nowrap;border-bottom:1px solid var(--border2);color:#eee;">${r.name}<br><span style="color:var(--muted);font-size:0.68rem;">${r.reading}</span></td>
+      <td style="padding:6px 10px;text-align:center;border-bottom:1px solid var(--border2);color:#f09878;">${r.natRank < 900 ? r.natRank+'位' : '−'}</td>
+      <td style="padding:6px 10px;text-align:center;border-bottom:1px solid var(--border2);color:#60c8e0;">${r.sekaiRank < 900 ? r.sekaiRank+'位' : '−'}</td>
+      <td style="padding:6px 10px;text-align:center;border-bottom:1px solid var(--border2);color:${diffColor};font-weight:bold;">${diffStr}</td>
+      <td style="padding:6px 10px;text-align:center;border-bottom:1px solid var(--border2);"><span style="background:${typeBg};color:${typeColor};border-radius:4px;padding:2px 7px;font-size:0.72rem;">${r.type}</span></td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function sortVaRankDiff(key) {
+  vaRdSortState.asc = (vaRdSortState.key === key) ? !vaRdSortState.asc : true;
+  vaRdSortState.key = key;
+  renderVoteRankDiff();
+}
+// ===== 票数分析ここまで =====
 
 function renderTPChart(d) {
   const canvas = document.getElementById('tp-rank-chart');

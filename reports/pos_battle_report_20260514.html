@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ポジションバトル 分析レポート｜新世界 数値トラッカー</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500&display=swap');
+:root{--bg:#0a0a0c;--s1:#111115;--s2:#18181d;--border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);--text:#ededeb;--muted:#888882;--hint:#444440;--accent:#c8b8ff;--gold:#f0c040;--green:#4ec87a;--red:#ff5c35;--cyan:#60c8e0;--pink:#e080c0;--orange:#f09878;}
+*{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text);line-height:1.75;font-size:14px;}
+.wrap{max-width:860px;margin:0 auto;padding:0 1.5rem 6rem;}
+.hero{padding:3.5rem 0 2.5rem;border-bottom:1px solid var(--border);margin-bottom:3rem;}
+.hero-tag{font-family:'JetBrains Mono',monospace;font-size:0.65rem;color:var(--accent);letter-spacing:0.18em;text-transform:uppercase;margin-bottom:0.75rem;opacity:0.8;}
+.hero h1{font-size:1.55rem;font-weight:700;letter-spacing:-0.01em;line-height:1.3;margin-bottom:0.75rem;}
+.hero-meta{font-family:'JetBrains Mono',monospace;font-size:0.7rem;color:var(--muted);line-height:1.8;}
+.section{margin-bottom:3.5rem;}
+.section-head{display:flex;align-items:baseline;gap:0.75rem;margin-bottom:1.5rem;padding-bottom:0.6rem;border-bottom:1px solid var(--border);}
+.section-num{font-family:'JetBrains Mono',monospace;font-size:0.62rem;color:var(--accent);opacity:0.6;}
+.section-title{font-size:1rem;font-weight:700;letter-spacing:0.02em;}
+p{font-size:0.875rem;color:#ccc;margin-bottom:0.9rem;line-height:1.85;}
+p:last-child{margin-bottom:0;}
+strong{color:var(--text);font-weight:500;}
+.insight{background:var(--s1);border:1px solid var(--border2);border-left:3px solid var(--accent);border-radius:0 6px 6px 0;padding:1rem 1.25rem;margin:1.25rem 0;font-size:0.84rem;color:var(--text);line-height:1.75;}
+.insight.green{border-left-color:var(--green);}
+.insight.gold{border-left-color:var(--gold);}
+.insight.red{border-left-color:var(--red);}
+.insight.cyan{border-left-color:var(--cyan);}
+.insight.orange{border-left-color:var(--orange);}
+.insight.pink{border-left-color:var(--pink);}
+.flow-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:1.25rem 0;}
+.flow-card{background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:1.1rem 1.2rem;}
+.flow-card.zen{border-top:2px solid var(--cyan);}
+.flow-card.ko{border-top:2px solid var(--pink);}
+.flow-card-title{font-size:0.68rem;font-family:'JetBrains Mono',monospace;letter-spacing:0.08em;margin-bottom:0.75rem;}
+.flow-step{display:flex;align-items:center;gap:6px;font-size:0.75rem;margin-bottom:5px;}
+.flow-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.flow-arrow{font-size:0.6rem;color:var(--hint);padding-left:4px;}
+.flow-note{font-size:0.67rem;font-family:'JetBrains Mono',monospace;color:var(--muted);margin-top:0.75rem;padding-top:0.6rem;border-top:1px solid var(--border);line-height:1.6;}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:1.25rem 0;}
+.stat-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin:1.25rem 0;}
+.stat-card{background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:1rem 1.2rem;}
+.stat-label{font-size:0.65rem;font-family:'JetBrains Mono',monospace;color:var(--muted);letter-spacing:0.08em;margin-bottom:4px;}
+.stat-val{font-size:1.6rem;font-weight:700;font-family:'JetBrains Mono',monospace;line-height:1;}
+.stat-sub{font-size:0.7rem;color:var(--muted);margin-top:4px;}
+.bar-section{margin:1rem 0;}
+.bar-row{display:flex;align-items:center;gap:8px;margin-bottom:7px;}
+.bar-label{width:190px;font-size:0.72rem;color:var(--muted);flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.bar-track{flex:1;background:rgba(255,255,255,0.04);border-radius:3px;height:20px;overflow:hidden;}
+.bar-fill{height:100%;border-radius:3px;min-width:2px;display:flex;align-items:center;padding-left:6px;font-size:0.6rem;font-family:'JetBrains Mono',monospace;color:rgba(255,255,255,0.6);}
+.bar-val{font-size:0.7rem;font-family:'JetBrains Mono',monospace;width:80px;text-align:right;flex-shrink:0;}
+.tbl-wrap{overflow-x:auto;margin:1rem 0;}
+table{width:100%;border-collapse:collapse;font-size:0.78rem;}
+th{font-size:0.65rem;color:var(--muted);font-weight:400;text-align:right;padding:6px 8px;border-bottom:1px solid var(--border);white-space:nowrap;font-family:'JetBrains Mono',monospace;}
+th:first-child{text-align:left;}
+td{padding:6px 8px;border-bottom:1px solid var(--border);text-align:right;font-family:'JetBrains Mono',monospace;font-size:0.75rem;color:var(--muted);}
+td:first-child{text-align:left;color:var(--text);font-family:'Noto Sans JP',sans-serif;}
+tr:hover td{background:var(--s1);}
+.highlight-box{background:var(--s2);border:1px solid rgba(200,184,255,0.25);border-radius:8px;padding:1.25rem;margin:1.25rem 0;}
+.highlight-box-title{font-size:0.7rem;font-family:'JetBrains Mono',monospace;color:var(--accent);letter-spacing:0.1em;margin-bottom:0.75rem;}
+.rank-change{display:flex;align-items:center;gap:12px;margin-bottom:0.75rem;flex-wrap:wrap;}
+.rank-num{font-size:2rem;font-weight:700;font-family:'JetBrains Mono',monospace;line-height:1;}
+.rank-arrow{font-size:1.5rem;color:var(--green);}
+.predict{background:linear-gradient(135deg,rgba(200,184,255,0.06),rgba(78,200,122,0.04));border:1px solid rgba(200,184,255,0.2);border-radius:8px;padding:1.25rem;margin:1.25rem 0;}
+.predict-title{font-size:0.68rem;font-family:'JetBrains Mono',monospace;color:var(--accent);letter-spacing:0.1em;margin-bottom:0.75rem;}
+.predict-item{display:flex;gap:8px;align-items:flex-start;font-size:0.84rem;margin-bottom:0.6rem;line-height:1.7;}
+.predict-icon{flex-shrink:0;margin-top:2px;}
+.footnote{font-size:0.72rem;color:var(--hint);font-family:'JetBrains Mono',monospace;border-top:1px solid var(--border);margin-top:0.75rem;padding-top:0.6rem;line-height:1.6;}
+.rule-box{background:var(--s2);border:1px solid rgba(240,192,64,0.2);border-radius:8px;padding:1.25rem;margin:1.25rem 0;}
+.rule-title{font-size:0.68rem;font-family:'JetBrains Mono',monospace;color:var(--gold);letter-spacing:0.1em;margin-bottom:0.75rem;}
+.rule-item{display:flex;gap:8px;font-size:0.82rem;color:#ccc;margin-bottom:0.5rem;line-height:1.7;}
+.rule-icon{flex-shrink:0;color:var(--gold);}
+.growth-badge{display:inline-block;font-size:0.62rem;font-family:'JetBrains Mono',monospace;padding:1px 5px;border-radius:3px;background:rgba(78,200,122,0.12);color:var(--green);border:1px solid rgba(78,200,122,0.25);margin-left:4px;}
+.c-zen{color:var(--cyan);}
+.c-ko{color:var(--pink);}
+.c-gold{color:var(--gold);}
+.c-green{color:var(--green);}
+.c-red{color:var(--red);}
+.c-accent{color:var(--accent);}
+.c-orange{color:var(--orange);}
+.ben-badge{display:inline-block;font-size:0.6rem;font-family:'JetBrains Mono',monospace;padding:1px 5px;border-radius:3px;margin-left:4px;}
+.ben-60k{background:rgba(240,192,64,0.15);color:var(--gold);border:1px solid rgba(240,192,64,0.3);}
+.ben-50k{background:rgba(200,184,255,0.12);color:var(--accent);border:1px solid rgba(200,184,255,0.3);}
+.ben-10k{background:rgba(96,200,224,0.12);color:var(--cyan);border:1px solid rgba(96,200,224,0.25);}
+.ben-0{background:rgba(255,255,255,0.04);color:var(--hint);border:1px solid rgba(255,255,255,0.08);}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="hero">
+  <div class="hero-tag">Analysis Report · Position Battle</div>
+  <h1>ポジションバトル<br>推しカメラ・YouTube数値 分析レポート</h1>
+  <div class="hero-meta">
+    日プ新世界 ｜ 推しカメラ・YouTubeハイライト 5/23 時点データ<br>
+    第二回順位発表式（2026/05/14）にベネフィットが反映済み<br>
+    前半組（Natural/Super/宿命/DOMINANCE）5/2頃放送 ／ 後半組（ベテルギウス/Doctor!/BE CLASSIC/WORK HARD/My GF's Clock）5/7〜8頃放送
+  </div>
+</div>
+
+<!-- 00 -->
+<div class="section">
+  <div class="section-head"><span class="section-num">00</span><span class="section-title">このデータを読む前提｜「チーム運」と「前後半ハンデ」が共存するステージ</span></div>
+
+  <p>ポジションバトルはグループバトルと異なり、<strong>チーム全体のパフォーマンスに対してベネフィット（追加票）が与えられる構造</strong>だった。最高評価のチームには全メンバーに+50,000票、さらにチーム内1位の練習生には追加で+10,000票（合計+60,000票）。それ以外のチームの1位にも+10,000票が与えられた。</p>
+
+  <div class="rule-box">
+    <div class="rule-title">ポジションバトル ベネフィット規則</div>
+    <div class="rule-item"><span class="rule-icon">▲</span><span>最高チーム（Natural / Imagine Dragons）の全メンバー ＋50,000票</span></div>
+    <div class="rule-item"><span class="rule-icon">▲</span><span>最高チームの1位（浅香 孝太郎 / KOTARO）は追加 ＋10,000票 ＝ 合計 <strong>+60,000票</strong></span></div>
+    <div class="rule-item"><span class="rule-icon">▲</span><span>その他チームの個人1位 ＋10,000票（9チーム中 最高チーム以外の8チーム）</span></div>
+    <div class="rule-item"><span class="rule-icon">－</span><span>上記以外の練習生はベネフィットなし（50名中36名）</span></div>
+  </div>
+
+  <p>この結果、個人の投票数（個人獲得票）ではなく<strong>チーム運とポジション</strong>がポジションバトル順位を大きく左右する構造が生まれた。さらに前回のグループバトルと同じく、<strong>前半組と後半組の放送タイミングのズレ</strong>が投票数・順位に非対称な影響を与えた。</p>
+
+  <div class="flow-grid">
+    <div class="flow-card zen">
+      <div class="flow-card-title c-zen">前半組（23名・4チーム）</div>
+      <div class="flow-step"><div class="flow-dot" style="background:var(--cyan)"></div>5/2頃 ハイライト・推しカメラ公開</div>
+      <div class="flow-step"><div class="flow-arrow">↓</div></div>
+      <div class="flow-step"><div class="flow-dot" style="background:var(--cyan)"></div>ファンが動画を視聴・拡散</div>
+      <div class="flow-step"><div class="flow-arrow">↓</div></div>
+      <div class="flow-step"><div class="flow-dot" style="background:var(--cyan)"></div>投票期限（5/8）まで約6日間</div>
+      <div class="flow-note">Natural / Super / 宿命 / DOMINANCE<br>5/2時点でHL既に 11〜17万再生</div>
+    </div>
+    <div class="flow-card ko">
+      <div class="flow-card-title c-ko">後半組（27名・5チーム）</div>
+      <div class="flow-step"><div class="flow-dot" style="background:var(--pink)"></div>5/3 推しカメラ公開（mnetplus）</div>
+      <div class="flow-step"><div class="flow-arrow">↓</div></div>
+      <div class="flow-step"><div class="flow-dot" style="background:var(--pink)"></div>5/7 YouTubeハイライト公開</div>
+      <div class="flow-step"><div class="flow-arrow">↓</div></div>
+      <div class="flow-step"><div class="flow-dot" style="background:var(--pink)"></div>投票期限（5/8）まで実質1日</div>
+      <div class="flow-note">ベテルギウス / Doctor! / BE CLASSIC / WORK HARD / My GF's Clock<br>5/7時点のHL再生数はわずか 4〜5K</div>
+    </div>
+  </div>
+
+  <div class="insight orange">
+    後半組のYouTubeハイライトが公開されたのは投票締め切り1日前。<strong>前半組が6日間かけて積み上げた閲覧数・投票への転換を、後半組は実質1日で補わなければならなかった。</strong>グループバトル後半組の「2日間」よりもさらに厳しい条件だった。
+  </div>
+</div>
+
+<!-- 01 -->
+<div class="section">
+  <div class="section-head"><span class="section-num">01</span><span class="section-title">タイムラグの実態｜数字で見る放送タイミングの非対称</span></div>
+
+  <p>前半組のハイライト動画は5/2時点で合計609,294回再生に達していた。後半組は5/7時点の合計がわずか21,577回（前半組の3.5%）。翌5/9には584,859回まで急伸したが、そのときにはすでに投票期限（5/8）を過ぎていた。</p>
+
+  <div class="stat-grid">
+    <div class="stat-card" style="border-top:2px solid var(--cyan);">
+      <div class="stat-label c-zen">前半組 HL合計（5/2時点）</div>
+      <div class="stat-val c-zen">609,294</div>
+      <div class="stat-sub">投票期限まで約6日ある段階で</div>
+    </div>
+    <div class="stat-card" style="border-top:2px solid var(--pink);">
+      <div class="stat-label c-ko">後半組 HL合計（5/7時点）</div>
+      <div class="stat-val c-ko">21,577</div>
+      <div class="stat-sub">投票期限1日前の時点で（前半の3.5%）</div>
+    </div>
+  </div>
+
+  <p>5/9（投票締め切りの翌日）には後半組のハイライト合計は584,859回に達し、前半組の5/2水準に近づいた。だが<strong>票には乗らなかった</strong>。後半組にとってのポジションバトルの「評価」は、第二回順位発表式の票数にはほとんど反映されていない。</p>
+
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr>
+        <th>楽曲 / アーティスト</th>
+        <th>放送組</th>
+        <th>5/7 HL</th>
+        <th>5/9 HL</th>
+        <th>5/23 HL</th>
+        <th>5/9→5/23 伸び</th>
+      </tr></thead>
+      <tbody>
+        <tr><td>宿命 / Official髭男dism</td><td class="c-zen">前半</td><td>483,983</td><td>525,679</td><td class="c-green">646,387</td><td>+23%</td></tr>
+        <tr><td>Natural / Imagine Dragons</td><td class="c-zen">前半</td><td>373,935</td><td>445,818</td><td class="c-green">559,217</td><td>+25%</td></tr>
+        <tr><td>Super / SEVENTEEN</td><td class="c-zen">前半</td><td>345,022</td><td>392,896</td><td class="c-green">523,822</td><td>+33%</td></tr>
+        <tr><td>DOMINANCE / INI</td><td class="c-zen">前半</td><td>282,002</td><td>310,849</td><td>372,334</td><td>+20%</td></tr>
+        <tr><td>Doctor!Doctor! / ZEROBASEONE</td><td class="c-ko">後半</td><td>3,997</td><td>147,410</td><td class="c-green">366,441</td><td class="c-gold">+149%</td></tr>
+        <tr><td>ベテルギウス / 優里</td><td class="c-ko">後半</td><td>4,525</td><td>116,338</td><td>273,832</td><td class="c-gold">+135%</td></tr>
+        <tr><td>WORK HARD / ちゃんみな</td><td class="c-ko">後半</td><td>4,691</td><td>110,001</td><td>248,146</td><td class="c-gold">+126%</td></tr>
+        <tr><td>My Grandfather's Clock</td><td class="c-ko">後半</td><td>4,696</td><td>120,843</td><td>239,959</td><td class="c-gold">+99%</td></tr>
+        <tr><td>BE CLASSIC / JO1</td><td class="c-ko">後半</td><td>4,668</td><td>91,268</td><td>184,362</td><td>+102%</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="insight red">
+    後半組のハイライト動画は投票締め切り後に爆発的に成長している。Doctor!Doctor!は5/9→5/23で+149%、ベテルギウスは+135%。<strong>この伸び分は全て「評価が出たが票に乗らなかったもの」だ。</strong>後半組の練習生たちの実際のパフォーマンス評価は、第二回順位発表式の結果よりも相当後ろにずれ込んでいる。
+  </div>
+</div>
+
+<!-- 02 -->
+<div class="section">
+  <div class="section-head"><span class="section-num">02</span><span class="section-title">ベネフィット構造が上位を支配した｜Natural全員がTOP6を占拠</span></div>
+
+  <p>ポジションバトル個人順位のTOP14は、ベネフィットを受けた練習生で全て占められている。最高チームに選ばれたNatural / Imagine Dragonsの6名が1〜6位を独占し、各チームの1位がその後に続く。個人票だけで戦った練習生（36名）は、最大でも15位止まりだ。</p>
+
+  <div class="stat-grid">
+    <div class="stat-card" style="border-top:2px solid var(--gold);">
+      <div class="stat-label c-gold">Naturalチーム最低個人票（WEIZE）</div>
+      <div class="stat-val c-gold">50,291</div>
+      <div class="stat-sub">291票 ＋ 50,000票ベネフィット → 6位</div>
+    </div>
+    <div class="stat-card" style="border-top:2px solid var(--hint);">
+      <div class="stat-label">ベネフィット無し 個人票最高（HYEONSEUNG）</div>
+      <div class="stat-val" style="color:var(--muted);">415</div>
+      <div class="stat-sub">415票のみ → 15位</div>
+    </div>
+  </div>
+
+  <p>WEIZE（Natural 6位、個人票291票）とHYEONSEUNG（Super 2位、個人票415票）を比較すると、<strong>個人票では明らかに劣るWEIZEがベネフィットによって121倍以上の総獲得票</strong>を持ち、50,291位 vs 415票の差で6位と15位に分かれている。</p>
+
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr>
+        <th>ポジション順位</th>
+        <th>名前</th>
+        <th>チーム</th>
+        <th>放送</th>
+        <th>個人票</th>
+        <th>ベネフィット</th>
+        <th>総獲得票</th>
+      </tr></thead>
+      <tbody>
+        <tr><td style="text-align:left;color:var(--gold);">1位</td><td>浅香 孝太郎（KOTARO）</td><td>Natural</td><td class="c-zen">前半</td><td>402</td><td class="c-gold">+60,000 <span class="ben-badge ben-60k">最高+1位</span></td><td class="c-gold">60,402</td></tr>
+        <tr><td style="text-align:left;color:var(--gold);">2位</td><td>チェン・リッキー（RICKEY）</td><td>Natural</td><td class="c-zen">前半</td><td>394</td><td class="c-accent">+50,000 <span class="ben-badge ben-50k">最高チーム</span></td><td>50,394</td></tr>
+        <tr><td style="text-align:left;color:var(--gold);">3位</td><td>安部 結蘭（YURA）</td><td>Natural</td><td class="c-zen">前半</td><td>384</td><td class="c-accent">+50,000</td><td>50,384</td></tr>
+        <tr><td style="text-align:left;color:var(--gold);">4位</td><td>石田 亮太（RYOTA）</td><td>Natural</td><td class="c-zen">前半</td><td>350</td><td class="c-accent">+50,000</td><td>50,350</td></tr>
+        <tr><td style="text-align:left;color:var(--gold);">5位</td><td>小林 千悟（CHISATO）</td><td>Natural</td><td class="c-zen">前半</td><td>327</td><td class="c-accent">+50,000</td><td>50,327</td></tr>
+        <tr><td style="text-align:left;color:var(--gold);">6位</td><td>リー・ウェイゼ（WEIZE）</td><td>Natural</td><td class="c-zen">前半</td><td>291</td><td class="c-accent">+50,000</td><td>50,291</td></tr>
+        <tr><td style="text-align:left;">7位</td><td>ユン・ジェヨン（JAEYONG）</td><td>宿命</td><td class="c-zen">前半</td><td>433</td><td class="c-cyan">+10,000 <span class="ben-badge ben-10k">チーム1位</span></td><td>10,433</td></tr>
+        <tr><td style="text-align:left;">8位</td><td>大林 悠成（YUSEI.O）</td><td>DOMINANCE</td><td class="c-zen">前半</td><td>426</td><td class="c-cyan">+10,000</td><td>10,426</td></tr>
+        <tr><td style="text-align:left;">9位</td><td>照井 康祐（KOSUKE）</td><td>Super</td><td class="c-zen">前半</td><td>418</td><td class="c-cyan">+10,000</td><td>10,418</td></tr>
+        <tr><td style="text-align:left;">10位</td><td>加藤 大樹（DAIKI.K）</td><td>Doctor!</td><td class="c-ko">後半</td><td>398</td><td class="c-cyan">+10,000</td><td>10,398</td></tr>
+        <tr><td style="text-align:left;">11位</td><td>濱田 永遠（TOWA）</td><td>WORK HARD</td><td class="c-ko">後半</td><td>394</td><td class="c-cyan">+10,000</td><td>10,394</td></tr>
+        <tr><td style="text-align:left;">12位</td><td>イ・ヒョンジェ（HYUNJAE）</td><td>ベテルギウス</td><td class="c-ko">後半</td><td>388</td><td class="c-cyan">+10,000</td><td>10,388</td></tr>
+        <tr><td style="text-align:left;">12位</td><td>釼持 吉成（KINARI）</td><td>BE CLASSIC</td><td class="c-ko">後半</td><td>388</td><td class="c-cyan">+10,000</td><td>10,388</td></tr>
+        <tr><td style="text-align:left;">14位</td><td>アダム・ナガイ（ADAM）</td><td>My GF's Clock</td><td class="c-ko">後半</td><td>365</td><td class="c-cyan">+10,000</td><td>10,365</td></tr>
+        <tr style="border-top:2px solid var(--border2);"><td style="text-align:left;color:var(--muted);">15位〜</td><td>ベネフィット無し（36名）</td><td>—</td><td>—</td><td>148〜415</td><td style="color:var(--hint);">0</td><td style="color:var(--muted);">148〜415</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="insight gold">
+    上位14名のうち前半組が10名、後半組が4名（DAIKI.K / TOWA / HYUNJAE / KINARI / ADAM）。後半組4名はいずれも各チームの1位に入ったことでのみベネフィットを獲得した。<strong>最高チームに選ばれた前半組Naturalの全員が、個人票数に関係なく後半組全員を上回っている。</strong>
+  </div>
+</div>
+
+<!-- 03 -->
+<div class="section">
+  <div class="section-head"><span class="section-num">03</span><span class="section-title">チーム別動画再生数｜数字で見る格差</span></div>
+
+  <p>YouTubeハイライト再生数（5/23時点）でも前半4チームが上位を占める。ただし動画種別によって景色は大きく変わる。</p>
+
+  <div style="margin-bottom:0.5rem;font-size:0.68rem;color:var(--muted);font-family:'JetBrains Mono',monospace;letter-spacing:0.08em;">── YouTubeハイライト再生数（5/23）</div>
+  <div class="bar-section">
+    <div class="bar-row"><div class="bar-label c-zen">宿命 / Official髭男dism</div><div class="bar-track"><div class="bar-fill" style="width:100%;background:rgba(96,200,224,0.35);">646,387</div></div><div class="bar-val c-zen">646,387</div></div>
+    <div class="bar-row"><div class="bar-label c-zen">Natural / Imagine Dragons</div><div class="bar-track"><div class="bar-fill" style="width:86.5%;background:rgba(200,184,255,0.35);">559,217</div></div><div class="bar-val c-zen">559,217</div></div>
+    <div class="bar-row"><div class="bar-label c-zen">Super / SEVENTEEN</div><div class="bar-track"><div class="bar-fill" style="width:81.0%;background:rgba(96,200,224,0.25);">523,822</div></div><div class="bar-val c-zen">523,822</div></div>
+    <div class="bar-row"><div class="bar-label c-zen">DOMINANCE / INI</div><div class="bar-track"><div class="bar-fill" style="width:57.6%;background:rgba(96,200,224,0.2);">372,334</div></div><div class="bar-val c-zen">372,334</div></div>
+    <div class="bar-row"><div class="bar-label c-ko">Doctor!Doctor! / ZEROBASEONE</div><div class="bar-track"><div class="bar-fill" style="width:56.7%;background:rgba(224,128,192,0.3);">366,441</div></div><div class="bar-val c-ko">366,441</div></div>
+    <div class="bar-row"><div class="bar-label c-ko">ベテルギウス / 優里</div><div class="bar-track"><div class="bar-fill" style="width:42.4%;background:rgba(224,128,192,0.2);">273,832</div></div><div class="bar-val c-ko">273,832</div></div>
+    <div class="bar-row"><div class="bar-label c-ko">WORK HARD / ちゃんみな</div><div class="bar-track"><div class="bar-fill" style="width:38.4%;background:rgba(224,128,192,0.2);">248,146</div></div><div class="bar-val c-ko">248,146</div></div>
+    <div class="bar-row"><div class="bar-label c-ko">My Grandfather's Clock</div><div class="bar-track"><div class="bar-fill" style="width:37.1%;background:rgba(224,128,192,0.15);">239,959</div></div><div class="bar-val c-ko">239,959</div></div>
+    <div class="bar-row"><div class="bar-label c-ko">BE CLASSIC / JO1</div><div class="bar-track"><div class="bar-fill" style="width:28.5%;background:rgba(224,128,192,0.15);">184,362</div></div><div class="bar-val c-ko">184,362</div></div>
+  </div>
+
+  <p>ハイライトでは前半4チームが上位を占める一方、<strong>フル版ではDoctor!Doctor!が全チーム中1位</strong>（231,198回）と、後半組コンテンツが底力を見せている。</p>
+
+  <div style="margin:1.25rem 0 0.5rem;font-size:0.68rem;color:var(--muted);font-family:'JetBrains Mono',monospace;letter-spacing:0.08em;">── YouTubeフル版 TOP5（5/23）</div>
+  <div class="bar-section">
+    <div class="bar-row"><div class="bar-label c-ko">Doctor!Doctor! / ZEROBASEONE</div><div class="bar-track"><div class="bar-fill" style="width:100%;background:rgba(224,128,192,0.3);">231,198</div></div><div class="bar-val c-ko">231,198</div></div>
+    <div class="bar-row"><div class="bar-label c-ko">ベテルギウス / 優里</div><div class="bar-track"><div class="bar-fill" style="width:70.0%;background:rgba(224,128,192,0.2);">161,795</div></div><div class="bar-val c-ko">161,795</div></div>
+    <div class="bar-row"><div class="bar-label c-ko">WORK HARD / ちゃんみな</div><div class="bar-track"><div class="bar-fill" style="width:53.2%;background:rgba(224,128,192,0.2);">122,972</div></div><div class="bar-val c-ko">122,972</div></div>
+    <div class="bar-row"><div class="bar-label c-zen">Natural / Imagine Dragons</div><div class="bar-track"><div class="bar-fill" style="width:52.4%;background:rgba(200,184,255,0.3);">121,283</div></div><div class="bar-val c-zen">121,283</div></div>
+    <div class="bar-row"><div class="bar-label c-ko">My Grandfather's Clock</div><div class="bar-track"><div class="bar-fill" style="width:52.0%;background:rgba(224,128,192,0.15);">120,222</div></div><div class="bar-val c-ko">120,222</div></div>
+  </div>
+
+  <div class="insight cyan">
+    フル版での後半組の強さは注目に値する。ハイライトで5位のDoctor!Doctor!がフル版では全体1位（231K）。ベテルギウス・WORK HARDもフル版TOP3に入る。<strong>「ハイライトを見てさらに全部見たいと思わせる」吸引力が後半組に集中している</strong>のは、コンテンツとしての質の高さを示唆している。ただし、この評価は全て投票締め切り後の動きだ。
+  </div>
+</div>
+
+<!-- 04 -->
+<div class="section">
+  <div class="section-head"><span class="section-num">04</span><span class="section-title">推しカメラランキング｜ベネフィットとの乖離</span></div>
+
+  <p>個人の推しカメラ再生数（5/23時点）では、後半組の練習生が上位を多く占める。しかしベネフィット構造により、高い推しカメラ再生数を持つ後半組の練習生が、ポジションバトル順位では下位に回るという逆転が多発している。</p>
+
+  <div style="margin-bottom:0.5rem;font-size:0.68rem;color:var(--muted);font-family:'JetBrains Mono',monospace;letter-spacing:0.08em;">── 推しカメラ再生数 上位10名（5/23）</div>
+  <div class="bar-section">
+    <div class="bar-row"><div class="bar-label c-ko">柳谷 伊冴（ISSA）</div><div class="bar-track"><div class="bar-fill" style="width:100%;background:rgba(224,128,192,0.35);">386,985</div></div><div class="bar-val c-ko">386,985</div></div>
+    <div class="bar-row"><div class="bar-label c-zen">照井 康祐（KOSUKE）</div><div class="bar-track"><div class="bar-fill" style="width:70.8%;background:rgba(96,200,224,0.3);">274,024</div></div><div class="bar-val c-zen">274,024</div></div>
+    <div class="bar-row"><div class="bar-label c-ko">矢田 佳暉（YOSHIKI）</div><div class="bar-track"><div class="bar-fill" style="width:58.8%;background:rgba(224,128,192,0.25);">227,631</div></div><div class="bar-val c-ko">227,631</div></div>
+    <div class="bar-row"><div class="bar-label c-ko">アダム・ナガイ（ADAM）</div><div class="bar-track"><div class="bar-fill" style="width:56.8%;background:rgba(96,200,224,0.2);">219,934</div></div><div class="bar-val c-ko">219,934</div></div>
+    <div class="bar-row"><div class="bar-label c-ko">横山 奏夢（KANAME）</div><div class="bar-track"><div class="bar-fill" style="width:37.0%;background:rgba(224,128,192,0.2);">143,180</div></div><div class="bar-val c-ko">143,180</div></div>
+    <div class="bar-row"><div class="bar-label c-zen">安部 結蘭（YURA）</div><div class="bar-track"><div class="bar-fill" style="width:39.5%;background:rgba(200,184,255,0.3);">152,696</div></div><div class="bar-val c-zen">152,696</div></div>
+    <div class="bar-row"><div class="bar-label c-ko">オ・シンヘン（SHINHAENG）</div><div class="bar-track"><div class="bar-fill" style="width:36.5%;background:rgba(224,128,192,0.15);">141,053</div></div><div class="bar-val c-ko">141,053</div></div>
+    <div class="bar-row"><div class="bar-label c-ko">熊部 拓斗（TAKUTO.K）</div><div class="bar-track"><div class="bar-fill" style="width:35.0%;background:rgba(224,128,192,0.15);">135,432</div></div><div class="bar-val c-ko">135,432</div></div>
+    <div class="bar-row"><div class="bar-label c-ko">釼持 吉成（KINARI）</div><div class="bar-track"><div class="bar-fill" style="width:34.2%;background:rgba(96,200,224,0.15);">132,337</div></div><div class="bar-val c-ko">132,337</div></div>
+    <div class="bar-row"><div class="bar-label c-ko">パク・シヨン（SIYOUNG）</div><div class="bar-track"><div class="bar-fill" style="width:34.2%;background:rgba(224,128,192,0.15);">132,491</div></div><div class="bar-val c-ko">132,491</div></div>
+  </div>
+
+  <div class="insight">
+    推しカメラ上位10名のうち後半組が8名を占める。平均値で比較しても、後半組（104,826回）は前半組（59,262回）の約1.8倍。グループバトル同様、<strong>個人の注目度・人気が高い練習生が後半組に集まっている構造</strong>がここでも見える。
+  </div>
+</div>
+
+<!-- 05 -->
+<div class="section">
+  <div class="section-head"><span class="section-num">05</span><span class="section-title">個人フォーカス｜「運」と「実力」が交差した3例</span></div>
+
+  <div class="highlight-box" style="border-color:rgba(240,192,64,0.3);">
+    <div class="highlight-box-title" style="color:var(--gold);">CASE 01 ── 浅香 孝太郎（KOTARO）/ Natural / Imagine Dragons・前半組 1位</div>
+    <div class="rank-change">
+      <div><div class="stat-label">ポジションバトル順位</div><div class="rank-num c-gold">1位</div></div>
+      <div>
+        <div class="stat-label">総獲得票（内訳）</div>
+        <div style="font-size:0.85rem;font-family:'JetBrains Mono',monospace;margin-top:6px;">
+          <span style="color:var(--muted);">個人 402票</span>
+          <span style="color:var(--hint);padding:0 6px;">＋</span>
+          <span style="color:var(--gold);">ベネフィット 60,000票</span>
+          <span style="color:var(--hint);padding:0 6px;">＝</span>
+          <span style="color:var(--gold);font-weight:700;">60,402票</span>
+        </div>
+      </div>
+    </div>
+    <p style="font-size:0.82rem;color:#ccc;margin:0;">推しカメラは78,871回（全体中程度）。しかし最高チーム評価とチーム内1位という2つの条件を同時に満たしたことで、<strong>全50名中最大のベネフィット+60,000票</strong>を獲得した。個人票は402票と全体水準内だが、ベネフィットにより他の誰もが届かない総票数を記録。「最高チームのエースに選ばれた」という結果が、そのままポジションバトル1位に直結した形だ。</p>
+  </div>
+
+  <div class="highlight-box" style="border-color:rgba(255,92,53,0.3);">
+    <div class="highlight-box-title" style="color:var(--red);">CASE 02 ── 柳谷 伊冴（ISSA）/ ベテルギウス / 優里・後半組 チーム内2位</div>
+    <div class="rank-change">
+      <div><div class="stat-label">ポジションバトル順位</div><div class="rank-num c-ko">29位</div></div>
+      <div>
+        <div class="stat-label">推しカメラ（全体1位）</div>
+        <div style="font-size:1.4rem;font-weight:700;font-family:'JetBrains Mono',monospace;color:var(--pink);margin-top:4px;">386,985</div>
+      </div>
+    </div>
+    <p style="font-size:0.82rem;color:#ccc;margin-top:0.75rem;">全50名中ダントツの推しカメラ1位（386,985回）でありながら、ポジションバトル個人順位は29位。チーム内2位であったためベネフィットなし（342票のみ）。</p>
+    <div class="insight red" style="margin:0.75rem 0 0;">
+      KOTAROとISSAの対比は、このステージが示した最も鮮明な逆転だ。ISSAの推しカメラはKOTAROの<strong>4.9倍</strong>（386K対79K）。しかしKOTAROの総票60,402はISSAの342の177倍になる。<strong>「どのチームに配置されたか」「チーム内で何位だったか」がこれだけの差を生む構造</strong>が、ポジションバトルの本質を端的に示している。
+    </div>
+  </div>
+
+  <div class="highlight-box">
+    <div class="highlight-box-title">CASE 03 ── 矢田 佳暉（YOSHIKI）/ Doctor!Doctor! / ZEROBASEONE・後半組 チーム内5位</div>
+    <div class="rank-change">
+      <div><div class="stat-label">ポジションバトル順位</div><div class="rank-num" style="color:var(--muted);">37位</div></div>
+      <div>
+        <div class="stat-label">推しカメラ（全体3位）</div>
+        <div style="font-size:1.4rem;font-weight:700;font-family:'JetBrains Mono',monospace;color:var(--accent);margin-top:4px;">227,631</div>
+      </div>
+    </div>
+    <p style="font-size:0.82rem;color:#ccc;margin-top:0.75rem;">推しカメラ全体3位（227,631回）だが、チーム内5位・後半組・ベネフィット無しで個人票302票のみ。ポジションバトル37位。Doctor!Doctor!のハイライトは5/9以降に爆発的成長（+149%）を見せており、チームとしての評価は高い。しかしそれは投票締め切り後の話だ。</p>
+    <p style="font-size:0.82rem;color:#ccc;margin:0.5rem 0 0;">注目は推しカメラの成長ペースだ。5/3時点2,341回だったYOSHIKIの推しカメラは、5/9時点で186,404回（80倍）、5/23時点で227,631回。後半組の放送がYouTubeで届き始めた5/9以降にファン層が急速に拡大したことを示している。</p>
+  </div>
+
+  <div class="insight green">
+    3ケースに共通するのは「数字の規模≠順位」という構造だ。KOTARO（推しカメラ中程度→1位）、ISSA（推しカメラ1位→29位）、YOSHIKI（推しカメラ3位→37位）——最終的な順位を決めたのは個人の人気ではなく<strong>「チームに何票ついたか」と「放送のタイミング」</strong>だった。
+  </div>
+</div>
+
+<!-- 06 -->
+<div class="section">
+  <div class="section-head"><span class="section-num">06</span><span class="section-title">第二回順位発表式への接続｜ベネフィットが総合順位を押し上げた</span></div>
+
+  <p>ポジションバトルのベネフィット票は、第二回順位発表式の総票数に加算された。Natural全員の+50K〜+60Kは、第二回の順位を大きく引き上げる要因になった。</p>
+
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr>
+        <th>名前</th>
+        <th>第一回順位</th>
+        <th>第二回順位</th>
+        <th>順位変動</th>
+        <th>ポジションバトル内順位</th>
+        <th>ベネフィット</th>
+      </tr></thead>
+      <tbody>
+        <tr><td>浅香 孝太郎（KOTARO）</td><td>13位</td><td>2位</td><td class="c-green">▲11</td><td class="c-gold">1位</td><td class="c-gold">+60K</td></tr>
+        <tr><td>チェン・リッキー（RICKEY）</td><td>11位</td><td>3位</td><td class="c-green">▲8</td><td class="c-gold">2位</td><td class="c-accent">+50K</td></tr>
+        <tr><td>安部 結蘭（YURA）</td><td>4位</td><td>4位</td><td>±0</td><td class="c-gold">3位</td><td class="c-accent">+50K</td></tr>
+        <tr><td>石田 亮太（RYOTA）</td><td>17位</td><td>7位</td><td class="c-green">▲10</td><td class="c-gold">4位</td><td class="c-accent">+50K</td></tr>
+        <tr><td>小林 千悟（CHISATO）</td><td>26位</td><td>9位</td><td class="c-green">▲17</td><td class="c-gold">5位</td><td class="c-accent">+50K</td></tr>
+        <tr><td>リー・ウェイゼ（WEIZE）</td><td>21位</td><td>18位</td><td class="c-green">▲3</td><td class="c-gold">6位</td><td class="c-accent">+50K</td></tr>
+        <tr><td>柳谷 伊冴（ISSA）</td><td>37位</td><td>14位</td><td class="c-green">▲23</td><td>29位</td><td style="color:var(--hint);">0</td></tr>
+        <tr><td>矢田 佳暉（YOSHIKI）</td><td>—</td><td>27位</td><td>—</td><td>37位</td><td style="color:var(--hint);">0</td></tr>
+        <tr><td>横山 奏夢（KANAME）</td><td>—</td><td>29位</td><td>—</td><td>25位</td><td style="color:var(--hint);">0</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>NaturalのCHISATO（26位→9位）、KOTARO（13位→2位）、RICKEY（11位→3位）は50K〜60Kベネフィットで二桁の順位上昇を実現した。対してISSAは37位→14位と大幅上昇しているが、これはベネフィットなしでの純粋な投票による上昇であり、<strong>ポジションバトルの推しカメラ数値が遅れて投票に転換されたもの</strong>と読める。</p>
+
+  <div class="insight">
+    ISSAの▲23という上昇幅は第二回で最大クラスだ。ベネフィット無しでこれだけ動いた背景には、推しカメラ1位（387K）という圧倒的な数値が「認知→投票」というタイムラグを経て転換されたことがある。<strong>数値の大きさは、時間差で必ず票になっていく。</strong>
+  </div>
+</div>
+
+<!-- 07 -->
+<div class="section">
+  <div class="section-head"><span class="section-num">07</span><span class="section-title">総括｜「チームくじ」と「放送タイミング」が決める順位の構造</span></div>
+
+  <p>ポジションバトルのデータから浮かび上がるのは、<strong>個人のパフォーマンスや人気とは独立した二つの変数</strong>が順位を大きく支配しているという事実だ。ひとつは「どのチームに入るか」——最高チームNaturalに選ばれた6名はチームの評価を全員で均等に享受した。もうひとつは「前半か後半か」——後半組はYouTubeコンテンツが投票締め切りに間に合わなかった。</p>
+
+  <p>しかしISSAの推移は、この構造に抗う力を示してもいる。ベネフィット無し・後半組・タイムラグ不利という三重のハンデを抱えながら、推しカメラ1位（386,985回）という事実は変わらない。第二回順位発表式では37位→14位という大幅な上昇に転じた。<strong>「評価が出るのが遅れる」のであって「評価されない」わけではない</strong>——それがこのデータが示している。</p>
+
+  <p>コンセプトバトル（配信第九話、5/23）では放送が1回で前チームを網羅する形式となり、今回のような前後半ハンデは解消される見通しだ。ポジションバトルで「運」に恵まれなかった後半組の練習生たちが、初めてフラットな条件で評価を受けるステージになる。</p>
+
+  <div class="predict">
+    <div class="predict-title">コンセプトバトルへの仮説</div>
+    <div class="predict-item"><span class="predict-icon c-accent">◆</span><span><strong class="c-accent">ISSAはさらに票が集まる可能性が高い。</strong>推しカメラ1位の注目度が持続しており、コンセプトバトルでパフォーマンスが評価されれば「遅れた分の票」が一気に乗ってくる可能性がある。</span></div>
+    <div class="predict-item"><span class="predict-icon c-cyan">◆</span><span><strong class="c-cyan">YOSHIKIのような後半組の大幅な伸びに注目。</strong>推しカメラ規模が大きい後半組の練習生（YOSHIKI、KANAME、SHINHAENGなど）が、フラットな条件下でどこまで票を積み上げるか。</span></div>
+    <div class="predict-item"><span class="predict-icon c-gold">◆</span><span><strong class="c-gold">Naturalベネフィット組は「底上げ後」の本来の位置に収束するか。</strong>CHISATO（9位）、WEIZE（18位）など、ベネフィットで引き上げられた順位が次回以降どう動くかが、彼らの「本来の評価水準」を測る指標になる。</span></div>
+    <div class="predict-item"><span class="predict-icon c-ko">◆</span><span><strong class="c-ko">1票制（第四回ファイナル）を見据えたファンの行動変容。</strong>残り投票回数が減るにつれ、コアファンの密度が薄い練習生から票が離れていく。推しカメラの「量」より「リピート率・継続率」が重要になってくる段階だ。</span></div>
+  </div>
+
+  <div class="footnote">
+    本レポートはポジションバトル推しカメラ・YouTubeハイライト／フル版／NOCUT版データ（5/23 時点）および第二回順位発表式結果（2026/05/14）を基に作成。<br>
+    ベネフィット票数・ポジションバトル個人順位はCSVデータに基づく。<br>
+    © 2026 jidaikenkyuroom
+  </div>
+</div>
+
+</div>
+</body>
+</html>
