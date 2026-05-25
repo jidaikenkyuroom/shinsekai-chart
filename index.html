@@ -609,6 +609,7 @@ tr:hover td{background:var(--surface);}
     <div class="g-tabs" id="va-tabs">
       <button class="g-tab active" onclick="switchVoteTab('ratio')">① 国民/SEKAI割合</button>
       <button class="g-tab" onclick="switchVoteTab('scatter')">② 散布図</button>
+      <button class="g-tab" onclick="switchVoteTab('trend')">③ 順位推移</button>
     </div>
     <div id="vatab-ratio">
       <div class="row" style="margin-bottom:1rem;flex-wrap:wrap;gap:0.5rem;">
@@ -645,6 +646,21 @@ tr:hover td{background:var(--surface);}
       </div>
       <p class="sub-label" style="margin-bottom:1.2rem;">X軸＝国民pt、Y軸＝SEKAIpt。右上ほど両方から支持。点の色は順位帯（<span style="color:#c8b8ff;">■ 1〜12位</span> <span style="color:#88aacc;">■ 13〜35位</span> <span style="color:#556677;">■ 36位以下</span>）。枠線金色はGR対象。クリックで個人カードを表示。</p>
       <div class="chart-wrap" style="height:500px;"><canvas id="va-scatter-chart"></canvas></div>
+    </div>
+    <div id="vatab-trend" style="display:none;">
+      <p class="sub-label" style="margin-bottom:0.75rem;">総合順位（実線）・国民pt順位（破線）・SEKAIpt順位（点線）を第1〜4回にわたって比較。最大8名まで選択。</p>
+      <div class="row" style="margin-bottom:0.6rem;flex-wrap:wrap;gap:0.5rem;">
+        <input type="text" id="va-trend-search" placeholder="名前 or ABCで絞り込み..." oninput="filterVaTrendPicker()" style="width:200px;">
+        <button onclick="clearVaTrendSelection()" style="font-size:0.72rem;padding:5px 10px;border-radius:5px;border:1px solid var(--border2);background:transparent;color:var(--muted);cursor:pointer;font-family:inherit;">クリア</button>
+        <span id="va-trend-count" style="font-size:0.72rem;color:var(--muted);line-height:32px;">0 / 8 選択中</span>
+      </div>
+      <div class="picker" id="va-trend-picker" style="margin-bottom:1rem;"></div>
+      <div style="display:flex;gap:1.2rem;font-size:0.7rem;color:var(--muted);margin-bottom:0.75rem;flex-wrap:wrap;">
+        <span>─── 総合順位</span>
+        <span style="letter-spacing:2px;">╌╌╌ 国民pt順位</span>
+        <span style="letter-spacing:1px;">··· SEKAIpt順位</span>
+      </div>
+      <div class="chart-wrap" style="height:480px;"><canvas id="va-trend-chart"></canvas></div>
     </div>
   </div>
 
@@ -4283,14 +4299,15 @@ function initVoteAnalysis() {
 }
 
 function switchVoteTab(tab) {
-  ['ratio','scatter'].forEach(t => {
+  ['ratio','scatter','trend'].forEach(t => {
     document.getElementById('vatab-'+t).style.display = t===tab ? '' : 'none';
   });
   document.querySelectorAll('#va-tabs .g-tab').forEach((el,i) => {
-    el.classList.toggle('active', ['ratio','scatter'][i]===tab);
+    el.classList.toggle('active', ['ratio','scatter','trend'][i]===tab);
   });
   if(tab==='ratio')   renderVoteRatio();
   if(tab==='scatter') renderVoteScatter();
+  if(tab==='trend')   { buildVaTrendPicker(); renderVoteTrend(); }
 }
 
 function renderVoteScatter() {
@@ -4503,6 +4520,154 @@ function renderVoteRatio() {
             font: { size: 10 }
           }
         }
+      }
+    }
+  });
+}
+// ── 順位推移タブ ──
+let vaTrendChart = null;
+let vaTrendSelected = [];
+let vaTrendPickerBuilt = false;
+
+function buildVaPtRankMaps() {
+  const maps = {};
+  (typeof RANK_EVENT_KEYS !== 'undefined' ? RANK_EVENT_KEYS : []).forEach(k => {
+    const rows = rawRankData[k] || [];
+    const byNat   = [...rows].filter(r=>r[3]!=null).sort((a,b)=>(b[3]||0)-(a[3]||0));
+    const bySekai = [...rows].filter(r=>r[4]!=null).sort((a,b)=>(b[4]||0)-(a[4]||0));
+    const natMap = {}, sekaiMap = {};
+    byNat.forEach((r,i)   => natMap[r[0]]   = i+1);
+    bySekai.forEach((r,i) => sekaiMap[r[0]] = i+1);
+    maps[k] = {natMap, sekaiMap};
+  });
+  return maps;
+}
+
+function buildVaTrendPicker() {
+  if(vaTrendPickerBuilt) { filterVaTrendPicker(); return; }
+  vaTrendPickerBuilt = true;
+  filterVaTrendPicker();
+}
+
+function filterVaTrendPicker() {
+  const q = (document.getElementById('va-trend-search').value || '').toLowerCase();
+  // 全イベントに参加した練習生を集める（最新回の順位順）
+  const allReadings = new Set();
+  (RANK_EVENT_KEYS || []).forEach(k => (rawRankData[k]||[]).forEach(r => allReadings.add(r[0])));
+  const latestKey = RANK_EVENT_KEYS[RANK_EVENT_KEYS.length-1];
+  const latestMap = {};
+  (rawRankData[latestKey]||[]).forEach(r => latestMap[r[0]] = r[1] || 999);
+
+  let list = [...allReadings]
+    .map(reading => ({ reading, name: readingClassMap[reading]?.name || reading, rank: latestMap[reading]||999 }))
+    .sort((a,b) => a.rank - b.rank);
+
+  if(q) list = list.filter(d => d.name.includes(q) || d.reading.toLowerCase().includes(q));
+
+  document.getElementById('va-trend-picker').innerHTML = list.map(d => {
+    const sel = vaTrendSelected.includes(d.reading);
+    return `<button class="pick-btn ${sel?'selected':''}" onclick="toggleVaTrendPick('${d.reading}')" title="${d.name}（${d.reading}）">${d.name}<span style="display:block;font-size:0.58rem;color:var(--hint);font-family:monospace;">${d.reading}</span></button>`;
+  }).join('');
+}
+
+function toggleVaTrendPick(reading) {
+  if(vaTrendSelected.includes(reading)) {
+    vaTrendSelected = vaTrendSelected.filter(r => r !== reading);
+  } else {
+    if(vaTrendSelected.length >= 8) return;
+    vaTrendSelected.push(reading);
+  }
+  document.getElementById('va-trend-count').textContent = vaTrendSelected.length + ' / 8 選択中';
+  filterVaTrendPicker();
+  renderVoteTrend();
+}
+
+function clearVaTrendSelection() {
+  vaTrendSelected = [];
+  document.getElementById('va-trend-count').textContent = '0 / 8 選択中';
+  filterVaTrendPicker();
+  renderVoteTrend();
+}
+
+function renderVoteTrend() {
+  if(typeof rawRankData === 'undefined') return;
+  const events = RANK_EVENT_KEYS || [];
+  const ptMaps = buildVaPtRankMaps();
+
+  if(vaTrendChart) { vaTrendChart.destroy(); vaTrendChart = null; }
+
+  if(!vaTrendSelected.length) {
+    document.getElementById('va-trend-chart').getContext('2d').clearRect(0,0,9999,9999);
+    return;
+  }
+
+  const datasets = [];
+  vaTrendSelected.forEach((reading, ci) => {
+    const color = palette[ci % palette.length];
+    const name  = readingClassMap[reading]?.name || reading;
+
+    // 各回の順位を取得
+    const overall = events.map(k => {
+      const r = (rawRankData[k]||[]).find(r=>r[0]===reading);
+      return r ? (r[1] || null) : null;
+    });
+    const natRank = events.map(k => ptMaps[k]?.natMap[reading] ?? null);
+    const sekaiRank = events.map(k => ptMaps[k]?.sekaiMap[reading] ?? null);
+
+    datasets.push({
+      label: `${name} 総合`,
+      data: overall,
+      borderColor: color, backgroundColor: 'transparent',
+      borderWidth: 2, borderDash: [],
+      pointRadius: 5, pointBackgroundColor: color,
+      spanGaps: false, tension: 0.2,
+    });
+    datasets.push({
+      label: `${name} 国民`,
+      data: natRank,
+      borderColor: color + 'bb', backgroundColor: 'transparent',
+      borderWidth: 1.5, borderDash: [6,3],
+      pointRadius: 3, pointBackgroundColor: color + 'bb',
+      spanGaps: false, tension: 0.2,
+    });
+    datasets.push({
+      label: `${name} SEKAI`,
+      data: sekaiRank,
+      borderColor: color + '88', backgroundColor: 'transparent',
+      borderWidth: 1.5, borderDash: [2,4],
+      pointRadius: 3, pointBackgroundColor: color + '88',
+      spanGaps: false, tension: 0.2,
+    });
+  });
+
+  vaTrendChart = new Chart(document.getElementById('va-trend-chart'), {
+    type: 'line',
+    data: { labels: events.map(k => k+'回'), datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          labels: {
+            color: '#aaa', font: { size: 10 }, boxWidth: 20,
+            filter: item => item.text.endsWith('総合'),  // 凡例は総合線のみ
+          }
+        },
+        tooltip: {
+          callbacks: {
+            title: ctx => ctx[0].label,
+            label: ctx => `${ctx.dataset.label}: ${ctx.parsed.y != null ? ctx.parsed.y+'位' : '未参加'}`,
+          }
+        }
+      },
+      scales: {
+        y: {
+          reverse: true,
+          min: 1,
+          ticks: { color: '#888', callback: v => v+'位', maxTicksLimit: 10 },
+          grid: { color: 'rgba(255,255,255,0.05)' },
+          title: { display: true, text: '順位', color: '#888' }
+        },
+        x: { ticks: { color: '#ccc' }, grid: { display: false } }
       }
     }
   });
