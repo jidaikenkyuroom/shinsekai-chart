@@ -608,6 +608,7 @@ tr:hover td{background:var(--surface);}
     </blockquote>
     <div class="g-tabs" id="va-tabs">
       <button class="g-tab active" onclick="switchVoteTab('ratio')">① 国民/SEKAI割合</button>
+      <button class="g-tab" onclick="switchVoteTab('scatter')">② 散布図</button>
     </div>
     <div id="vatab-ratio">
       <div class="row" style="margin-bottom:1rem;flex-wrap:wrap;gap:0.5rem;">
@@ -632,6 +633,18 @@ tr:hover td{background:var(--surface);}
         <span style="color:#ffd700;">★ = GR対象（GR枠1〜12位）</span>
       </div>
       <div class="chart-wrap" id="va-ratio-wrap"><canvas id="va-ratio-chart"></canvas></div>
+    </div>
+    <div id="vatab-scatter" style="display:none;">
+      <div class="row" style="margin-bottom:1rem;flex-wrap:wrap;gap:0.5rem;">
+        <span class="label">回:</span>
+        <select id="va-scatter-event" onchange="renderVoteScatter()"></select>
+        <select id="va-scatter-filter" onchange="renderVoteScatter()">
+          <option value="active">通過者のみ</option>
+          <option value="all">全員</option>
+        </select>
+      </div>
+      <p class="sub-label" style="margin-bottom:1.2rem;">X軸＝国民pt、Y軸＝SEKAIpt。右上ほど両方から支持。点の色は順位帯（<span style="color:#c8b8ff;">■ 1〜12位</span> <span style="color:#88aacc;">■ 13〜35位</span> <span style="color:#556677;">■ 36位以下</span>）。枠線金色はGR対象。クリックで個人カードを表示。</p>
+      <div class="chart-wrap" style="height:500px;"><canvas id="va-scatter-chart"></canvas></div>
     </div>
   </div>
 
@@ -4244,7 +4257,7 @@ function renderConceptBenefit(sortKey) {
 // ===== コンセプトバトルここまで =====
 
 // ===== 票数分析 =====
-let vaRatioChart = null;
+let vaRatioChart = null, vaScatterChart = null;
 let vaInited = false;
 
 // 通過ボーダー（SEKAI枠除く本線）
@@ -4254,13 +4267,15 @@ function initVoteAnalysis() {
   if(!vaInited) {
     const sel = document.getElementById('va-ratio-event');
     if(typeof RANK_EVENT_KEYS !== 'undefined') {
-      RANK_EVENT_KEYS.forEach(k => {
-        const opt = document.createElement('option');
-        opt.value = k; opt.textContent = k + '順位発表式';
-        sel.appendChild(opt);
+      ['va-ratio-event','va-scatter-event'].forEach(selId => {
+        const s = document.getElementById(selId);
+        RANK_EVENT_KEYS.forEach(k => {
+          const opt = document.createElement('option');
+          opt.value = k; opt.textContent = k + '順位発表式';
+          s.appendChild(opt);
+        });
+        if(s.options.length) s.selectedIndex = s.options.length - 1;
       });
-      // 最新回をデフォルト選択
-      if(sel.options.length) sel.selectedIndex = sel.options.length - 1;
     }
     vaInited = true;
   }
@@ -4268,13 +4283,110 @@ function initVoteAnalysis() {
 }
 
 function switchVoteTab(tab) {
-  ['ratio'].forEach(t => {
+  ['ratio','scatter'].forEach(t => {
     document.getElementById('vatab-'+t).style.display = t===tab ? '' : 'none';
   });
   document.querySelectorAll('#va-tabs .g-tab').forEach((el,i) => {
-    el.classList.toggle('active', ['ratio'][i]===tab);
+    el.classList.toggle('active', ['ratio','scatter'][i]===tab);
   });
-  if(tab==='ratio') renderVoteRatio();
+  if(tab==='ratio')   renderVoteRatio();
+  if(tab==='scatter') renderVoteScatter();
+}
+
+function renderVoteScatter() {
+  if(typeof rawRankData === 'undefined') return;
+  const eventKey = document.getElementById('va-scatter-event').value;
+  const filter   = document.getElementById('va-scatter-filter').value;
+  const thresh   = VA_PASS_THRESHOLD[eventKey] || 999;
+
+  let items = (rawRankData[eventKey] || [])
+    .filter(r => r[3] != null && r[4] != null && r[5] > 0)
+    .map(r => {
+      const [reading, rank, grRank, natPt, sekaiPt, totalPt] = r;
+      const isGR = grRank != null && grRank <= 12;
+      return {reading, rank, grRank, natPt, sekaiPt, totalPt, isGR};
+    });
+
+  if(filter === 'active') items = items.filter(d => d.rank <= thresh || d.isGR);
+
+  // 順位帯で3グループに分けてdatasets化
+  function tierColor(rank) {
+    if(rank <= 12) return '#c8b8ff';
+    if(rank <= 35) return '#88aacc';
+    return '#556677';
+  }
+  function tierLabel(rank) {
+    if(rank <= 12) return '1〜12位';
+    if(rank <= 35) return '13〜35位';
+    return '36位以下';
+  }
+
+  const tierKeys = ['1〜12位','13〜35位','36位以下'];
+  const tierColors = {'1〜12位':'#c8b8ff','13〜35位':'#88aacc','36位以下':'#556677'};
+
+  const grouped = {'1〜12位':[], '13〜35位':[], '36位以下':[]};
+  items.forEach(d => { grouped[tierLabel(d.rank||999)].push(d); });
+
+  const datasets = tierKeys.map(tier => ({
+    label: tier,
+    data: grouped[tier].map(d => ({
+      x: d.natPt, y: d.sekaiPt,
+      reading: d.reading, rank: d.rank, grRank: d.grRank, isGR: d.isGR,
+      name: readingClassMap[d.reading]?.name || d.reading,
+      totalPt: d.totalPt,
+      sekaiPct: d.totalPt > 0 ? (d.sekaiPt/d.totalPt*100).toFixed(1) : '-',
+    })),
+    backgroundColor: tierColors[tier] + 'bb',
+    borderColor: grouped[tier].map(d => d.isGR ? '#ffd700' : tierColors[tier]),
+    borderWidth: grouped[tier].map(d => d.isGR ? 2 : 1),
+    pointRadius: 7,
+    pointHoverRadius: 9,
+  }));
+
+  if(vaScatterChart) { vaScatterChart.destroy(); vaScatterChart = null; }
+  const canvas = document.getElementById('va-scatter-chart');
+  vaScatterChart = new Chart(canvas, {
+    type: 'scatter',
+    data: { datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { labels: { color: '#aaa', font: { size: 11 } } },
+        tooltip: {
+          callbacks: {
+            label: ctx => {
+              const p = ctx.raw;
+              const gr = p.isGR ? ` ★GR${p.grRank}位` : '';
+              return [
+                `${p.name}（${p.reading}）`,
+                `総合: ${p.rank != null ? p.rank+'位' : '-'}${gr}`,
+                `国民pt: ${p.x.toLocaleString()}`,
+                `SEKAIpt: ${p.y.toLocaleString()}（${p.sekaiPct}%）`,
+              ];
+            }
+          }
+        }
+      },
+      onClick: (e, elements) => {
+        if(elements.length) {
+          const p = elements[0].element.$context.raw;
+          if(p.reading) openTraineePanel(p.reading);
+        }
+      },
+      scales: {
+        x: {
+          ticks: { color:'#888', callback: v => v>=1000000?(v/1000000).toFixed(1)+'M':v>=1000?(v/1000).toFixed(0)+'k':v },
+          grid: { color:'rgba(255,255,255,0.05)' },
+          title: { display:true, text:'国民pt', color:'#888' }
+        },
+        y: {
+          ticks: { color:'#888', callback: v => v>=1000000?(v/1000000).toFixed(1)+'M':v>=1000?(v/1000).toFixed(0)+'k':v },
+          grid: { color:'rgba(255,255,255,0.05)' },
+          title: { display:true, text:'SEKAIpt', color:'#888' }
+        }
+      }
+    }
+  });
 }
 
 function renderVoteRatio() {
