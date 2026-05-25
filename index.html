@@ -610,6 +610,7 @@ tr:hover td{background:var(--surface);}
       <button class="g-tab active" onclick="switchVoteTab('ratio')">① 国民/SEKAI割合</button>
       <button class="g-tab" onclick="switchVoteTab('scatter')">② 散布図</button>
       <button class="g-tab" onclick="switchVoteTab('trend')">③ 順位推移</button>
+      <button class="g-tab" onclick="switchVoteTab('rankdiff')">④ ランク差テーブル</button>
     </div>
     <div id="vatab-ratio">
       <div class="row" style="margin-bottom:1rem;flex-wrap:wrap;gap:0.5rem;">
@@ -661,6 +662,41 @@ tr:hover td{background:var(--surface);}
         <span style="letter-spacing:1px;">··· SEKAIpt順位</span>
       </div>
       <div class="chart-wrap" style="height:480px;"><canvas id="va-trend-chart"></canvas></div>
+    </div>
+    <div id="vatab-rank-diff" style="display:none;">
+      <p class="sub-label" style="margin-bottom:0.75rem;">国民pt順位とSEKAIpt順位の差を一覧表示。差分＝国民pt順位−SEKAIpt順位。正の値はSEKAIが相対的に高い（SEKAI型）、負の値は国民が相対的に高い（国民型）。列見出しクリックで並び替え。</p>
+      <div class="row" style="margin-bottom:1rem;flex-wrap:wrap;gap:0.5rem;">
+        <span class="label">回:</span>
+        <select id="va-rd-event" onchange="renderVoteRankDiff()"></select>
+        <select id="va-rd-filter" onchange="renderVoteRankDiff()">
+          <option value="active">通過者のみ</option>
+          <option value="all">全員</option>
+        </select>
+      </div>
+      <div style="overflow-x:auto;">
+        <table id="va-rd-table" style="width:100%;border-collapse:collapse;font-size:0.8rem;">
+          <thead>
+            <tr>
+              <th onclick="sortVaRankDiff('rank')" style="cursor:pointer;padding:7px 10px;text-align:center;border-bottom:1px solid var(--border2);color:var(--muted);white-space:nowrap;">総合順位 <span id="va-rd-sort-rank"></span></th>
+              <th onclick="sortVaRankDiff('name')" style="cursor:pointer;padding:7px 10px;text-align:left;border-bottom:1px solid var(--border2);color:var(--muted);white-space:nowrap;">名前 <span id="va-rd-sort-name"></span></th>
+              <th onclick="sortVaRankDiff('natRank')" style="cursor:pointer;padding:7px 10px;text-align:center;border-bottom:1px solid var(--border2);color:#f09878;white-space:nowrap;">国民pt順位 <span id="va-rd-sort-natRank"></span></th>
+              <th onclick="sortVaRankDiff('sekaiRank')" style="cursor:pointer;padding:7px 10px;text-align:center;border-bottom:1px solid var(--border2);color:#60c8e0;white-space:nowrap;">SEKAIpt順位 <span id="va-rd-sort-sekaiRank"></span></th>
+              <th onclick="sortVaRankDiff('diff')" style="cursor:pointer;padding:7px 10px;text-align:center;border-bottom:1px solid var(--border2);color:var(--muted);white-space:nowrap;">差分<br><span style="font-size:0.65rem;font-weight:normal;">（国民順位−SEKAI順位）</span> <span id="va-rd-sort-diff"></span></th>
+              <th style="padding:7px 10px;text-align:center;border-bottom:1px solid var(--border2);color:var(--muted);white-space:nowrap;">タイプ</th>
+            </tr>
+          </thead>
+          <tbody id="va-rd-tbody"></tbody>
+        </table>
+      </div>
+      <p style="font-size:0.7rem;color:var(--muted);margin-top:1rem;line-height:1.8;">
+        タイプ判定：差分≥+5 →
+        <span style="background:#1a3a5a;color:#60c8e0;border-radius:4px;padding:2px 7px;font-size:0.68rem;">SEKAI型</span>
+        、差分≤−5 →
+        <span style="background:#3a2010;color:#f09878;border-radius:4px;padding:2px 7px;font-size:0.68rem;">国民型</span>
+        、それ以外 →
+        <span style="background:#2a2a2a;color:#aaa;border-radius:4px;padding:2px 7px;font-size:0.68rem;">均衡型</span>
+        。差分の絶対値が大きいほど一方向への偏りが強い。
+      </p>
     </div>
   </div>
 
@@ -4299,15 +4335,16 @@ function initVoteAnalysis() {
 }
 
 function switchVoteTab(tab) {
-  ['ratio','scatter','trend'].forEach(t => {
+  ['ratio','scatter','trend','rankdiff'].forEach(t => {
     document.getElementById('vatab-'+t).style.display = t===tab ? '' : 'none';
   });
   document.querySelectorAll('#va-tabs .g-tab').forEach((el,i) => {
-    el.classList.toggle('active', ['ratio','scatter','trend'][i]===tab);
+    el.classList.toggle('active', ['ratio','scatter','trend','rankdiff'][i]===tab);
   });
-  if(tab==='ratio')   renderVoteRatio();
-  if(tab==='scatter') renderVoteScatter();
-  if(tab==='trend')   { buildVaTrendPicker(); renderVoteTrend(); }
+  if(tab==='ratio')    renderVoteRatio();
+  if(tab==='scatter')  renderVoteScatter();
+  if(tab==='trend')    { buildVaTrendPicker(); renderVoteTrend(); }
+  if(tab==='rankdiff') renderVoteRankDiff();
 }
 
 function renderVoteScatter() {
@@ -4645,7 +4682,7 @@ function renderVoteTrend() {
 
   vaTrendChart = new Chart(document.getElementById('va-trend-chart'), {
     type: 'line',
-    data: { labels: events.map(k => k+'回'), datasets },
+    data: { labels: events.map(k => k+'順位発表式'), datasets },
     options: {
       responsive: true, maintainAspectRatio: false,
       plugins: {
@@ -4674,6 +4711,84 @@ function renderVoteTrend() {
       }
     }
   });
+}
+// ── ランク差テーブル ──
+let vaRdSortState = {key: 'rank', asc: true};
+
+function renderVoteRankDiff() {
+  if(typeof rawRankData === 'undefined') return;
+  const rdSel = document.getElementById('va-rd-event');
+  if(!rdSel.options.length && typeof RANK_EVENT_KEYS !== 'undefined') {
+    RANK_EVENT_KEYS.forEach(k => {
+      const opt = document.createElement('option');
+      opt.value = k; opt.textContent = k + '順位発表式';
+      rdSel.appendChild(opt);
+    });
+    if(rdSel.options.length) rdSel.selectedIndex = rdSel.options.length - 1;
+  }
+  const eventKey = rdSel.value;
+  if(!eventKey) return;
+  const filter   = document.getElementById('va-rd-filter').value;
+  const thresh   = VA_PASS_THRESHOLD[eventKey] || 999;
+  const ptMaps   = buildVaPtRankMaps();
+  const natMap   = ptMaps[eventKey]?.natMap   || {};
+  const sekaiMap = ptMaps[eventKey]?.sekaiMap || {};
+
+  let rows = (rawRankData[eventKey] || [])
+    .filter(r => r[3] != null && r[4] != null)
+    .map(r => {
+      const [reading, rank, grRank, natPt, sekaiPt, totalPt] = r;
+      const nr   = natMap[reading]   || 999;
+      const sr   = sekaiMap[reading] || 999;
+      const diff = nr - sr;
+      const type = diff >= 5 ? 'SEKAI型' : diff <= -5 ? '国民型' : '均衡型';
+      const isGR = grRank != null && grRank <= 12;
+      const passes = (rank != null && rank <= thresh) || isGR;
+      return {reading, name: readingClassMap[reading]?.name || reading,
+              rank: rank || 999, grRank, natRank: nr, sekaiRank: sr, diff, type, passes};
+    });
+
+  if(filter === 'active') rows = rows.filter(r => r.passes);
+
+  const {key, asc} = vaRdSortState;
+  rows.sort((a, b) => {
+    const va = a[key], vb = b[key];
+    if(typeof va === 'string') return asc ? va.localeCompare(vb, 'ja') : vb.localeCompare(va, 'ja');
+    return asc ? va - vb : vb - va;
+  });
+
+  ['rank','name','natRank','sekaiRank','diff'].forEach(k => {
+    const el = document.getElementById('va-rd-sort-'+k);
+    if(el) el.textContent = k === key ? (asc ? '▲' : '▼') : '';
+  });
+
+  const tbody = document.getElementById('va-rd-tbody');
+  tbody.innerHTML = '';
+  rows.forEach(r => {
+    const typeBg    = r.type==='SEKAI型' ? '#1a3a5a' : r.type==='国民型' ? '#3a2010' : '#2a2a2a';
+    const typeColor = r.type==='SEKAI型' ? '#60c8e0'  : r.type==='国民型' ? '#f09878'  : '#aaa';
+    const diffColor = r.diff > 0 ? '#60c8e0' : r.diff < 0 ? '#f09878' : '#888';
+    const diffStr   = r.diff > 0 ? '+' + r.diff : String(r.diff);
+    const rankStr   = r.rank < 900 ? r.rank + '位' : '−';
+    const grStr     = (r.grRank != null && r.grRank <= 12)
+                      ? ` <span style="color:#ffd700;font-size:0.65rem;">★GR${r.grRank}位</span>` : '';
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td style="padding:6px 10px;text-align:center;border-bottom:1px solid var(--border2);color:#ccc;">${rankStr}${grStr}</td>
+      <td style="padding:6px 10px;white-space:nowrap;border-bottom:1px solid var(--border2);color:#eee;">${r.name}<br><span style="color:var(--muted);font-size:0.68rem;">${r.reading}</span></td>
+      <td style="padding:6px 10px;text-align:center;border-bottom:1px solid var(--border2);color:#f09878;">${r.natRank < 900 ? r.natRank+'位' : '−'}</td>
+      <td style="padding:6px 10px;text-align:center;border-bottom:1px solid var(--border2);color:#60c8e0;">${r.sekaiRank < 900 ? r.sekaiRank+'位' : '−'}</td>
+      <td style="padding:6px 10px;text-align:center;border-bottom:1px solid var(--border2);color:${diffColor};font-weight:bold;">${diffStr}</td>
+      <td style="padding:6px 10px;text-align:center;border-bottom:1px solid var(--border2);"><span style="background:${typeBg};color:${typeColor};border-radius:4px;padding:2px 7px;font-size:0.72rem;">${r.type}</span></td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function sortVaRankDiff(key) {
+  vaRdSortState.asc = (vaRdSortState.key === key) ? !vaRdSortState.asc : true;
+  vaRdSortState.key = key;
+  renderVoteRankDiff();
 }
 // ===== 票数分析ここまで =====
 
