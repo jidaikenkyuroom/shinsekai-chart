@@ -4551,14 +4551,17 @@ function buildVaTrendPicker() {
 
 function filterVaTrendPicker() {
   const q = (document.getElementById('va-trend-search').value || '').toLowerCase();
-  // 全イベントに参加した練習生を集める（最新回の順位順）
-  const allReadings = new Set();
-  (RANK_EVENT_KEYS || []).forEach(k => (rawRankData[k]||[]).forEach(r => allReadings.add(r[0])));
+  // 第1回通過者のみ（rank≤50 または GR枠≤12）
+  const r1 = rawRankData['第1回'] || [];
+  const survivors = new Set(
+    r1.filter(r => (r[1] != null && r[1] <= 50) || (r[2] != null && r[2] <= 12))
+      .map(r => r[0])
+  );
   const latestKey = RANK_EVENT_KEYS[RANK_EVENT_KEYS.length-1];
   const latestMap = {};
   (rawRankData[latestKey]||[]).forEach(r => latestMap[r[0]] = r[1] || 999);
 
-  let list = [...allReadings]
+  let list = [...survivors]
     .map(reading => ({ reading, name: readingClassMap[reading]?.name || reading, rank: latestMap[reading]||999 }))
     .sort((a,b) => a.rank - b.rank);
 
