@@ -569,6 +569,7 @@ tr:hover td{background:var(--surface);}
       <button class="g-tab active" onclick="switchConceptTab('list')">チーム一覧</button>
       <button class="g-tab" onclick="switchConceptTab('oshi')">推しカメラ</button>
       <button class="g-tab" onclick="switchConceptTab('highlight')">チーム別動画再生数</button>
+      <button class="g-tab" onclick="switchConceptTab('contrib')">チーム寄与度</button>
       <button class="g-tab" onclick="switchConceptTab('benefit')">ベネフィット効果</button>
     </div>
     <div id="ctab-list"><div id="concept-list"></div></div>
@@ -590,6 +591,9 @@ tr:hover td{background:var(--surface);}
       <div class="chart-wrap" style="height:320px;"><canvas id="chartConceptRD"></canvas></div>
       <h3 class="pos-group-label" style="margin-top:1.5rem;">▼ Full ver. <span id="concept-full-date" style="font-size:0.72rem;font-weight:normal;opacity:0.55;margin-left:0.4rem;"></span></h3>
       <div class="chart-wrap" style="height:320px;"><canvas id="chartConceptFull"></canvas></div>
+    </div>
+    <div id="ctab-contrib" style="display:none">
+      <div id="concept-contrib-content"></div>
     </div>
     <div id="ctab-benefit" style="display:none">
       <div id="concept-benefit-content"></div>
@@ -3802,14 +3806,15 @@ let chartConceptOshiScatter = null, chartConceptOshiBar = null, chartConceptHL =
 
 function switchConceptTab(tab) {
   currentConceptTab = tab;
-  ['list','oshi','highlight','benefit'].forEach(t => {
+  ['list','oshi','highlight','contrib','benefit'].forEach(t => {
     document.getElementById('ctab-'+t).style.display = t===tab ? '' : 'none';
   });
   document.querySelectorAll('#concept-tabs .g-tab').forEach((el,i) => {
-    el.classList.toggle('active', ['list','oshi','highlight','benefit'][i]===tab);
+    el.classList.toggle('active', ['list','oshi','highlight','contrib','benefit'][i]===tab);
   });
   if(tab==='oshi')      renderConceptOshi();
   if(tab==='highlight') renderConceptHL();
+  if(tab==='contrib')   renderConceptContrib();
   if(tab==='benefit')   renderConceptBenefit();
 }
 
@@ -3996,6 +4001,110 @@ function renderConceptHL() {
     document.getElementById('ctab-highlight').insertAdjacentHTML('beforeend',
       '<p style="color:var(--muted);padding:1rem 0;">動画データはまだありません。次回の自動更新後に表示されます。</p>');
   }
+}
+
+function renderConceptContrib() {
+  if(typeof CONCEPT_TRACKER==='undefined'){
+    document.getElementById('concept-contrib-content').innerHTML='<p style="color:var(--hint)">データ読み込み中</p>';
+    return;
+  }
+
+  // 最新推しカメラインデックス
+  let oshiLatestIdx = -1;
+  for(let i=CONCEPT_TRACKER.oshiDates.length-1; i>=0; i--){
+    if(CONCEPT_TRACKER.indiv.some(d=>d.oshi[i]!=null)){ oshiLatestIdx=i; break; }
+  }
+  const lastOshi = oshiLatestIdx>=0 ? CONCEPT_TRACKER.oshiDates[oshiLatestIdx] : '';
+
+  if(oshiLatestIdx<0){
+    document.getElementById('concept-contrib-content').innerHTML=
+      '<p style="color:var(--muted);padding:1rem 0;">推しカメラデータはまだありません。次回の自動更新後に表示されます。</p>';
+    return;
+  }
+
+  const indivMap = {};
+  CONCEPT_TRACKER.indiv.forEach(d=>{ indivMap[d.reading]=d; });
+
+  const songOrder = ['BLACK ANGEL','DREAMER','Fuego','KICK','Neko(ねこ)'];
+  const teams = CONCEPT_TRACKER.teams.map(t => {
+    const members = t.members
+      .map(r => { const d=indivMap[r]; return d ? {reading:r, name:d.name, views:d.oshi[oshiLatestIdx]??0} : null; })
+      .filter(Boolean)
+      .sort((a,b)=>b.views-a.views);
+    const oshiTotal = members.reduce((s,m)=>s+m.views,0);
+    return {...t, members, oshiTotal};
+  }).sort((a,b)=>b.oshiTotal-a.oshiTotal);
+
+  function concLabel(t1pct, gap) {
+    if(t1pct>=45) return ['★★★ 1人依存','#ff9060'];
+    if(gap>=12)   return ['★★  やや集中','#e0c060'];
+    return           ['★   分散型',  '#60c8a0'];
+  }
+
+  // サマリーテーブル
+  let html=`<p class="sub-label" style="margin-bottom:0.5rem;">チーム内占有率 ＝ そのメンバーの推しカメラ ÷ チーム全員の推しカメラ合計。</p>
+<p class="sub-label" style="opacity:0.55;margin-bottom:1.5rem;">推しカメラ基準日: ${lastOshi}</p>
+<div class="tbl-wrap" style="margin-bottom:2rem;">
+<table><thead><tr>
+  <th style="text-align:left;">楽曲</th><th>推しカメラ合計</th>
+  <th style="text-align:left;">TOP1</th><th>TOP1占有率</th><th style="text-align:left;">集中度</th>
+</tr></thead><tbody>`;
+
+  teams.forEach(t=>{
+    if(!t.members.length||t.oshiTotal===0) return;
+    const sc   = CONCEPT_SONG_COLORS[t.song]||'#888';
+    const t1   = t.members[0], t2 = t.members[1];
+    const t1pct = t1.views/t.oshiTotal*100;
+    const gap   = t2 ? t1pct-t2.views/t.oshiTotal*100 : t1pct;
+    const [cl,clr] = concLabel(t1pct,gap);
+    html+=`<tr>
+      <td style="color:${sc};font-size:0.73rem;">♪${t.song}</td>
+      <td>${t.oshiTotal.toLocaleString()}</td>
+      <td style="text-align:left;font-size:0.72rem;">${t1.reading}</td>
+      <td>${t1pct.toFixed(0)}%</td>
+      <td style="text-align:left;font-size:0.67rem;color:${clr};">${cl}</td>
+    </tr>`;
+  });
+  html+=`</tbody></table></div>`;
+
+  // チーム別棒グラフカード
+  html+=`<div style="font-size:0.78rem;font-weight:500;color:var(--accent);font-family:monospace;margin-bottom:1.25rem;padding-bottom:0.4rem;border-bottom:1px solid var(--border2);">チーム別詳細</div>`;
+
+  const sorted = [...songOrder.map(s=>teams.find(t=>t.song===s)).filter(Boolean),
+                  ...teams.filter(t=>!songOrder.includes(t.song))];
+  sorted.forEach(t=>{
+    if(!t.members.length||t.oshiTotal===0) return;
+    const sc = CONCEPT_SONG_COLORS[t.song]||'#888';
+    const t1 = t.members[0], t2 = t.members[1];
+    const t1pct = t1.views/t.oshiTotal*100;
+    const gap   = t2 ? t1pct-t2.views/t.oshiTotal*100 : t1pct;
+    const [cl,clr] = concLabel(t1pct,gap);
+    let bars='';
+    t.members.forEach((m,i)=>{
+      const pct=m.views/t.oshiTotal*100;
+      const top=i===0;
+      bars+=`<div style="display:flex;align-items:center;gap:7px;margin-bottom:3px;">
+        <div style="width:74px;font-size:0.68rem;color:${top?sc:'var(--muted)'};font-family:monospace;text-align:right;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${m.name}">${m.reading}</div>
+        <div style="width:30px;font-size:0.64rem;color:var(--hint);font-family:monospace;text-align:right;flex-shrink:0;">${pct.toFixed(0)}%</div>
+        <div style="flex:1;background:rgba(255,255,255,0.05);border-radius:2px;height:12px;overflow:hidden;">
+          <div style="width:${pct.toFixed(1)}%;background:${sc}${top?'bb':'40'};height:100%;${top?'border-right:2px solid '+sc+';':''}min-width:2px;border-radius:2px;"></div>
+        </div>
+        <div style="width:72px;font-size:0.65rem;font-family:monospace;color:${top?sc:'var(--hint)'};text-align:right;flex-shrink:0;">${m.views.toLocaleString()}</div>
+      </div>`;
+    });
+    html+=`<div style="background:var(--surface);border-radius:8px;padding:0.85rem 1rem;margin-bottom:0.85rem;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:0.55rem;flex-wrap:wrap;">
+        <div style="width:3px;border-radius:2px;background:${sc};align-self:stretch;min-height:20px;flex-shrink:0;"></div>
+        <span style="font-size:0.78rem;font-weight:600;color:${sc};">${t.song}</span>
+        <span style="font-size:0.65rem;color:${clr};font-family:monospace;margin-left:auto;">${cl}</span>
+      </div>
+      <div style="display:flex;gap:1.2rem;font-size:0.65rem;color:var(--muted);font-family:monospace;margin-bottom:0.65rem;flex-wrap:wrap;">
+        <span>推しカメラ計 <b style="color:var(--text);">${t.oshiTotal.toLocaleString()}</b></span>
+      </div>
+      ${bars}
+    </div>`;
+  });
+  document.getElementById('concept-contrib-content').innerHTML=html;
 }
 
 let conceptBenefitSortKey = 'conceptRank';
