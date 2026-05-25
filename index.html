@@ -649,17 +649,30 @@ tr:hover td{background:var(--surface);}
       <div class="chart-wrap" style="height:500px;"><canvas id="va-scatter-chart"></canvas></div>
     </div>
     <div id="vatab-trend" style="display:none;">
-      <p class="sub-label" style="margin-bottom:0.75rem;">総合順位（実線）・国民pt順位（破線）・SEKAIpt順位（点線）を第1〜4回にわたって比較。最大8名まで選択。</p>
-      <div class="row" style="margin-bottom:0.6rem;flex-wrap:wrap;gap:0.5rem;">
+      <div style="background:var(--surface);border:1px solid var(--border2);border-radius:8px;padding:0.85rem 1.1rem;margin-bottom:1rem;font-size:0.76rem;line-height:2;color:var(--text);">
+        <div style="font-weight:bold;color:#ccc;margin-bottom:0.3rem;font-size:0.8rem;">グラフの見方 / 操作手順</div>
+        <div><span style="display:inline-block;background:#2a4a6a;color:#a8c8f0;border-radius:4px;padding:1px 8px;font-size:0.7rem;font-weight:bold;margin-right:6px;vertical-align:middle;">Step 1</span>下の練習生リストからクリックして選択（最大8名）。名前/コードで絞り込み可。</div>
+        <div><span style="display:inline-block;background:#2a4a6a;color:#a8c8f0;border-radius:4px;padding:1px 8px;font-size:0.7rem;font-weight:bold;margin-right:6px;vertical-align:middle;">Step 2</span>必要に応じて「表示する線」ボタンで不要な線種を非表示に切り替え。</div>
+        <div style="margin-top:0.4rem;display:flex;gap:1.4rem;flex-wrap:wrap;color:var(--muted);font-size:0.72rem;">
+          <span>─── 総合順位（実線）</span>
+          <span>╌╌╌ 国民pt順位（破線）</span>
+          <span>··· SEKAIpt順位（点線）</span>
+        </div>
+      </div>
+      <div class="row" style="margin-bottom:0.6rem;flex-wrap:wrap;gap:0.5rem;align-items:center;">
         <input type="text" id="va-trend-search" placeholder="名前 or ABCで絞り込み..." oninput="filterVaTrendPicker()" style="width:200px;">
         <button onclick="clearVaTrendSelection()" style="font-size:0.72rem;padding:5px 10px;border-radius:5px;border:1px solid var(--border2);background:transparent;color:var(--muted);cursor:pointer;font-family:inherit;">クリア</button>
-        <span id="va-trend-count" style="font-size:0.72rem;color:var(--muted);line-height:32px;">0 / 8 選択中</span>
+        <span id="va-trend-count" style="font-size:0.72rem;color:var(--muted);">0 / 8 選択中</span>
       </div>
       <div class="picker" id="va-trend-picker" style="margin-bottom:1rem;"></div>
-      <div style="display:flex;gap:1.2rem;font-size:0.7rem;color:var(--muted);margin-bottom:0.75rem;flex-wrap:wrap;">
-        <span>─── 総合順位</span>
-        <span style="letter-spacing:2px;">╌╌╌ 国民pt順位</span>
-        <span style="letter-spacing:1px;">··· SEKAIpt順位</span>
+      <div style="display:flex;gap:0.5rem;margin-bottom:0.9rem;flex-wrap:wrap;align-items:center;">
+        <span style="font-size:0.72rem;color:var(--muted);white-space:nowrap;">表示する線:</span>
+        <button id="va-line-toggle-overall" onclick="toggleVaTrendLine('overall')"
+          style="font-size:0.72rem;padding:5px 13px;border-radius:5px;border:1px solid #666;background:rgba(255,255,255,0.1);color:#ddd;cursor:pointer;font-family:inherit;transition:opacity .15s;">─── 総合順位</button>
+        <button id="va-line-toggle-nat" onclick="toggleVaTrendLine('nat')"
+          style="font-size:0.72rem;padding:5px 13px;border-radius:5px;border:1px solid #666;background:rgba(240,152,120,0.15);color:#f09878;cursor:pointer;font-family:inherit;transition:opacity .15s;">╌╌╌ 国民pt順位</button>
+        <button id="va-line-toggle-sekai" onclick="toggleVaTrendLine('sekai')"
+          style="font-size:0.72rem;padding:5px 13px;border-radius:5px;border:1px solid #666;background:rgba(96,200,224,0.12);color:#60c8e0;cursor:pointer;font-family:inherit;transition:opacity .15s;">··· SEKAIpt順位</button>
       </div>
       <div class="chart-wrap" style="height:480px;"><canvas id="va-trend-chart"></canvas></div>
     </div>
@@ -4565,6 +4578,22 @@ function renderVoteRatio() {
 let vaTrendChart = null;
 let vaTrendSelected = [];
 let vaTrendPickerBuilt = false;
+let vaTrendLineVisible = {overall: true, nat: true, sekai: true};
+
+function toggleVaTrendLine(type) {
+  vaTrendLineVisible[type] = !vaTrendLineVisible[type];
+  const btn = document.getElementById('va-line-toggle-' + type);
+  if(btn) {
+    btn.style.opacity   = vaTrendLineVisible[type] ? '1' : '0.35';
+    btn.style.textDecoration = vaTrendLineVisible[type] ? '' : 'line-through';
+  }
+  if(!vaTrendChart) return;
+  const order = ['overall', 'nat', 'sekai'];
+  vaTrendChart.data.datasets.forEach((ds, i) => {
+    ds.hidden = !vaTrendLineVisible[order[i % 3]];
+  });
+  vaTrendChart.update();
+}
 
 function buildVaPtRankMaps() {
   const maps = {};
@@ -4661,6 +4690,7 @@ function renderVoteTrend() {
       borderWidth: 2, borderDash: [],
       pointRadius: 5, pointBackgroundColor: color,
       spanGaps: false, tension: 0.2,
+      hidden: !vaTrendLineVisible.overall,
     });
     datasets.push({
       label: `${name} 国民`,
@@ -4669,6 +4699,7 @@ function renderVoteTrend() {
       borderWidth: 1.5, borderDash: [6,3],
       pointRadius: 3, pointBackgroundColor: color + 'bb',
       spanGaps: false, tension: 0.2,
+      hidden: !vaTrendLineVisible.nat,
     });
     datasets.push({
       label: `${name} SEKAI`,
@@ -4677,6 +4708,7 @@ function renderVoteTrend() {
       borderWidth: 1.5, borderDash: [2,4],
       pointRadius: 3, pointBackgroundColor: color + '88',
       spanGaps: false, tension: 0.2,
+      hidden: !vaTrendLineVisible.sekai,
     });
   });
 
