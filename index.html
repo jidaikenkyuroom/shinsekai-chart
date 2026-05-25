@@ -627,6 +627,7 @@ tr:hover td{background:var(--surface);}
       <div id="va-ratio-legend" style="display:flex;gap:1.2rem;font-size:0.72rem;color:var(--muted);margin-bottom:0.75rem;flex-wrap:wrap;">
         <span><span style="display:inline-block;width:12px;height:12px;background:#f09878;border-radius:2px;margin-right:4px;vertical-align:middle;"></span>国民pt</span>
         <span><span style="display:inline-block;width:12px;height:12px;background:#60c8e0;border-radius:2px;margin-right:4px;vertical-align:middle;"></span>SEKAIpt</span>
+        <span><span style="display:inline-block;width:12px;height:12px;background:#ffd700;border-radius:2px;margin-right:4px;vertical-align:middle;"></span>ベネフィット</span>
         <span style="color:#ffd700;">★ = GR対象（GR枠1〜12位）</span>
       </div>
       <div class="chart-wrap" id="va-ratio-wrap"><canvas id="va-ratio-chart"></canvas></div>
@@ -4291,9 +4292,10 @@ function renderVoteRatio() {
     .map(r => {
       const [reading, rank, grRank, natPt, sekaiPt, totalPt] = r;
       const nat = natPt || 0, sekai = sekaiPt || 0, total = (totalPt || 1);
+      const benefit = Math.max(0, total - nat - sekai);
       const isGR = grRank != null && grRank <= 12;
-      return {reading, rank, grRank, natPt: nat, sekaiPt: sekai, totalPt: total,
-              natPct: nat/total*100, sekaiPct: sekai/total*100, isGR};
+      return {reading, rank, grRank, natPt: nat, sekaiPt: sekai, benefit, totalPt: total,
+              natPct: nat/total*100, sekaiPct: sekai/total*100, benefitPct: benefit/total*100, isGR};
     });
 
   if(filter === 'active') {
@@ -4332,6 +4334,13 @@ function renderVoteRatio() {
           backgroundColor: '#60c8e099',
           borderColor: 'transparent',
           borderWidth: 0,
+        },
+        {
+          label: 'ベネフィット',
+          data: items.map(d => +d.benefitPct.toFixed(2)),
+          backgroundColor: '#ffd70099',
+          borderColor: 'transparent',
+          borderWidth: 0,
         }
       ]
     },
@@ -4355,11 +4364,13 @@ function renderVoteRatio() {
                   `総合順位: ${d.rank != null ? d.rank+'位' : '-'}`,
                   `国民pt: ${d.natPt.toLocaleString()}（${d.natPct.toFixed(1)}%）`,
                 ];
+              } else if(ctx.datasetIndex === 1) {
+                return `SEKAIpt: ${d.sekaiPt.toLocaleString()}（${d.sekaiPct.toFixed(1)}%）`;
               } else {
-                return [
-                  `SEKAIpt: ${d.sekaiPt.toLocaleString()}（${d.sekaiPct.toFixed(1)}%）`,
-                  `総票: ${d.totalPt.toLocaleString()}`,
-                ];
+                return d.benefit > 0
+                  ? [`ベネフィット: ${d.benefit.toLocaleString()}（${d.benefitPct.toFixed(1)}%）`,
+                     `総票: ${d.totalPt.toLocaleString()}`]
+                  : `総票: ${d.totalPt.toLocaleString()}`;
               }
             }
           }
