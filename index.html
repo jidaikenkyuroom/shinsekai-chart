@@ -160,6 +160,7 @@ tr:hover td{background:var(--surface);}
   <button class="tab" onclick="switchTab('battle')">グループバトル</button>
   <button class="tab" onclick="switchTab('pos')">ポジションバトル</button>
   <button class="tab" onclick="switchTab('concept')">コンセプトバトル</button>
+  <button class="tab" onclick="switchTab('voteanalysis')">票数分析</button>
 </div>
 <div class="main">
 
@@ -600,6 +601,38 @@ tr:hover td{background:var(--surface);}
     </div>
   </div>
 
+  <div id="tab-voteanalysis" class="section">
+    <blockquote style="border-left:3px solid var(--border2);background:var(--surface);padding:0.8rem 1.1rem;margin-bottom:1.25rem;border-radius:0 5px 5px 0;font-size:0.76rem;color:var(--text);opacity:0.75;line-height:1.8;">
+      各順位発表式での国民pt・SEKAIptの内訳を分析します。第1〜4回の順位発表データから、誰が「国民型」「SEKAI型」かを可視化します。★印はグローバルランカー対象（GR枠上位12位以内）。
+    </blockquote>
+    <div class="g-tabs" id="va-tabs">
+      <button class="g-tab active" onclick="switchVoteTab('ratio')">① 国民/SEKAI割合</button>
+    </div>
+    <div id="vatab-ratio">
+      <div class="row" style="margin-bottom:1rem;flex-wrap:wrap;gap:0.5rem;">
+        <span class="label">回:</span>
+        <select id="va-ratio-event" onchange="renderVoteRatio()"></select>
+        <span class="label">並び替え:</span>
+        <select id="va-ratio-sort" onchange="renderVoteRatio()">
+          <option value="sekai">SEKAI比率順（高い順）</option>
+          <option value="nat">国民比率順（高い順）</option>
+          <option value="rank" selected>総合順位順</option>
+          <option value="abc">ABC順</option>
+        </select>
+        <select id="va-ratio-filter" onchange="renderVoteRatio()">
+          <option value="active">通過者のみ</option>
+          <option value="all">全員</option>
+        </select>
+      </div>
+      <div id="va-ratio-legend" style="display:flex;gap:1.2rem;font-size:0.72rem;color:var(--muted);margin-bottom:0.75rem;flex-wrap:wrap;">
+        <span><span style="display:inline-block;width:12px;height:12px;background:#f09878;border-radius:2px;margin-right:4px;vertical-align:middle;"></span>国民pt</span>
+        <span><span style="display:inline-block;width:12px;height:12px;background:#60c8e0;border-radius:2px;margin-right:4px;vertical-align:middle;"></span>SEKAIpt</span>
+        <span style="color:#ffd700;">★ = GR対象（GR枠1〜12位）</span>
+      </div>
+      <div class="chart-wrap" id="va-ratio-wrap"><canvas id="va-ratio-chart"></canvas></div>
+    </div>
+  </div>
+
 </div>
 <div id="trendTooltip" style="display:none;position:fixed;pointer-events:none;z-index:300;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:11px 14px;min-width:190px;max-width:230px;box-shadow:0 4px 20px rgba(0,0,0,0.5);"></div>
 <script>
@@ -1002,7 +1035,7 @@ function loadSelection(){
 }
 
 function switchTab(t){
-  ['watch','all','trend','heat','analysis','battle','pos','concept'].forEach((id,i)=>{
+  ['watch','all','trend','heat','analysis','battle','pos','concept','voteanalysis'].forEach((id,i)=>{
     document.getElementById('tab-'+id).classList.toggle('active',id===t);
     document.querySelectorAll('.tab')[i].classList.toggle('active',id===t);
   });
@@ -1013,6 +1046,7 @@ function switchTab(t){
   if(t==='analysis') renderVoteBreakdown();
   if(t==='battle') renderBattle();
   if(t==='concept') renderConceptBattle();
+  if(t==='voteanalysis') initVoteAnalysis();
 }
 
 function switchGraph(type){
@@ -4206,6 +4240,150 @@ function renderConceptBenefit(sortKey) {
   document.getElementById('concept-benefit-content').innerHTML=html;
 }
 // ===== コンセプトバトルここまで =====
+
+// ===== 票数分析 =====
+let vaRatioChart = null;
+let vaInited = false;
+
+// 通過ボーダー（SEKAI枠除く本線）
+const VA_PASS_THRESHOLD = {'第1回': 50, '第2回': 35, '第3回': 20, '第4回': 12};
+
+function initVoteAnalysis() {
+  if(!vaInited) {
+    const sel = document.getElementById('va-ratio-event');
+    if(typeof RANK_EVENT_KEYS !== 'undefined') {
+      RANK_EVENT_KEYS.forEach(k => {
+        const opt = document.createElement('option');
+        opt.value = k; opt.textContent = k + '順位発表式';
+        sel.appendChild(opt);
+      });
+      // 最新回をデフォルト選択
+      if(sel.options.length) sel.selectedIndex = sel.options.length - 1;
+    }
+    vaInited = true;
+  }
+  renderVoteRatio();
+}
+
+function switchVoteTab(tab) {
+  ['ratio'].forEach(t => {
+    document.getElementById('vatab-'+t).style.display = t===tab ? '' : 'none';
+  });
+  document.querySelectorAll('#va-tabs .g-tab').forEach((el,i) => {
+    el.classList.toggle('active', ['ratio'][i]===tab);
+  });
+  if(tab==='ratio') renderVoteRatio();
+}
+
+function renderVoteRatio() {
+  if(typeof rawRankData === 'undefined') return;
+  const eventKey = document.getElementById('va-ratio-event').value;
+  const sort      = document.getElementById('va-ratio-sort').value;
+  const filter    = document.getElementById('va-ratio-filter').value;
+
+  const eventRows = rawRankData[eventKey] || [];
+  // [reading, rank, grRank, natPt, sekaiPt, totalPt]
+
+  const thresh = VA_PASS_THRESHOLD[eventKey] || 999;
+
+  let items = eventRows
+    .filter(r => r[5] != null && r[5] > 0)
+    .map(r => {
+      const [reading, rank, grRank, natPt, sekaiPt, totalPt] = r;
+      const nat = natPt || 0, sekai = sekaiPt || 0, total = (totalPt || 1);
+      const isGR = grRank != null && grRank <= 12;
+      return {reading, rank, grRank, natPt: nat, sekaiPt: sekai, totalPt: total,
+              natPct: nat/total*100, sekaiPct: sekai/total*100, isGR};
+    });
+
+  if(filter === 'active') {
+    items = items.filter(d => d.rank <= thresh || d.isGR);
+  }
+
+  if(sort === 'sekai')      items.sort((a,b) => b.sekaiPct - a.sekaiPct);
+  else if(sort === 'nat')   items.sort((a,b) => b.natPct - a.natPct);
+  else if(sort === 'rank')  items.sort((a,b) => (a.rank||999) - (b.rank||999));
+  else                       items.sort((a,b) => a.reading.localeCompare(b.reading));
+
+  const labels = items.map(d => {
+    const name = readingClassMap[d.reading]?.name || d.reading;
+    return (d.isGR ? '★ ' : '') + name;
+  });
+  const tickColors = items.map(d => d.isGR ? '#ffd700' : '#ccc');
+
+  document.getElementById('va-ratio-wrap').style.height = (items.length * 24 + 60) + 'px';
+
+  if(vaRatioChart) { vaRatioChart.destroy(); vaRatioChart = null; }
+  vaRatioChart = new Chart(document.getElementById('va-ratio-chart'), {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        {
+          label: '国民pt',
+          data: items.map(d => +d.natPct.toFixed(2)),
+          backgroundColor: '#f0987899',
+          borderColor: 'transparent',
+          borderWidth: 0,
+        },
+        {
+          label: 'SEKAIpt',
+          data: items.map(d => +d.sekaiPct.toFixed(2)),
+          backgroundColor: '#60c8e099',
+          borderColor: 'transparent',
+          borderWidth: 0,
+        }
+      ]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            title: ctx => {
+              const d = items[ctx[0].dataIndex];
+              const name = readingClassMap[d.reading]?.name || d.reading;
+              return `${name}（${d.reading}）${d.isGR ? ' ★GR' + d.grRank + '位' : ''}`;
+            },
+            label: ctx => {
+              const d = items[ctx.dataIndex];
+              if(ctx.datasetIndex === 0) {
+                return [
+                  `総合順位: ${d.rank != null ? d.rank+'位' : '-'}`,
+                  `国民pt: ${d.natPt.toLocaleString()}（${d.natPct.toFixed(1)}%）`,
+                ];
+              } else {
+                return [
+                  `SEKAIpt: ${d.sekaiPt.toLocaleString()}（${d.sekaiPct.toFixed(1)}%）`,
+                  `総票: ${d.totalPt.toLocaleString()}`,
+                ];
+              }
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          stacked: true,
+          max: 100,
+          ticks: { color: '#888', callback: v => v + '%' },
+          grid: { color: 'rgba(255,255,255,0.05)' }
+        },
+        y: {
+          stacked: true,
+          ticks: {
+            color: ctx => tickColors[ctx.index] || '#ccc',
+            font: { size: 10 }
+          }
+        }
+      }
+    }
+  });
+}
+// ===== 票数分析ここまで =====
 
 function renderTPChart(d) {
   const canvas = document.getElementById('tp-rank-chart');
