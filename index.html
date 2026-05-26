@@ -2240,7 +2240,7 @@ function switchBattleTab(tab) {
   if(tab==='timing')       renderBattleTiming();
   if(tab==='classscatter') renderClassScatter();
   if(tab==='trends')       renderBattleTrends();
-  if(tab==='votescatter')  renderVoteScatter();
+  if(tab==='votescatter')  renderBattleVoteScatter();
   if(tab==='contrib')      renderGbContrib();
 }
 
@@ -2907,7 +2907,7 @@ function renderVsQuadCards(){
 
 // ── 個人票×推しカメラ 散布図 ──
 let chartVoteScatter = null;
-function renderVoteScatter(){
+function renderBattleVoteScatter(){
   if(chartVoteScatter){ chartVoteScatter.destroy(); chartVoteScatter=null; }
   const ctx = document.getElementById('chartVoteScatter');
 
