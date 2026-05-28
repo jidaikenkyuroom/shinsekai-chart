@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第三回順位発表式 分析レポート｜新世界 数値トラッカー</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500&display=swap');
+:root{--bg:#0a0a0c;--s1:#111115;--s2:#18181d;--border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);--text:#ededeb;--muted:#888882;--hint:#444440;--accent:#c8b8ff;--gold:#f0c040;--green:#4ec87a;--red:#ff5c35;--cyan:#60c8e0;--pink:#e080c0;--orange:#f09878;}
+*{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text);line-height:1.75;font-size:14px;}
+.wrap{max-width:860px;margin:0 auto;padding:0 1.5rem 6rem;}
+.hero{padding:3.5rem 0 2.5rem;border-bottom:1px solid var(--border);margin-bottom:3rem;}
+.hero-tag{font-family:'JetBrains Mono',monospace;font-size:0.65rem;color:var(--accent);letter-spacing:0.18em;text-transform:uppercase;margin-bottom:0.75rem;opacity:0.8;}
+.hero h1{font-size:1.55rem;font-weight:700;letter-spacing:-0.01em;line-height:1.3;margin-bottom:0.75rem;}
+.hero-meta{font-family:'JetBrains Mono',monospace;font-size:0.7rem;color:var(--muted);line-height:1.8;}
+.section{margin-bottom:3.5rem;}
+.section-head{display:flex;align-items:baseline;gap:0.75rem;margin-bottom:1.5rem;padding-bottom:0.6rem;border-bottom:1px solid var(--border);}
+.section-num{font-family:'JetBrains Mono',monospace;font-size:0.62rem;color:var(--accent);opacity:0.6;}
+.section-title{font-size:1rem;font-weight:700;letter-spacing:0.02em;}
+p{font-size:0.875rem;color:#ccc;margin-bottom:0.9rem;line-height:1.85;}
+p:last-child{margin-bottom:0;}
+strong{color:var(--text);font-weight:500;}
+.insight{background:var(--s1);border:1px solid var(--border2);border-left:3px solid var(--accent);border-radius:0 6px 6px 0;padding:1rem 1.25rem;margin:1.25rem 0;font-size:0.84rem;color:var(--text);line-height:1.75;}
+.insight.green{border-left-color:var(--green);}
+.insight.gold{border-left-color:var(--gold);}
+.insight.red{border-left-color:var(--red);}
+.insight.cyan{border-left-color:var(--cyan);}
+.insight.orange{border-left-color:var(--orange);}
+.insight.pink{border-left-color:var(--pink);}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:1.25rem 0;}
+.stat-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin:1.25rem 0;}
+.stat-card{background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:1rem 1.2rem;}
+.stat-label{font-size:0.65rem;font-family:'JetBrains Mono',monospace;color:var(--muted);letter-spacing:0.08em;margin-bottom:4px;}
+.stat-val{font-size:1.6rem;font-weight:700;font-family:'JetBrains Mono',monospace;line-height:1;}
+.stat-sub{font-size:0.7rem;color:var(--muted);margin-top:4px;}
+.bar-section{margin:1rem 0;}
+.bar-row{display:flex;align-items:center;gap:8px;margin-bottom:7px;}
+.bar-label{width:180px;font-size:0.72rem;color:var(--muted);flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.bar-track{flex:1;background:rgba(255,255,255,0.04);border-radius:3px;height:20px;overflow:hidden;}
+.bar-fill{height:100%;border-radius:3px;min-width:2px;display:flex;align-items:center;padding-left:6px;font-size:0.6rem;font-family:'JetBrains Mono',monospace;color:rgba(255,255,255,0.6);}
+.bar-val{font-size:0.7rem;font-family:'JetBrains Mono',monospace;width:80px;text-align:right;flex-shrink:0;}
+.tbl-wrap{overflow-x:auto;margin:1rem 0;}
+table{width:100%;border-collapse:collapse;font-size:0.78rem;}
+th{font-size:0.65rem;color:var(--muted);font-weight:400;text-align:right;padding:6px 8px;border-bottom:1px solid var(--border);white-space:nowrap;font-family:'JetBrains Mono',monospace;}
+th:first-child{text-align:left;}
+td{padding:6px 8px;border-bottom:1px solid var(--border);text-align:right;font-family:'JetBrains Mono',monospace;font-size:0.75rem;color:var(--muted);}
+td:first-child{text-align:left;color:var(--text);font-family:'Noto Sans JP',sans-serif;}
+tr:hover td{background:var(--s1);}
+.highlight-box{background:var(--s2);border:1px solid rgba(200,184,255,0.25);border-radius:8px;padding:1.25rem;margin:1.25rem 0;}
+.highlight-box-title{font-size:0.7rem;font-family:'JetBrains Mono',monospace;color:var(--accent);letter-spacing:0.1em;margin-bottom:0.75rem;}
+.predict{background:linear-gradient(135deg,rgba(200,184,255,0.06),rgba(78,200,122,0.04));border:1px solid rgba(200,184,255,0.2);border-radius:8px;padding:1.25rem;margin:1.25rem 0;}
+.predict-title{font-size:0.68rem;font-family:'JetBrains Mono',monospace;color:var(--accent);letter-spacing:0.1em;margin-bottom:0.75rem;}
+.predict-item{display:flex;gap:8px;align-items:flex-start;font-size:0.84rem;margin-bottom:0.6rem;line-height:1.7;}
+.predict-icon{flex-shrink:0;margin-top:2px;}
+.footnote{font-size:0.72rem;color:var(--hint);font-family:'JetBrains Mono',monospace;border-top:1px solid var(--border);margin-top:0.75rem;padding-top:0.6rem;line-height:1.6;}
+.gap-row{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border);}
+.gap-rank{font-family:'JetBrains Mono',monospace;font-size:0.72rem;width:50px;flex-shrink:0;color:var(--muted);}
+.gap-name{font-size:0.8rem;flex:1;}
+.gap-pt{font-family:'JetBrains Mono',monospace;font-size:0.72rem;width:80px;text-align:right;flex-shrink:0;}
+.gap-diff{font-family:'JetBrains Mono',monospace;font-size:0.68rem;width:90px;text-align:right;flex-shrink:0;}
+.gap-line{border-left:3px solid var(--red);padding-left:8px;margin:6px 0 6px 58px;font-size:0.7rem;font-family:'JetBrains Mono',monospace;color:var(--red);}
+.ben-tag{display:inline-block;font-size:0.58rem;font-family:'JetBrains Mono',monospace;padding:1px 5px;border-radius:3px;margin-left:4px;vertical-align:middle;}
+.ben-100k{background:rgba(240,192,64,0.15);color:var(--gold);border:1px solid rgba(240,192,64,0.3);}
+.ben-50k{background:rgba(200,184,255,0.12);color:var(--accent);border:1px solid rgba(200,184,255,0.3);}
+.ben-40k{background:rgba(96,200,224,0.12);color:var(--cyan);border:1px solid rgba(96,200,224,0.25);}
+.ben-30k{background:rgba(78,200,122,0.12);color:var(--green);border:1px solid rgba(78,200,122,0.25);}
+.ben-20k{background:rgba(240,152,120,0.12);color:var(--orange);border:1px solid rgba(240,152,120,0.25);}
+.ben-10k{background:rgba(255,255,255,0.06);color:var(--muted);border:1px solid rgba(255,255,255,0.12);}
+.ben-0{background:rgba(255,255,255,0.03);color:var(--hint);border:1px solid rgba(255,255,255,0.07);}
+.c-zen{color:var(--cyan);}
+.c-gold{color:var(--gold);}
+.c-green{color:var(--green);}
+.c-red{color:var(--red);}
+.c-accent{color:var(--accent);}
+.c-orange{color:var(--orange);}
+.c-muted{color:var(--muted);}
+.sim-row{display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr;gap:0;align-items:center;padding:5px 8px;border-bottom:1px solid var(--border);font-size:0.76rem;}
+.sim-row:hover{background:var(--s1);}
+.sim-head{font-size:0.62rem;font-family:'JetBrains Mono',monospace;color:var(--muted);letter-spacing:0.05em;}
+.sim-arrow-up{color:var(--green);}
+.sim-arrow-dn{color:var(--red);}
+.sim-arrow-flat{color:var(--hint);}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="hero">
+  <div class="hero-tag">Analysis Report · Rank Ceremony #3</div>
+  <h1>第三回順位発表式<br>票差・票構造 分析</h1>
+  <div class="hero-meta">
+    日プ新世界 ｜ 2026/05/28 ｜ 投票期間 5/14〜5/22（2名/日）<br>
+    ファイナリスト22名確定（通常通過20名 ＋ グローバルランカー2名）<br>
+    ※ KINARI 辞退につき、21位以下から1名繰り上がりあり
+  </div>
+</div>
+
+<!-- 00 -->
+<div class="section">
+  <div class="section-head"><span class="section-num">00</span><span class="section-title">全体像｜票規模と通過ライン</span></div>
+
+  <p>第三回順位発表式では上位20名が通過。さらにグローバルランカー枠（国民30%・SEKAI70%逆比率）上位12名のうち通常通過していない練習生が別途通過する。今回はGR10位（REN.KO）とGR11位（HYEONSEUNG）の2名が、それぞれ第3回メイン順位23位・21位という圏外から通過を果たした。KINARIの辞退（上位練習生）により、実質21位だったGOTENが20位に繰り上がりファイナルに進んだ。</p>
+
+  <div class="stat-grid-3">
+    <div class="stat-card" style="border-top:2px solid var(--gold);">
+      <div class="stat-label c-gold">1位 総票数</div>
+      <div class="stat-val c-gold">315,128</div>
+      <div class="stat-sub">SHINHAENG（BLACK ANGEL 1位 +10万pt）</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">ファイナリスト最低票数</div>
+      <div class="stat-val" style="color:var(--muted);">153,301</div>
+      <div class="stat-sub">19位 ADAM（集計データ内最低）</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">1位 vs 19位</div>
+      <div class="stat-val c-accent">2.1倍</div>
+      <div class="stat-sub">前回（第2回）は 1.67M vs 544K = 3.1倍</div>
+    </div>
+  </div>
+
+  <p>投票人数の上限が12名/日→2名/日と大幅に絞られた結果、票数の絶対値は第2回（50万〜167万票）から大幅に縮小した（今回15万〜31万票）。しかし<strong>上位と下位の比率（2.1倍）は縮まっており</strong>、固定ファンを持つ練習生ほど有利な構造になっている。</p>
+
+  <div class="insight cyan">
+    コンセプトバトルのベネフィット（BLACK ANGELチームへの+10万〜+0）が今回の総票に加算されている。この「ベネフィット込み」の数字が公式結果だが、本レポートでは<strong>「ベネフィットがなければどうなっていたか」</strong>のシミュレーションを Section 03 で行う。次のファイナルはベネフィットなしなので、この分析は実力の純粋な指標になる。
+  </div>
+</div>
+
+<!-- 01 -->
+<div class="section">
+  <div class="section-head"><span class="section-num">01</span><span class="section-title">断層マップ｜上位2層の明確な分断</span></div>
+
+  <p>票数分布を見ると、<strong>1〜10位（21.5万〜31.5万票）と11〜19位（15.3万〜19.5万票）の間に約3万票の断層</strong>がある。10位（DAIKI.K 225,289票）と11位（TAKUTO.K 195,293票）の差は29,996票（13.3%）で、今回最大の断層だ。</p>
+
+  <div class="bar-section">
+    <div class="bar-row"><div class="bar-label c-gold">1. SHINHAENG</div><div class="bar-track"><div class="bar-fill" style="width:100%;background:rgba(240,192,64,0.4);">315,128</div></div><div class="bar-val c-gold">315,128</div></div>
+    <div class="bar-row"><div class="bar-label">2. YURA</div><div class="bar-track"><div class="bar-fill" style="width:98.3%;background:rgba(200,184,255,0.35);">309,760</div></div><div class="bar-val">309,760</div></div>
+    <div class="bar-row"><div class="bar-label">3. YOSHIKI</div><div class="bar-track"><div class="bar-fill" style="width:89.3%;background:rgba(96,200,224,0.3);">281,371</div></div><div class="bar-val">281,371</div></div>
+    <div class="bar-row"><div class="bar-label">4. KOSUKE</div><div class="bar-track"><div class="bar-fill" style="width:87.5%;background:rgba(96,200,224,0.25);">275,646</div></div><div class="bar-val">275,646</div></div>
+    <div class="bar-row"><div class="bar-label">5. RYOGA</div><div class="bar-track"><div class="bar-fill" style="width:83.9%;background:rgba(78,200,122,0.3);">264,597</div></div><div class="bar-val">264,597</div></div>
+    <div class="bar-row"><div class="bar-label">6. SIYOUNG</div><div class="bar-track"><div class="bar-fill" style="width:83.4%;background:rgba(78,200,122,0.25);">262,940</div></div><div class="bar-val">262,940</div></div>
+    <div class="bar-row"><div class="bar-label">7. RICKEY</div><div class="bar-track"><div class="bar-fill" style="width:78.9%;background:rgba(200,184,255,0.25);">248,522</div></div><div class="bar-val">248,522</div></div>
+    <div class="bar-row"><div class="bar-label">8. ISSA</div><div class="bar-track"><div class="bar-fill" style="width:72.9%;background:rgba(200,184,255,0.2);">229,608</div></div><div class="bar-val">229,608</div></div>
+    <div class="bar-row"><div class="bar-label">9. YUKI</div><div class="bar-track"><div class="bar-fill" style="width:72.2%;background:rgba(200,184,255,0.18);">227,684</div></div><div class="bar-val">227,684</div></div>
+    <div class="bar-row"><div class="bar-label">10. DAIKI.K</div><div class="bar-track"><div class="bar-fill" style="width:71.5%;background:rgba(200,184,255,0.15);">225,289</div></div><div class="bar-val">225,289</div></div>
+    <div style="margin:6px 58px;font-size:0.68rem;font-family:'JetBrains Mono',monospace;color:var(--red);padding-left:4px;">▼ ここに断層 −29,996pt（13.3%）</div>
+    <div class="bar-row"><div class="bar-label c-muted">11. TAKUTO.K</div><div class="bar-track"><div class="bar-fill" style="width:62.0%;background:rgba(255,255,255,0.1);">195,293</div></div><div class="bar-val">195,293</div></div>
+    <div class="bar-row"><div class="bar-label c-muted">12. RYUJI</div><div class="bar-track"><div class="bar-fill" style="width:61.6%;background:rgba(255,255,255,0.09);">194,003</div></div><div class="bar-val">194,003</div></div>
+    <div class="bar-row"><div class="bar-label c-muted">13. OSUKE</div><div class="bar-track"><div class="bar-fill" style="width:58.8%;background:rgba(255,255,255,0.08);">185,153</div></div><div class="bar-val">185,153</div></div>
+    <div class="bar-row"><div class="bar-label c-muted">14. TOWA</div><div class="bar-track"><div class="bar-fill" style="width:58.0%;background:rgba(255,255,255,0.07);">182,709</div></div><div class="bar-val">182,709</div></div>
+    <div class="bar-row"><div class="bar-label c-muted">15. KEITO</div><div class="bar-track"><div class="bar-fill" style="width:54.4%;background:rgba(255,255,255,0.07);">171,563</div></div><div class="bar-val">171,563</div></div>
+    <div class="bar-row"><div class="bar-label c-muted">16. KOSHIRO</div><div class="bar-track"><div class="bar-fill" style="width:51.7%;background:rgba(255,255,255,0.06);">162,917</div></div><div class="bar-val">162,917</div></div>
+    <div class="bar-row"><div class="bar-label c-muted">17. YUMA</div><div class="bar-track"><div class="bar-fill" style="width:50.4%;background:rgba(255,255,255,0.06);">158,771</div></div><div class="bar-val">158,771</div></div>
+    <div class="bar-row"><div class="bar-label c-muted">18. CHISATO</div><div class="bar-track"><div class="bar-fill" style="width:49.5%;background:rgba(255,255,255,0.06);">156,082</div></div><div class="bar-val">156,082</div></div>
+    <div class="bar-row"><div class="bar-label c-muted">19. ADAM</div><div class="bar-track"><div class="bar-fill" style="width:48.6%;background:rgba(255,255,255,0.05);">153,301</div></div><div class="bar-val">153,301</div></div>
+  </div>
+
+  <div class="insight">
+    1位SHINHAENGと2位YURAの差はわずか<strong>5,368票（1.7%）</strong>。この接戦は、YURAが+2万ptのベネフィットを受けながらもSHINHAENGの+10万ptには届かないという構造から生まれている。後述するベネフィット除去シミュレーションでは両者の順位が逆転する。
+  </div>
+</div>
+
+<!-- 02 -->
+<div class="section">
+  <div class="section-head"><span class="section-num">02</span><span class="section-title">超僅差ゾーン｜11〜19位の密集地帯</span></div>
+
+  <p>11位から19位の9名は195,293票〜153,301票という42,000票の範囲に密集している。隣接する練習生間の差は平均5,249票（わずか2〜3%）。この範囲では1回の放送や話題1つで大きく順位が入れ替わる可能性があった。</p>
+
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr>
+        <th>順位</th>
+        <th>名前</th>
+        <th>総票数</th>
+        <th>前の順位との差</th>
+        <th>差率</th>
+      </tr></thead>
+      <tbody>
+        <tr><td style="text-align:left;">11位</td><td>熊部 拓斗（TAKUTO.K）</td><td>195,293</td><td>—</td><td>—</td></tr>
+        <tr><td style="text-align:left;">12位</td><td>杉山 竜司（RYUJI）</td><td>194,003</td><td class="c-muted">−1,290</td><td>0.7%</td></tr>
+        <tr><td style="text-align:left;">13位</td><td>土田 央修（OSUKE）</td><td>185,153</td><td class="c-muted">−8,850</td><td>4.6%</td></tr>
+        <tr><td style="text-align:left;">14位</td><td>濱田 永遠（TOWA）</td><td>182,709</td><td class="c-muted">−2,444</td><td>1.3%</td></tr>
+        <tr><td style="text-align:left;">15位</td><td>小野 慶人（KEITO）</td><td>171,563</td><td class="c-muted">−11,146</td><td>6.1%</td></tr>
+        <tr><td style="text-align:left;">16位</td><td>青沼 昂史朗（KOSHIRO）</td><td>162,917</td><td class="c-muted">−8,646</td><td>5.0%</td></tr>
+        <tr><td style="text-align:left;">17位</td><td>岡田 侑磨（YUMA）</td><td>158,771</td><td class="c-muted">−4,146</td><td>2.5%</td></tr>
+        <tr><td style="text-align:left;">18位</td><td>小林 千悟（CHISATO）</td><td>156,082</td><td class="c-muted">−2,689</td><td>1.7%</td></tr>
+        <tr><td style="text-align:left;">19位</td><td>アダム・ナガイ（ADAM）</td><td>153,301</td><td class="c-muted">−2,781</td><td>1.8%</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="insight red">
+    TAKUTO.K（11位）とRYUJI（12位）の差は1,290票。2名/日の投票上限を考えると、わずか数百人のファンが集中投票を切り替えるだけで順位が入れ替わる水準だ。一方でKOSHIRO（16位）はGR7位で通過が見えており、主要投票では16位でも安定した地位を確保していた。
+  </div>
+</div>
+
+<!-- 03 -->
+<div class="section">
+  <div class="section-head"><span class="section-num">03</span><span class="section-title">ベネフィット除去シミュレーション｜「実力だけなら？」</span></div>
+
+  <p>今回総票に加算されたコンセプトバトルのベネフィット（最高チームBLACK ANGELのみ）を取り除いた場合、順位はどう変わるか。ベネフィットなし総票 ＝ 実際の総票 − ベネフィット票。</p>
+
+  <div class="tbl-wrap">
+    <table>
+      <thead>
+        <tr class="sim-head">
+          <th style="text-align:left;">名前</th>
+          <th>実際順位</th>
+          <th>実際総票</th>
+          <th>ベネフィット</th>
+          <th>ベネフィットなし総票</th>
+          <th>なし順位</th>
+          <th>変動</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>オ・シンヘン（SHINHAENG）</td><td>1位</td><td class="c-gold">315,128</td><td class="c-gold"><span class="ben-tag ben-100k">+100K</span></td><td>215,128</td><td class="c-red">10位</td><td class="c-red">▼ 9</td></tr>
+        <tr><td>安部 結蘭（YURA）</td><td>2位</td><td>309,760</td><td class="c-orange"><span class="ben-tag ben-20k">+20K</span></td><td>289,760</td><td class="c-green">1位</td><td class="c-green">▲ 1</td></tr>
+        <tr><td>矢田 佳暉（YOSHIKI）</td><td>3位</td><td>281,371</td><td>—</td><td>281,371</td><td class="c-green">2位</td><td class="c-green">▲ 1</td></tr>
+        <tr><td>照井 康祐（KOSUKE）</td><td>4位</td><td>275,646</td><td>—</td><td>275,646</td><td class="c-green">3位</td><td class="c-green">▲ 1</td></tr>
+        <tr><td>飯塚 亮賀（RYOGA）</td><td>5位</td><td>264,597</td><td class="c-green"><span class="ben-tag ben-30k">+30K</span></td><td>234,597</td><td>5位</td><td class="c-muted">± 0</td></tr>
+        <tr><td>パク・シヨン（SIYOUNG）</td><td>6位</td><td>262,940</td><td class="c-cyan"><span class="ben-tag ben-40k">+40K</span></td><td>222,940</td><td class="c-red">9位</td><td class="c-red">▼ 3</td></tr>
+        <tr><td>チェン・リッキー（RICKEY）</td><td>7位</td><td>248,522</td><td>—</td><td>248,522</td><td class="c-green">4位</td><td class="c-green">▲ 3</td></tr>
+        <tr><td>柳谷 伊冴（ISSA）</td><td>8位</td><td>229,608</td><td>—</td><td>229,608</td><td class="c-green">6位</td><td class="c-green">▲ 2</td></tr>
+        <tr><td>後藤 結（YUKI）</td><td>9位</td><td>227,684</td><td><span class="ben-tag ben-0">+0</span></td><td>227,684</td><td class="c-green">7位</td><td class="c-green">▲ 2</td></tr>
+        <tr><td>加藤 大樹（DAIKI.K）</td><td>10位</td><td>225,289</td><td>—</td><td>225,289</td><td class="c-green">8位</td><td class="c-green">▲ 2</td></tr>
+        <tr style="border-top:1px solid var(--border2);"><td>熊部 拓斗（TAKUTO.K）</td><td>11位</td><td>195,293</td><td>—</td><td>195,293</td><td>11位</td><td class="c-muted">± 0</td></tr>
+        <tr><td>杉山 竜司（RYUJI）</td><td>12位</td><td>194,003</td><td>—</td><td>194,003</td><td>12位</td><td class="c-muted">± 0</td></tr>
+        <tr><td>土田 央修（OSUKE）</td><td>13位</td><td>185,153</td><td>—</td><td>185,153</td><td>13位</td><td class="c-muted">± 0</td></tr>
+        <tr><td>濱田 永遠（TOWA）</td><td>14位</td><td>182,709</td><td>—</td><td>182,709</td><td>14位</td><td class="c-muted">± 0</td></tr>
+        <tr><td>小野 慶人（KEITO）</td><td>15位</td><td>171,563</td><td>—</td><td>171,563</td><td>15位</td><td class="c-muted">± 0</td></tr>
+        <tr><td>青沼 昂史朗（KOSHIRO）</td><td>16位</td><td>162,917</td><td>—</td><td>162,917</td><td>16位</td><td class="c-muted">± 0</td></tr>
+        <tr><td>小林 千悟（CHISATO）</td><td>18位</td><td>156,082</td><td>—</td><td>156,082</td><td class="c-green">17位</td><td class="c-green">▲ 1</td></tr>
+        <tr><td>アダム・ナガイ（ADAM）</td><td>19位</td><td>153,301</td><td>—</td><td>153,301</td><td class="c-green">18位</td><td class="c-green">▲ 1</td></tr>
+        <tr><td>岡田 侑磨（YUMA）</td><td>17位</td><td>158,771</td><td><span class="ben-tag ben-10k">+10K</span></td><td>148,771</td><td class="c-red">19位</td><td class="c-red">▼ 2</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="insight gold">
+    最大のインパクトは<strong>SHINHAENG（1位→10位 ▼9）</strong>。+10万ptというコンセプトバトル最大報酬が実際の順位に直接反映されたケースだ。ベネフィットなしのSHINHAENGは215,128票で、9位YUKI（227K）と10位DAIKI.K（225K）の間に入る。「最高チーム1位」という個人の評価がなければ、ファイナルに進んでいても全く異なる位置づけでスタートしていた。
+  </div>
+
+  <div class="insight green">
+    対照的に<strong>RICKEY（7位→4位 ▲3）、ISSA（8位→6位 ▲2）、YOSHIKI（3位→2位 ▲1）</strong>はベネフィットなしでも上位を維持する。これらの練習生の順位はコンセプトバトルの「運」に依存していない。<strong>ファイナルに向けて最も「地力がある」グループ</strong>として読むことができる。
+  </div>
+
+  <div class="insight orange">
+    KINARI（辞退）はコンセプトバトルで個人獲得票27票・ベネフィット+50,000票という内訳だった。ベネフィットなしの場合、KINARI の第3回ランキングへの貢献はほぼゼロ——辞退の有無に関わらず、ベネフィットが実態だったと言える。
+  </div>
+</div>
+
+<!-- 04 -->
+<div class="section">
+  <div class="section-head"><span class="section-num">04</span><span class="section-title">KINARI辞退の波紋｜GOTENの繰り上がり通過</span></div>
+
+  <p>KINARIは第1回・第2回ともに上位（それぞれ2位・4位）を維持してきた最有力練習生の一人だった。コンセプトバトルでもBLACK ANGEL 2位で+50,000票のベネフィットを獲得しており、本来であれば第3回でも高順位を維持していたと推測される。その辞退により、通常では通過ラインに届かなかったGOTENが20位に繰り上がりファイナル進出を果たした。</p>
+
+  <div class="highlight-box" style="border-color:rgba(255,92,53,0.25);">
+    <div class="highlight-box-title" style="color:var(--red);">KINARI 辞退によるドミノ効果</div>
+    <p style="font-size:0.82rem;color:#ccc;margin:0;">
+      KINARIの辞退 → 上位練習生の席が1つ空く → 本来21位の練習生（GOTEN）が繰り上がり20位通過<br>
+      ※ GOTENは第2回28位（主に推しカメラでの露出増加で上昇中）→ 今回繰り上がりで念願のファイナル進出。<br>
+      KINARIの席を埋めたのは、実力の積み上げではなく「辞退」という外部要因によるものだが、GOTENにとってはファイナルで実力を見せる機会を得たことに変わりない。
+    </p>
+  </div>
+
+  <div class="insight">
+    KINARIはBLACK ANGELで個人票27票という数字が示すように、今回の投票期間においては得票が厳しかった。一方で第1回・第2回の圧倒的な実績を考えると、辞退の背景には何らかの事情があったと推測されるが、番組からの公式発表の範囲では不明。上位からの離脱は順位の連鎖的な変動（繰り上がり）を生むことを改めて示した。
+  </div>
+</div>
+
+<!-- 05 -->
+<div class="section">
+  <div class="section-head"><span class="section-num">05</span><span class="section-title">グローバルランカー分析｜国民外からの2名通過</span></div>
+
+  <p>グローバルランカー（GR）枠は国民30%・SEKAI70%の逆比率で算出した順位の上位12名のうち、通常通過していない練習生が対象になる。今回はGR10位（REN.KO、第3回メイン23位）とGR11位（HYEONSEUNG、第3回メイン21位）がこの枠で通過した。</p>
+
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr>
+        <th>名前</th>
+        <th>第3回メイン順位</th>
+        <th>GR順位</th>
+        <th>第2回GR順位</th>
+        <th>第1回GR順位</th>
+        <th>通過形式</th>
+      </tr></thead>
+      <tbody>
+        <tr><td>小清水 蓮（REN.KO）</td><td>23位</td><td class="c-accent">GR 10位</td><td class="c-muted">GR 10位</td><td class="c-muted">GR 9位</td><td><span style="font-size:0.7rem;color:var(--accent);">GR通過</span></td></tr>
+        <tr><td>ユ・ヒョンスン（HYEONSEUNG）</td><td>21位</td><td class="c-accent">GR 11位</td><td class="c-muted">GR 8位</td><td class="c-muted">GR 7位</td><td><span style="font-size:0.7rem;color:var(--accent);">GR通過</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>REN.KOとHYEONSEUNGは3回連続してGRランキングに名を連ねており、安定したSEKAIプロデューサーからの支持を持つ。特にHYEONSEUNGは第1回GR7位→第2回GR8位→第3回GR11位とやや下降傾向にあるが、今回ギリギリで通過圏内に留まった。</p>
+
+  <div class="insight cyan">
+    ファイナルの投票は国民投票70%・SEKAI投票30%の通常比率で行われ（ベネフィットなし）。国内ファンの支持が手薄なGR通過組にとっては、ファイナルが最も難しい条件での戦いになる。REN.KO・HYEONSEUNGはSEKAI票で積み上げてきたが、デビューを決める最後の12席はその比率が逆転する。
+  </div>
+</div>
+
+<!-- 06 -->
+<div class="section">
+  <div class="section-head"><span class="section-num">06</span><span class="section-title">ファイナル（デビュー評価ステージ）への展望</span></div>
+
+  <p>第四回・最終順位発表（6/6）に向けた投票は<strong>5/28〜6/6（10日間）で、1名のみに投票可能</strong>。22名が2チームに分かれてパフォーマンスし、当日6/6に投票が締め切られ、同日中に上位12名のデビューが決定する。勝敗判定はなく、ベネフィットは一切ない。</p>
+
+  <div class="predict">
+    <div class="predict-title">ファイナルへの仮説</div>
+    <div class="predict-item"><span class="predict-icon c-gold">◆</span><span><strong class="c-gold">「1名投票」への集中が起きる。</strong>今まで複数名に分散できた票が1名のみになることで、ファンの「推しへの集中投票」傾向が最大化される。特に熱量が高い上位練習生（YURA、YOSHIKI、KOSUKEなど）は恩恵を受けやすい。</span></div>
+    <div class="predict-item"><span class="predict-icon c-accent">◆</span><span><strong class="c-accent">ベネフィットなし＝「地力」の純粋比較。</strong>シミュレーション通りなら YURA、YOSHIKI、KOSUKE、RICKEY が上位を維持。SHINHAENGは10位相当が「本来の位置」に近く、ファイナルでは上位12入りのボーダーラインに。</span></div>
+    <div class="predict-item"><span class="predict-icon c-cyan">◆</span><span><strong class="c-cyan">GR組（REN.KO・HYEONSEUNG）の正念場。</strong>国民70%比率では劣勢。1名投票でファンが国内人気練習生に集中する環境下でGR組がデビュー圏に入るには、当日パフォーマンスによる劇的な評価変化が必要かもしれない。</span></div>
+    <div class="predict-item"><span class="predict-icon c-orange">◆</span><span><strong class="c-orange">GOTEN（繰り上がり通過）の挽回に注目。</strong>11位→28位→20位（繰り上がり）という軌跡は不安定に見えるが、ファイナルはゼロスタートで全員に等しいチャンスがある。コンセプトバトルの評価が票に乗るタイムラグを考えると、今回の評価が上乗せされる可能性もある。</span></div>
+  </div>
+
+  <div class="footnote">
+    本レポートは新世界_順位発表式データ.csv（第3回）および新世界_コンセプトバトルチーム.csvのベネフィット列を基に作成。<br>
+    GOTEN（20位）の実際の票数データは未取得のため、同練習生は本レポートのベネフィットシミュレーション対象外。<br>
+    GR枠通過（REN.KO・HYEONSEUNG）の国民pt/SEKAIpt は現時点で未取得。<br>
+    © 2026 jidaikenkyuroom
+  </div>
+</div>
+
+</div>
+</body>
+</html>
