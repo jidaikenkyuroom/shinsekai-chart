@@ -200,7 +200,7 @@ tr:hover td{background:var(--surface);}
         <option value="abc">ABC順</option>
       </select>
       <select id="all-filter" onchange="renderAll()">
-        <option value="active">通過者のみ（35名）</option>
+        <option value="active">通過者のみ（22名）</option>
         <option value="all">全員（脱落含む）</option>
         <option value="hot">急上昇のみ</option>
         <option value="rise">上昇中以上</option>
@@ -285,8 +285,8 @@ tr:hover td{background:var(--surface);}
       </blockquote>
       <div class="chart-wrap" style="height:460px;"><canvas id="chartClassRank"></canvas></div>
       <div style="margin-top:0.75rem;font-size:0.7rem;color:var(--muted);display:flex;gap:1rem;flex-wrap:wrap;">
-        <span><span style="color:#4ec87a;">●</span> 通過（1〜35位）</span>
-        <span><span style="color:rgba(100,100,100,0.6);">●</span> 脱落（36位〜）</span>
+        <span><span style="color:#4ec87a;">●</span> 通過（ファイナリスト 22名）</span>
+        <span><span style="color:rgba(100,100,100,0.6);">●</span> 脱落</span>
       </div>
     </div>
 
@@ -314,8 +314,8 @@ tr:hover td{background:var(--surface);}
         <span class="label">通過状況:</span>
         <select id="scatter-survival" onchange="renderScatter()">
           <option value="all">脱落含む全員</option>
-          <option value="survived">通過者のみ（〜35位）</option>
-          <option value="elim">脱落者のみ（36位〜）</option>
+          <option value="survived">通過者のみ（ファイナリスト 22名）</option>
+          <option value="elim">脱落者のみ</option>
         </select>
       </div>
       <div class="row">

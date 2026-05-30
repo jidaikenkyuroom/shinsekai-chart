@@ -63,6 +63,8 @@ def build_vote_js(rows):
 
     entries = []
     for row in rows[1:]:
+        if len(row) < 2:
+            continue
         name, code = row[0], row[1]
         vals = ",".join(format_rank(v) for v in row[2:])
         entries.append(f'["{name}","{code}",{vals}]')
@@ -555,6 +557,119 @@ def build_tracker_js(src, battle_src, csv_cfg, battle_cfg, gb_team_csv, pos_cfg,
     ])
 
 
+def build_concept_js(source_dir, concept_cfg):
+    def js_str(s):
+        return str(s).replace('\\', '\\\\').replace('"', '\\"')
+
+    def js_dates(dates):
+        return "[" + ",".join(f'"{d}"' for d in dates) + "]"
+
+    def load_team_csv(path):
+        rows = read_csv(path)
+        vi = [i for i, h in enumerate(rows[0]) if h.endswith("_再生数")]
+        dates = [rows[0][i].replace("_再生数", "") for i in vi]
+        m = {}
+        for row in rows[1:]:
+            if len(row) < 2:
+                continue
+            song = js_str(row[0].strip())
+            vid  = row[1].strip()
+            views = [int_or_null(row[i]) if i < len(row) else "null" for i in vi]
+            m[song] = (vid, views)
+        return dates, m
+
+    team_rows = read_csv(source_dir / concept_cfg["team"])
+    oshi_rows = read_csv(source_dir / concept_cfg["oshi_cam"])
+
+    # 推しカメラ
+    oshi_vi    = [i for i, h in enumerate(oshi_rows[0]) if h.endswith("_再生数")]
+    oshi_dates = [oshi_rows[0][i].replace("_再生数", "") for i in oshi_vi]
+    oshi_map   = {}
+    for row in oshi_rows[1:]:
+        r = row[1].strip() if len(row) > 1 else ""
+        if r:
+            oshi_map[r] = [int_or_null(row[i]) if i < len(row) else "null" for i in oshi_vi]
+
+    # ハイライト / One Take Cam / NO CUT / RELAY DANCE / Full (楽曲, 動画ID, date_再生数...)
+    hl_dates,    hl_map    = load_team_csv(source_dir / concept_cfg["yt_highlight"])
+    otc_dates,   otc_map   = load_team_csv(source_dir / concept_cfg["yt_onetake"])    if concept_cfg.get("yt_onetake")    else ([], {})
+    nocut_dates, nocut_map = load_team_csv(source_dir / concept_cfg["yt_nocut"])      if concept_cfg.get("yt_nocut")      else ([], {})
+    rd_dates,    rd_map    = load_team_csv(source_dir / concept_cfg["yt_relaydance"]) if concept_cfg.get("yt_relaydance") else ([], {})
+    full_dates,  full_map  = load_team_csv(source_dir / concept_cfg["yt_full"])       if concept_cfg.get("yt_full")       else ([], {})
+
+    # メンバー個人データ
+    indiv = []
+    teams_dict = {}
+    for row in team_rows[1:]:
+        if len(row) < 3:
+            continue
+        name        = row[0]
+        reading     = row[1].strip()
+        song        = row[2].strip()
+        position    = row[3].strip()  if len(row) > 3 else ""
+        indiv_votes = row[4].strip()  if len(row) > 4 else ""
+        team_rank   = row[5].strip()  if len(row) > 5 else ""
+        benefit     = row[6].strip()  if len(row) > 6 else ""
+        total_votes = row[7].strip()  if len(row) > 7 else ""
+        noben_rank  = row[8].strip()  if len(row) > 8 else ""
+        conc_rank   = row[9].strip()  if len(row) > 9 else ""
+
+        song_js  = js_str(song)
+        oshi     = oshi_map.get(reading, [])
+        oshi_js  = "[" + ",".join(str(v) for v in oshi) + "]"
+
+        indiv.append(
+            f'{{"reading":"{reading}","name":"{js_str(name)}","song":"{song_js}",'
+            f'"pos":"{js_str(position)}",'
+            f'"indivVotes":{int_or_null(indiv_votes)},'
+            f'"teamRank":{int_or_null(team_rank)},'
+            f'"benefit":{int_or_null(benefit)},'
+            f'"totalVotes":{int_or_null(total_votes)},'
+            f'"nobenRank":{int_or_null(noben_rank)},'
+            f'"conceptRank":{int_or_null(conc_rank)},'
+            f'"oshi":{oshi_js}}}'
+        )
+
+        if song_js not in teams_dict:
+            teams_dict[song_js] = []
+        teams_dict[song_js].append(reading)
+
+    teams = []
+    for song_js, members in teams_dict.items():
+        members_js             = "[" + ",".join(f'"{r}"' for r in members) + "]"
+        hl_vid,    hl_views    = hl_map.get(song_js,    ("", []))
+        otc_vid,   otc_views   = otc_map.get(song_js,   ("", []))
+        nocut_vid, nocut_views = nocut_map.get(song_js, ("", []))
+        rd_vid,    rd_views    = rd_map.get(song_js,    ("", []))
+        full_vid,  full_views  = full_map.get(song_js,  ("", []))
+        hl_views_js    = "[" + ",".join(str(v) for v in hl_views)    + "]"
+        otc_views_js   = "[" + ",".join(str(v) for v in otc_views)   + "]"
+        nocut_views_js = "[" + ",".join(str(v) for v in nocut_views) + "]"
+        rd_views_js    = "[" + ",".join(str(v) for v in rd_views)    + "]"
+        full_views_js  = "[" + ",".join(str(v) for v in full_views)  + "]"
+        teams.append(
+            f'{{"song":"{song_js}","members":{members_js},'
+            f'"hlVid":"{hl_vid}","hlViews":{hl_views_js},'
+            f'"otcVid":"{otc_vid}","otcViews":{otc_views_js},'
+            f'"nocutVid":"{nocut_vid}","nocutViews":{nocut_views_js},'
+            f'"rdVid":"{rd_vid}","rdViews":{rd_views_js},'
+            f'"fullVid":"{full_vid}","fullViews":{full_views_js}}}'
+        )
+
+    return "\n".join([
+        "const CONCEPT_TRACKER={",
+        f"  oshiDates:{js_dates(oshi_dates)},",
+        f"  hlDates:{js_dates(hl_dates)},",
+        f"  otcDates:{js_dates(otc_dates)},",
+        f"  nocutDates:{js_dates(nocut_dates)},",
+        f"  rdDates:{js_dates(rd_dates)},",
+        f"  fullDates:{js_dates(full_dates)},",
+        f"  indiv:[{','.join(indiv)}],",
+        f"  teams:[{','.join(teams)}]",
+        "};",
+    ])
+
+
 def generate():
     with open(CONFIG_PATH, encoding="utf-8") as f:
         config = json.load(f)
@@ -623,6 +738,11 @@ def generate():
         output = output.replace("// {{AUTO_BATTLE_SNAP}}", snap_js)
         output = output.replace("// {{AUTO_BATTLE_DATES}}", dates_js)
         output = output.replace("// {{AUTO_BATTLE_SERIES}}", series_js)
+
+    if "concept_csv" in config:
+        src = Path(config.get("local_source_dir", config.get("battle_source_dir", "")))
+        concept_js = build_concept_js(src, config["concept_csv"])
+        output = output.replace("// {{AUTO_CONCEPT_DATA}}", concept_js)
 
     if ("battle_source_dir" in config and "battle_csv" in config
             and "group_battle_team_csv" in config and "pos_csv" in config):
