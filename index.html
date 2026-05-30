@@ -262,6 +262,7 @@ tr:hover td{background:var(--surface);}
       <span style="opacity:0.7;">順位発表式:</span>
       <button class="g-tab active" id="aev-btn-1" onclick="setAnalysisEvent('第1回')">第1回（4/23）</button>
       <button class="g-tab" id="aev-btn-2" onclick="setAnalysisEvent('第2回')">第2回（5/14）</button>
+      <button class="g-tab" id="aev-btn-3" onclick="setAnalysisEvent('第3回')">第3回（5/28）</button>
     </div>
 
     <!-- 国民 vs SEKAI票 -->
@@ -1097,6 +1098,7 @@ function setAnalysisEvent(key){
   analysisEventKey = key;
   document.getElementById('aev-btn-1').classList.toggle('active', key==='第1回');
   document.getElementById('aev-btn-2').classList.toggle('active', key==='第2回');
+  document.getElementById('aev-btn-3').classList.toggle('active', key==='第3回');
   const active = ['vote','class','gap'].find(t => document.getElementById('asec-'+t).classList.contains('active'));
   if(active==='vote') renderVoteBreakdown();
   else if(active==='class') renderClassRank();
@@ -3488,10 +3490,14 @@ function renderVoteGap(){
     {label:'21〜30位',min:21,max:30},
     {label:'31〜40位',min:31,max:40},
     {label:'41〜50位',min:41,max:50},
-  ] : [
+  ] : analysisEventKey === '第2回' ? [
     {label:'1〜12位（デビュー圏内）',min:1,max:12},
     {label:'13〜20位',min:13,max:20},
     {label:'21〜35位',min:21,max:35},
+  ] : [
+    {label:'1〜12位（デビュー圏内）',min:1,max:12},
+    {label:'13〜20位',min:13,max:20},
+    {label:'21〜23位（GR枠）',min:21,max:23},
   ];
   const diffMap={};
   for(let i=1;i<ranked.length;i++){
@@ -3613,13 +3619,14 @@ function renderVoteBreakdown(){
 function renderClassRank(){
   const clsX={A:0,B:1,C:2,D:3,F:4};
   const evData = rawRankData[analysisEventKey] || rawRank1;
-  const cutoff = analysisEventKey === '第1回' ? 50 : 35;
+  const cutoff = analysisEventKey === '第1回' ? 50 : analysisEventKey === '第2回' ? 35 : 20;
+  const isR3 = analysisEventKey === '第3回';
   const tooltipCfg={
     backgroundColor:'#1f1f24',borderColor:'rgba(255,255,255,0.13)',borderWidth:1,
     bodyColor:'#f0f0ee',bodyFont:{family:'monospace',size:12},padding:10,displayColors:false,
     callbacks:{label:ctx=>{
       const p=ctx.raw;
-      return[`${p.name}（${p.reading}）`,`再評価クラス: ${p.evalCls}　順位: ${p.rank}位`,p.survived?`通過（〜${cutoff}位）`:`脱落（${cutoff+1}位〜）`];
+      return[`${p.name}（${p.reading}）`,`再評価クラス: ${p.evalCls}　順位: ${p.rank}位`,p.survivalLabel];
     }}
   };
   const points=evData.filter(r=>r[1]!=null).map(r=>{
@@ -3627,8 +3634,13 @@ function renderClassRank(){
     if(!info)return null;
     const ec=info.eval;
     if(!(ec in clsX))return null;
+    const grFinalist = isR3 && r[2] != null && r[2] <= 12;
+    const survived = r[1] <= cutoff || grFinalist;
+    const survivalLabel = survived
+      ? (grFinalist && r[1] > cutoff ? `通過（GR${r[2]}位）` : `通過（〜${cutoff}位）`)
+      : `脱落（${cutoff+1}位〜）`;
     return{x:clsX[ec]+(Math.random()-0.5)*0.55,y:102-r[1],rank:r[1],reading:rd,
-      evalCls:ec,survived:r[1]<=cutoff,name:info.name||rd};
+      evalCls:ec,survived,survivalLabel,name:info.name||rd};
   }).filter(Boolean);
   const ctx=document.getElementById('chartClassRank').getContext('2d');
   if(chartClassRank){chartClassRank.destroy();chartClassRank=null;}
