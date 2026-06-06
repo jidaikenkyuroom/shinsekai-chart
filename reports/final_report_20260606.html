@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>最終順位発表式 全回変遷分析｜新世界 数値トラッカー</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500&display=swap');
+:root{--bg:#0a0a0c;--s1:#111115;--s2:#18181d;--border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);--text:#ededeb;--muted:#888882;--hint:#444440;--accent:#c8b8ff;--gold:#f0c040;--green:#4ec87a;--red:#ff5c35;--cyan:#60c8e0;--pink:#e080c0;--orange:#f09878;}
+*{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text);line-height:1.75;font-size:14px;}
+.wrap{max-width:860px;margin:0 auto;padding:0 1.5rem 6rem;}
+.hero{padding:3.5rem 0 2.5rem;border-bottom:1px solid var(--border);margin-bottom:3rem;}
+.hero-tag{font-family:'JetBrains Mono',monospace;font-size:0.65rem;color:var(--accent);letter-spacing:0.18em;text-transform:uppercase;margin-bottom:0.75rem;opacity:0.8;}
+.hero h1{font-size:1.55rem;font-weight:700;letter-spacing:-0.01em;line-height:1.3;margin-bottom:0.75rem;}
+.hero-meta{font-family:'JetBrains Mono',monospace;font-size:0.7rem;color:var(--muted);line-height:1.8;}
+.section{margin-bottom:3.5rem;}
+.section-head{display:flex;align-items:baseline;gap:0.75rem;margin-bottom:1.5rem;padding-bottom:0.6rem;border-bottom:1px solid var(--border);}
+.section-num{font-family:'JetBrains Mono',monospace;font-size:0.62rem;color:var(--accent);opacity:0.6;}
+.section-title{font-size:1rem;font-weight:700;letter-spacing:0.02em;}
+p{font-size:0.875rem;color:#ccc;margin-bottom:0.9rem;line-height:1.85;}
+p:last-child{margin-bottom:0;}
+strong{color:var(--text);font-weight:500;}
+.insight{background:var(--s1);border:1px solid var(--border2);border-left:3px solid var(--accent);border-radius:0 6px 6px 0;padding:1rem 1.25rem;margin:1.25rem 0;font-size:0.84rem;color:var(--text);line-height:1.75;}
+.insight.green{border-left-color:var(--green);}
+.insight.gold{border-left-color:var(--gold);}
+.insight.red{border-left-color:var(--red);}
+.insight.cyan{border-left-color:var(--cyan);}
+.insight.orange{border-left-color:var(--orange);}
+.insight.pink{border-left-color:var(--pink);}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:1.25rem 0;}
+.stat-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin:1.25rem 0;}
+.stat-card{background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:1rem 1.2rem;}
+.stat-label{font-size:0.65rem;font-family:'JetBrains Mono',monospace;color:var(--muted);letter-spacing:0.08em;margin-bottom:4px;}
+.stat-val{font-size:1.6rem;font-weight:700;font-family:'JetBrains Mono',monospace;line-height:1;}
+.stat-sub{font-size:0.7rem;color:var(--muted);margin-top:4px;}
+.bar-section{margin:1rem 0;}
+.bar-row{display:flex;align-items:center;gap:8px;margin-bottom:7px;}
+.bar-label{width:180px;font-size:0.72rem;color:var(--muted);flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.bar-track{flex:1;background:rgba(255,255,255,0.04);border-radius:3px;height:20px;overflow:hidden;}
+.bar-fill{height:100%;border-radius:3px;min-width:2px;display:flex;align-items:center;padding-left:6px;font-size:0.6rem;font-family:'JetBrains Mono',monospace;color:rgba(255,255,255,0.6);}
+.bar-val{font-size:0.7rem;font-family:'JetBrains Mono',monospace;width:80px;text-align:right;flex-shrink:0;}
+.tbl-wrap{overflow-x:auto;margin:1rem 0;}
+table{width:100%;border-collapse:collapse;font-size:0.78rem;}
+th{font-size:0.65rem;color:var(--muted);font-weight:400;text-align:right;padding:6px 8px;border-bottom:1px solid var(--border);white-space:nowrap;font-family:'JetBrains Mono',monospace;}
+th:first-child{text-align:left;}
+td{padding:6px 8px;border-bottom:1px solid var(--border);text-align:right;font-family:'JetBrains Mono',monospace;font-size:0.75rem;color:var(--muted);}
+td:first-child{text-align:left;color:var(--text);font-family:'Noto Sans JP',sans-serif;}
+tr:hover td{background:var(--s1);}
+.c-zen{color:var(--cyan);}
+.c-gold{color:var(--gold);}
+.c-green{color:var(--green);}
+.c-red{color:var(--red);}
+.c-accent{color:var(--accent);}
+.c-orange{color:var(--orange);}
+.c-pink{color:var(--pink);}
+.c-muted{color:var(--muted);}
+.badge-debut{display:inline-block;font-size:0.58rem;font-family:'JetBrains Mono',monospace;padding:2px 6px;border-radius:3px;background:rgba(78,200,122,0.15);color:var(--green);border:1px solid rgba(78,200,122,0.3);vertical-align:middle;}
+.badge-miss{display:inline-block;font-size:0.58rem;font-family:'JetBrains Mono',monospace;padding:2px 6px;border-radius:3px;background:rgba(255,92,53,0.12);color:var(--red);border:1px solid rgba(255,92,53,0.25);vertical-align:middle;}
+.badge-gr{display:inline-block;font-size:0.58rem;font-family:'JetBrains Mono',monospace;padding:2px 6px;border-radius:3px;background:rgba(96,200,224,0.12);color:var(--cyan);border:1px solid rgba(96,200,224,0.25);vertical-align:middle;}
+.delta-up{color:var(--green);font-family:'JetBrains Mono',monospace;}
+.delta-dn{color:var(--red);font-family:'JetBrains Mono',monospace;}
+.delta-flat{color:var(--hint);font-family:'JetBrains Mono',monospace;}
+.story-row{display:grid;grid-template-columns:90px 1fr;gap:12px;align-items:flex-start;padding:12px 0;border-bottom:1px solid var(--border);}
+.story-ranks{font-family:'JetBrains Mono',monospace;font-size:0.72rem;color:var(--muted);}
+.story-body{font-size:0.84rem;line-height:1.75;}
+.story-name{font-weight:700;color:var(--text);}
+.timeline{display:flex;align-items:center;gap:4px;font-family:'JetBrains Mono',monospace;font-size:0.72rem;margin:4px 0 6px;}
+.tl-step{padding:2px 7px;border-radius:3px;font-size:0.68rem;}
+.tl-arrow{color:var(--hint);}
+.footnote{font-size:0.72rem;color:var(--hint);font-family:'JetBrains Mono',monospace;border-top:1px solid var(--border);margin-top:0.75rem;padding-top:0.6rem;line-height:1.6;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="hero">
+  <div class="hero-tag">Analysis Report · Final Rank Ceremony</div>
+  <h1>最終順位発表式<br>デビュー確定 · 全回変遷分析</h1>
+  <div class="hero-meta">
+    日プ新世界 ｜ 2026/06/06 ｜ 投票期間 5/28〜6/6（1名/日）<br>
+    ファイナリスト22名 → 上位12名がデビュー確定<br>
+    ※ 最終発表は総合pts（国民70%・SEKAI30%）のみ公開、内訳非公表
+  </div>
+</div>
+
+<!-- 00 -->
+<div class="section">
+  <div class="section-head"><span class="section-num">00</span><span class="section-title">全体像｜規模と構造</span></div>
+
+  <p>最終投票は<strong>1名のみ投票可能</strong>という今シーズン最も票が絞られる形式で行われた。ベネフィットなし、GR枠なし——22名が純粋に1票1票を競い、12席を巡る最後の闘いとなった。</p>
+
+  <div class="stat-grid-3">
+    <div class="stat-card" style="border-top:2px solid var(--gold);">
+      <div class="stat-label c-gold">1位 pts</div>
+      <div class="stat-val c-gold">537,456</div>
+      <div class="stat-sub">DAIKI.K（全4回で2度の1位）</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">12位 pts（デビューボーダー）</div>
+      <div class="stat-val" style="color:var(--green);">378,536</div>
+      <div class="stat-sub">TOWA（4回通じて12〜15位で安定）</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">1位 vs 12位 比率</div>
+      <div class="stat-val c-accent">1.42倍</div>
+      <div class="stat-sub">第3回（2.07倍）より大幅に接近</div>
+    </div>
+  </div>
+
+  <p>投票人数1名への絞り込みにより、票が特定の練習生に強く集中した。その結果、上位と12位の比率（1.42倍）は第3回（2.07倍）より大幅に縮小——ただし1位DAIKI.Kが圧倒的な票数を集めた点は例外的で、<strong>2位YOSHIKI（508,787pts）との差だけで28,669pts</strong>ある。</p>
+
+  <div class="insight gold">
+    今シーズン全4回のうちDAIKI.Kは第1回・第2回・最終で1位を獲得。唯一の例外は第3回（10位）で、これはコンセプトバトルのチーム評価がファン投票に影響した可能性がある。最終では再び頂点に立ち、<strong>全4回の合計pts（1位）</strong>を通算でも最多獲得している。
+  </div>
+</div>
+
+<!-- 01 -->
+<div class="section">
+  <div class="section-head"><span class="section-num">01</span><span class="section-title">断層マップ｜トップ5と6〜12位の明確な分断</span></div>
+
+  <p>pts分布を見ると、<strong>5位YUKI（470,789pts）と6位ISSA（417,479pts）の間に53,310pts（11.3%）の断層</strong>がある。これは今回最大の差で、自然な2層構造を形成している。一方、7〜9位（KEITO/YURA/RYOGA）はわずか3,649pts（0.9%）の範囲に3名が密集しており、1000pts未満の差がごく短い投票期間のブレで生じうる接戦だった。</p>
+
+  <div class="bar-section">
+    <div class="bar-row"><div class="bar-label c-gold">1. DAIKI.K</div><div class="bar-track"><div class="bar-fill" style="width:100%;background:rgba(240,192,64,0.45);">537,456</div></div><div class="bar-val c-gold">537,456</div></div>
+    <div class="bar-row"><div class="bar-label">2. YOSHIKI</div><div class="bar-track"><div class="bar-fill" style="width:94.7%;background:rgba(200,184,255,0.4);">508,787</div></div><div class="bar-val">508,787</div></div>
+    <div class="bar-row"><div class="bar-label">3. SIYOUNG</div><div class="bar-track"><div class="bar-fill" style="width:92.8%;background:rgba(96,200,224,0.35);">498,627</div></div><div class="bar-val">498,627</div></div>
+    <div class="bar-row"><div class="bar-label">4. SHINHAENG</div><div class="bar-track"><div class="bar-fill" style="width:89.6%;background:rgba(96,200,224,0.3);">481,415</div></div><div class="bar-val">481,415</div></div>
+    <div class="bar-row"><div class="bar-label">5. YUKI</div><div class="bar-track"><div class="bar-fill" style="width:87.6%;background:rgba(78,200,122,0.3);">470,789</div></div><div class="bar-val">470,789</div></div>
+    <div style="margin:6px 188px 6px 0;font-size:0.68rem;font-family:'JetBrains Mono',monospace;color:var(--red);padding-left:4px;">▼ ここに最大断層 −53,310pts（11.3%）</div>
+    <div class="bar-row"><div class="bar-label">6. ISSA</div><div class="bar-track"><div class="bar-fill" style="width:77.7%;background:rgba(200,184,255,0.3);">417,479</div></div><div class="bar-val">417,479</div></div>
+    <div class="bar-row"><div class="bar-label">7. KEITO</div><div class="bar-track"><div class="bar-fill" style="width:76.0%;background:rgba(200,184,255,0.25);">408,598</div></div><div class="bar-val">408,598</div></div>
+    <div class="bar-row"><div class="bar-label">8. YURA</div><div class="bar-track"><div class="bar-fill" style="width:75.8%;background:rgba(200,184,255,0.22);">407,595</div></div><div class="bar-val">407,595</div></div>
+    <div class="bar-row"><div class="bar-label">9. RYOGA</div><div class="bar-track"><div class="bar-fill" style="width:75.4%;background:rgba(200,184,255,0.2);">404,949</div></div><div class="bar-val">404,949</div></div>
+    <div style="margin:3px 188px 3px 0;font-size:0.65rem;font-family:'JetBrains Mono',monospace;color:var(--hint);padding-left:4px;">← 7〜9位が3,649pts（0.9%）圏内に密集</div>
+    <div class="bar-row"><div class="bar-label">10. RYUJI</div><div class="bar-track"><div class="bar-fill" style="width:72.7%;background:rgba(255,255,255,0.15);">390,614</div></div><div class="bar-val">390,614</div></div>
+    <div class="bar-row"><div class="bar-label">11. KOSUKE</div><div class="bar-track"><div class="bar-fill" style="width:71.0%;background:rgba(255,255,255,0.12);">381,605</div></div><div class="bar-val">381,605</div></div>
+    <div class="bar-row"><div class="bar-label c-green">12. TOWA ●</div><div class="bar-track"><div class="bar-fill" style="width:70.5%;background:rgba(78,200,122,0.2);">378,536</div></div><div class="bar-val c-green">378,536</div></div>
+  </div>
+
+  <div class="insight">
+    <strong>7位KEITO（408,598pts）vs 8位YURA（407,595pts）の差はわずか1,003pts（0.25%）。</strong>今シーズンを通じて1000pts未満の接戦は異例で、最終投票の1名集中という形式でありながらここまで拮抗した。投票最終日のファン動員がわずかでも違えば順位が逆転していたレベルの差だ。
+  </div>
+
+  <p>順位ごとのptsギャップをまとめると——最大断層は5→6位（53,310pts / 11.3%）、最小は7→8位（1,003pts / 0.25%）。12→13位（デビューボーダー）の差は公開データでは確認できないが、13位RICKEYが第3回7位から最終13位へ大幅下落していることから相応の差があるとみられる。</p>
+</div>
+
+<!-- 02 -->
+<div class="section">
+  <div class="section-head"><span class="section-num">02</span><span class="section-title">全回変遷テーブル｜22名の軌跡</span></div>
+
+  <p>第1回〜最終の順位変遷を全ファイナリスト22名で一覧する。「変動」は第3回→最終の変化（+が上昇、−が下降）。</p>
+
+  <div class="tbl-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th style="text-align:left;">練習生</th>
+          <th>最終</th>
+          <th>第3回</th>
+          <th>第2回</th>
+          <th>第1回</th>
+          <th>変動<br><span style="font-size:0.58rem;">3→最終</span></th>
+          <th>結果</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>加藤 大樹（DAIKI.K）</td><td class="c-gold">1</td><td>10</td><td>1</td><td>1</td><td class="delta-up">▲9</td><td><span class="badge-debut">DEBUT</span></td></tr>
+        <tr><td>矢田 佳暉（YOSHIKI）</td><td>2</td><td>3</td><td>5</td><td>4</td><td class="delta-up">▲1</td><td><span class="badge-debut">DEBUT</span></td></tr>
+        <tr><td>パク・シヨン（SIYOUNG）</td><td>3</td><td>6</td><td>6</td><td>6</td><td class="delta-up">▲3</td><td><span class="badge-debut">DEBUT</span></td></tr>
+        <tr><td>オ・シンヘン（SHINHAENG）</td><td>4</td><td>1</td><td>7</td><td>5</td><td class="delta-dn">▼3</td><td><span class="badge-debut">DEBUT</span></td></tr>
+        <tr><td>後藤 結（YUKI）</td><td>5</td><td>9</td><td>16</td><td>17</td><td class="delta-up">▲4</td><td><span class="badge-debut">DEBUT</span></td></tr>
+        <tr><td>柳谷 伊冴（ISSA）</td><td>6</td><td>8</td><td>11</td><td>19</td><td class="delta-up">▲2</td><td><span class="badge-debut">DEBUT</span></td></tr>
+        <tr><td>小野 慶人（KEITO）</td><td>7</td><td>15</td><td>18</td><td>16</td><td class="delta-up">▲8</td><td><span class="badge-debut">DEBUT</span></td></tr>
+        <tr><td>安部 結蘭（YURA）</td><td>8</td><td>2</td><td>2</td><td>3</td><td class="delta-dn">▼6</td><td><span class="badge-debut">DEBUT</span></td></tr>
+        <tr><td>飯塚 亮賀（RYOGA）</td><td>9</td><td>5</td><td>8</td><td>12</td><td class="delta-dn">▼4</td><td><span class="badge-debut">DEBUT</span></td></tr>
+        <tr><td>杉山 竜司（RYUJI）</td><td>10</td><td>12</td><td>10</td><td>23</td><td class="delta-up">▲2</td><td><span class="badge-debut">DEBUT</span></td></tr>
+        <tr><td>照井 康祐（KOSUKE）</td><td>11</td><td>4</td><td>3</td><td>7</td><td class="delta-dn">▼7</td><td><span class="badge-debut">DEBUT</span></td></tr>
+        <tr><td>濱田 永遠（TOWA）</td><td>12</td><td>14</td><td>14</td><td>15</td><td class="delta-up">▲2</td><td><span class="badge-debut">DEBUT</span></td></tr>
+        <tr style="border-top:2px solid var(--red);"><td>チェン・リッキー（RICKEY）</td><td class="c-red">13</td><td>7</td><td>13</td><td>25</td><td class="delta-dn">▼6</td><td><span class="badge-miss">次点</span></td></tr>
+        <tr><td>土田 央修（OSUKE）</td><td class="c-muted">14</td><td>13</td><td>12</td><td>13</td><td class="delta-dn">▼1</td><td><span class="badge-miss">次点</span></td></tr>
+        <tr><td>熊部 拓斗（TAKUTO.K）</td><td class="c-muted">15</td><td>11</td><td>15</td><td>9</td><td class="delta-dn">▼4</td><td><span class="badge-miss">次点</span></td></tr>
+        <tr><td>倉橋 吾槙（GOTEN）</td><td class="c-muted">16</td><td>20</td><td>28</td><td>11</td><td class="delta-up">▲4</td><td><span class="badge-miss">次点</span></td></tr>
+        <tr><td>ユ・ヒョンスン（HYEONSEUNG）</td><td class="c-muted">17</td><td class="c-zen">21 <span style="font-size:0.6rem;">GR</span></td><td>9</td><td>8</td><td class="delta-up">▲4</td><td><span class="badge-miss">次点</span></td></tr>
+        <tr><td>岡田 侑磨（YUMA）</td><td class="c-muted">18</td><td>17</td><td>32</td><td>39</td><td class="delta-dn">▼1</td><td><span class="badge-miss">次点</span></td></tr>
+        <tr><td>アダム・ナガイ（ADAM）</td><td class="c-muted">19</td><td>19</td><td>21</td><td>10</td><td class="delta-flat">−</td><td><span class="badge-miss">次点</span></td></tr>
+        <tr><td>小清水 蓮（REN.KO）</td><td class="c-muted">20</td><td class="c-zen">23 <span style="font-size:0.6rem;">GR</span></td><td>20</td><td>14</td><td class="delta-up">▲3</td><td><span class="badge-miss">次点</span></td></tr>
+        <tr><td>青沼 昂史朗（KOSHIRO）</td><td class="c-muted">21</td><td>16</td><td>19</td><td>26</td><td class="delta-dn">▼5</td><td><span class="badge-miss">次点</span></td></tr>
+        <tr><td>小林 千悟（CHISATO）</td><td class="c-muted">22</td><td>22</td><td>26</td><td>27</td><td class="delta-flat">−</td><td><span class="badge-miss">次点</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="insight">
+    第3回→最終で最も大きく上昇したのは<strong>DAIKI.K（▲9）</strong>と<strong>KEITO（▲8）</strong>。最も下落したのは<strong>KOSUKE（▼7）、YURA（▼6）、RICKEY（▼6）</strong>。いずれも20〜30名規模の大接戦の中で第3回の順位とは異なる評価が最終に反映された形だ。
+  </div>
+</div>
+
+<!-- 03 -->
+<div class="section">
+  <div class="section-head"><span class="section-num">03</span><span class="section-title">主要ストーリー｜4回を通じた軌跡</span></div>
+
+  <p>全4回の変遷から浮かび上がる主要な「物語」を類型別に整理する。</p>
+
+  <!-- DAIKI.K -->
+  <div style="background:var(--s2);border:1px solid rgba(240,192,64,0.2);border-radius:8px;padding:1.25rem;margin:1rem 0;">
+    <div style="font-size:0.65rem;font-family:'JetBrains Mono',monospace;color:var(--gold);margin-bottom:6px;">STORY A — 頂点から谷底、そして復活</div>
+    <div style="font-size:0.88rem;font-weight:700;color:var(--text);margin-bottom:6px;">加藤 大樹（DAIKI.K）</div>
+    <div class="timeline">
+      <span class="tl-step" style="background:rgba(240,192,64,0.2);color:var(--gold);">第1回 1位</span>
+      <span class="tl-arrow">→</span>
+      <span class="tl-step" style="background:rgba(240,192,64,0.2);color:var(--gold);">第2回 1位</span>
+      <span class="tl-arrow">→</span>
+      <span class="tl-step" style="background:rgba(255,92,53,0.15);color:var(--red);">第3回 10位</span>
+      <span class="tl-arrow">→</span>
+      <span class="tl-step" style="background:rgba(240,192,64,0.2);color:var(--gold);">最終 1位</span>
+    </div>
+    <p style="margin:0;font-size:0.84rem;">今シーズン最もドラマチックな変遷。第3回でコンセプトバトルのチーム結果（BLACK ANGELが1位ではなかった影響と考えられる）から10位に急落。しかし最終で一気に頂点へ返り咲き、<strong>537,456pts</strong>という1位ダントツの数字を叩き出した。</p>
+  </div>
+
+  <!-- KEITO -->
+  <div style="background:var(--s2);border:1px solid rgba(78,200,122,0.2);border-radius:8px;padding:1.25rem;margin:1rem 0;">
+    <div style="font-size:0.65rem;font-family:'JetBrains Mono',monospace;color:var(--green);margin-bottom:6px;">STORY B — 中位固定からの大躍進</div>
+    <div style="font-size:0.88rem;font-weight:700;color:var(--text);margin-bottom:6px;">小野 慶人（KEITO）</div>
+    <div class="timeline">
+      <span class="tl-step" style="background:rgba(255,255,255,0.06);color:var(--muted);">第1回 16位</span>
+      <span class="tl-arrow">→</span>
+      <span class="tl-step" style="background:rgba(255,255,255,0.06);color:var(--muted);">第2回 18位</span>
+      <span class="tl-arrow">→</span>
+      <span class="tl-step" style="background:rgba(255,255,255,0.06);color:var(--muted);">第3回 15位</span>
+      <span class="tl-arrow">→</span>
+      <span class="tl-step" style="background:rgba(78,200,122,0.2);color:var(--green);">最終 7位</span>
+    </div>
+    <p style="margin:0;font-size:0.84rem;">3回連続15〜18位と一貫して「デビューボーダー付近の中位」にいたが、最終で7位へ一気に8ランク上昇。<strong>今シーズン最大の最終ジャンプアップ（第3回比▲8）。</strong>最終パフォーマンスでの評価上昇が票に直結した可能性がある。</p>
+  </div>
+
+  <!-- SIYOUNG -->
+  <div style="background:var(--s2);border:1px solid rgba(96,200,224,0.2);border-radius:8px;padding:1.25rem;margin:1rem 0;">
+    <div style="font-size:0.65rem;font-family:'JetBrains Mono',monospace;color:var(--cyan);margin-bottom:6px;">STORY C — 驚異の安定から上位確定</div>
+    <div style="font-size:0.88rem;font-weight:700;color:var(--text);margin-bottom:6px;">パク・シヨン（SIYOUNG）</div>
+    <div class="timeline">
+      <span class="tl-step" style="background:rgba(96,200,224,0.15);color:var(--cyan);">第1回 6位</span>
+      <span class="tl-arrow">→</span>
+      <span class="tl-step" style="background:rgba(96,200,224,0.15);color:var(--cyan);">第2回 6位</span>
+      <span class="tl-arrow">→</span>
+      <span class="tl-step" style="background:rgba(96,200,224,0.15);color:var(--cyan);">第3回 6位</span>
+      <span class="tl-arrow">→</span>
+      <span class="tl-step" style="background:rgba(96,200,224,0.2);color:var(--cyan);">最終 3位</span>
+    </div>
+    <p style="margin:0;font-size:0.84rem;">3回連続で完全に6位を維持するという前例のない安定感。最終で一気に3位まで上昇し、今シーズンのベスト順位を更新した。この「ぶれない土台」が1票集中形式で最大限に活きた形だ。</p>
+  </div>
+
+  <!-- YUKI/ISSA 右肩上がり -->
+  <div style="background:var(--s2);border:1px solid rgba(200,184,255,0.2);border-radius:8px;padding:1.25rem;margin:1rem 0;">
+    <div style="font-size:0.65rem;font-family:'JetBrains Mono',monospace;color:var(--accent);margin-bottom:6px;">STORY D — 一貫した右肩上がり</div>
+    <div style="font-size:0.88rem;font-weight:700;color:var(--text);margin-bottom:8px;">後藤 結（YUKI） / 柳谷 伊冴（ISSA）</div>
+    <div class="timeline" style="margin-bottom:4px;">
+      <span style="font-size:0.7rem;color:var(--muted);width:48px;flex-shrink:0;">YUKI</span>
+      <span class="tl-step" style="background:rgba(255,255,255,0.05);color:var(--muted);">17位</span>
+      <span class="tl-arrow">→</span>
+      <span class="tl-step" style="background:rgba(255,255,255,0.07);color:var(--muted);">16位</span>
+      <span class="tl-arrow">→</span>
+      <span class="tl-step" style="background:rgba(200,184,255,0.1);color:var(--accent);">9位</span>
+      <span class="tl-arrow">→</span>
+      <span class="tl-step" style="background:rgba(200,184,255,0.2);color:var(--accent);">5位</span>
+    </div>
+    <div class="timeline">
+      <span style="font-size:0.7rem;color:var(--muted);width:48px;flex-shrink:0;">ISSA</span>
+      <span class="tl-step" style="background:rgba(255,255,255,0.05);color:var(--muted);">19位</span>
+      <span class="tl-arrow">→</span>
+      <span class="tl-step" style="background:rgba(255,255,255,0.08);color:var(--muted);">11位</span>
+      <span class="tl-arrow">→</span>
+      <span class="tl-step" style="background:rgba(200,184,255,0.12);color:var(--accent);">8位</span>
+      <span class="tl-arrow">→</span>
+      <span class="tl-step" style="background:rgba(200,184,255,0.2);color:var(--accent);">6位</span>
+    </div>
+    <p style="margin-top:8px;margin-bottom:0;font-size:0.84rem;">どちらも初回は10位台後半と出遅れながら、毎回着実に順位を上げ続け最終でベスト順位を達成。特にYUKIは第1回17位から最終5位まで、4回連続で順位を更新し続けた。</p>
+  </div>
+
+  <!-- KOSUKE/YURA 下降 -->
+  <div style="background:var(--s2);border:1px solid rgba(255,92,53,0.2);border-radius:8px;padding:1.25rem;margin:1rem 0;">
+    <div style="font-size:0.65rem;font-family:'JetBrains Mono',monospace;color:var(--red);margin-bottom:6px;">STORY E — 上位常連から最終大幅下落</div>
+    <div style="font-size:0.88rem;font-weight:700;color:var(--text);margin-bottom:8px;">照井 康祐（KOSUKE） / 安部 結蘭（YURA）</div>
+    <div class="timeline" style="margin-bottom:4px;">
+      <span style="font-size:0.7rem;color:var(--muted);width:56px;flex-shrink:0;">KOSUKE</span>
+      <span class="tl-step" style="background:rgba(200,184,255,0.15);color:var(--accent);">7位</span>
+      <span class="tl-arrow">→</span>
+      <span class="tl-step" style="background:rgba(200,184,255,0.2);color:var(--accent);">3位</span>
+      <span class="tl-arrow">→</span>
+      <span class="tl-step" style="background:rgba(200,184,255,0.18);color:var(--accent);">4位</span>
+      <span class="tl-arrow">→</span>
+      <span class="tl-step" style="background:rgba(255,92,53,0.2);color:var(--red);">11位</span>
+    </div>
+    <div class="timeline">
+      <span style="font-size:0.7rem;color:var(--muted);width:56px;flex-shrink:0;">YURA</span>
+      <span class="tl-step" style="background:rgba(200,184,255,0.2);color:var(--accent);">3位</span>
+      <span class="tl-arrow">→</span>
+      <span class="tl-step" style="background:rgba(200,184,255,0.22);color:var(--accent);">2位</span>
+      <span class="tl-arrow">→</span>
+      <span class="tl-step" style="background:rgba(200,184,255,0.22);color:var(--accent);">2位</span>
+      <span class="tl-arrow">→</span>
+      <span class="tl-step" style="background:rgba(255,92,53,0.2);color:var(--red);">8位</span>
+    </div>
+    <p style="margin-top:8px;margin-bottom:0;font-size:0.84rem;">KOSUKEは第2回3位・第3回4位の高位安定から最終11位へ7ランク急落。YURAも第2回・第3回連続2位から最終8位へ6ランク下落。ともにデビューは達成したが、第3回時点の予想からは大幅に下振れた。YURAは第3回でBLACK ANGEL（コンセプトバトル1位チーム）+2万ptベネフィットを受けており、それが消えた影響も一因と考えられる。</p>
+  </div>
+
+  <!-- RICKEY -->
+  <div style="background:var(--s2);border:1px solid rgba(255,92,53,0.2);border-radius:8px;padding:1.25rem;margin:1rem 0;">
+    <div style="font-size:0.65rem;font-family:'JetBrains Mono',monospace;color:var(--red);margin-bottom:6px;">STORY F — 第3回トップ7からデビュー逃し</div>
+    <div style="font-size:0.88rem;font-weight:700;color:var(--text);margin-bottom:6px;">チェン・リッキー（RICKEY）</div>
+    <div class="timeline">
+      <span class="tl-step" style="background:rgba(255,255,255,0.05);color:var(--muted);">第1回 25位</span>
+      <span class="tl-arrow">→</span>
+      <span class="tl-step" style="background:rgba(200,184,255,0.12);color:var(--accent);">第2回 13位</span>
+      <span class="tl-arrow">→</span>
+      <span class="tl-step" style="background:rgba(200,184,255,0.2);color:var(--accent);">第3回 7位</span>
+      <span class="tl-arrow">→</span>
+      <span class="tl-step" style="background:rgba(255,92,53,0.2);color:var(--red);">最終 13位</span>
+    </div>
+    <p style="margin:0;font-size:0.84rem;">第1回25位という低スタートから右肩上がりに上昇し、第3回では7位まで到達。しかし最終で一転6ランク下落し、<strong>13位でデビューラインのちょうど1つ下</strong>に。第3回の「上昇のピーク」が最終では維持されなかった。今シーズン最大のサプライズ脱落候補の一人だ。</p>
+  </div>
+
+  <!-- TOWA -->
+  <div style="background:var(--s2);border:1px solid rgba(78,200,122,0.2);border-radius:8px;padding:1.25rem;margin:1rem 0;">
+    <div style="font-size:0.65rem;font-family:'JetBrains Mono',monospace;color:var(--green);margin-bottom:6px;">STORY G — 鉄板の安定感でボーダーをくぐり抜け</div>
+    <div style="font-size:0.88rem;font-weight:700;color:var(--text);margin-bottom:6px;">濱田 永遠（TOWA）</div>
+    <div class="timeline">
+      <span class="tl-step" style="background:rgba(255,255,255,0.07);color:var(--muted);">第1回 15位</span>
+      <span class="tl-arrow">→</span>
+      <span class="tl-step" style="background:rgba(255,255,255,0.08);color:var(--muted);">第2回 14位</span>
+      <span class="tl-arrow">→</span>
+      <span class="tl-step" style="background:rgba(255,255,255,0.08);color:var(--muted);">第3回 14位</span>
+      <span class="tl-arrow">→</span>
+      <span class="tl-step" style="background:rgba(78,200,122,0.2);color:var(--green);">最終 12位</span>
+    </div>
+    <p style="margin:0;font-size:0.84rem;">4回を通じて常に12〜15位という驚くほどの安定感。最終でちょうど12位——デビューの最後の1席を滑り込みで確定させた。一度も上位を走らず、一度も下位に沈まず、一定のファン支持を最終まで維持し続けた。</p>
+  </div>
+</div>
+
+<!-- 04 -->
+<div class="section">
+  <div class="section-head"><span class="section-num">04</span><span class="section-title">デビューボーダー｜12位 vs 13位の逆転劇</span></div>
+
+  <p>デビューの最後の1席（12位）を巡る最大の注目点は、<strong>第3回時点では13位RICKEYが7位、12位TOWAが14位——つまりRICKEYがTOWAより7ランク上</strong>にいたことだ。それが最終で完全に逆転した。</p>
+
+  <div class="tbl-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th style="text-align:left;">練習生</th>
+          <th>第1回</th>
+          <th>第2回</th>
+          <th>第3回</th>
+          <th>最終</th>
+          <th>最終 pts</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>濱田 永遠（TOWA）<span style="margin-left:6px;" class="badge-debut">12位 DEBUT</span></td>
+          <td>15</td><td>14</td><td>14</td><td class="c-green">12</td><td class="c-green">378,536</td>
+        </tr>
+        <tr>
+          <td>チェン・リッキー（RICKEY）<span style="margin-left:6px;" class="badge-miss">13位 次点</span></td>
+          <td>25</td><td>13</td><td>7</td><td class="c-red">13</td><td class="c-muted">（非公表）</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="insight red">
+    RICKEYの変遷を見ると、第3回まで「上昇路線」が続いており、第3回7位は今シーズン最高位だった。一方TOWAは常に12〜15位の「安定路線」。最終の1名投票という形式が、固定的なコアファン数をそのまま反映しやすく、「勢いで上がってきたRICKEY」より「安定支持のTOWA」が有利に働いたと考えられる。
+  </div>
+
+  <p>また、TOWAは第3回(14位)→最終(12位)の+2という堅実な上昇を見せており、ファイナルステージでのパフォーマンス評価も追い風になった可能性がある。</p>
+</div>
+
+<!-- 05 -->
+<div class="section">
+  <div class="section-head"><span class="section-num">05</span><span class="section-title">パターン分類｜4回通じた軌跡タイプ</span></div>
+
+  <p>22名のファイナリストを、4回通じた変遷パターンで分類する。</p>
+
+  <div class="tbl-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th style="text-align:left;">タイプ</th>
+          <th style="text-align:left;">練習生</th>
+          <th style="text-align:left;">特徴</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td style="color:var(--gold);font-family:'JetBrains Mono',monospace;font-size:0.7rem;">上位安定</td>
+          <td style="text-align:left;">DAIKI.K・YOSHIKI・SIYOUNG・SHINHAENG</td>
+          <td style="text-align:left;color:var(--muted);font-size:0.72rem;">4回とも上位圏内。DAIKI.Kのみ第3回に例外的下落あり</td>
+        </tr>
+        <tr>
+          <td style="color:var(--green);font-family:'JetBrains Mono',monospace;font-size:0.7rem;">右肩上がり</td>
+          <td style="text-align:left;">YUKI・ISSA・KEITO・RYUJI</td>
+          <td style="text-align:left;color:var(--muted);font-size:0.72rem;">初回は中〜下位。毎回または最終で大きく上昇</td>
+        </tr>
+        <tr>
+          <td style="color:var(--red);font-family:'JetBrains Mono',monospace;font-size:0.7rem;">右肩下がり</td>
+          <td style="text-align:left;">KOSUKE・YURA・SHINHAENG（最終のみ）・RICKEY</td>
+          <td style="text-align:left;color:var(--muted);font-size:0.72rem;">中盤ピーク後に下落。RICKEY以外はデビュー達成</td>
+        </tr>
+        <tr>
+          <td style="color:var(--muted);font-family:'JetBrains Mono',monospace;font-size:0.7rem;">中位安定</td>
+          <td style="text-align:left;">TOWA・OSUKE・TAKUTO.K・ADAM</td>
+          <td style="text-align:left;color:var(--muted);font-size:0.72rem;">常に12〜20位圏内。変動が少なくコアファンが安定</td>
+        </tr>
+        <tr>
+          <td style="color:var(--orange);font-family:'JetBrains Mono',monospace;font-size:0.7rem;">浮き沈み</td>
+          <td style="text-align:left;">RYOGA・GOTEN・HYEONSEUNG・REN.KO</td>
+          <td style="text-align:left;color:var(--muted);font-size:0.72rem;">回によって大きく変動。GR組もこの区分</td>
+        </tr>
+        <tr>
+          <td style="color:var(--accent);font-family:'JetBrains Mono',monospace;font-size:0.7rem;">後半台頭</td>
+          <td style="text-align:left;">YUMA・KOSHIRO・CHISATO</td>
+          <td style="text-align:left;color:var(--muted);font-size:0.72rem;">第1回は下位スタートで第3回頃に上位に食い込むも最終で失速</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="insight cyan">
+    「右肩上がり」タイプ（YUKI・ISSA・KEITO・RYUJI）は全員がデビュー達成。対して「右肩下がり」の中でデビューを逃したのはRICKEYのみ——KOSUKE・YURAは下落してもデビューラインを維持した。上昇傾向のある練習生は最終の1名投票形式でも有利に働く構造があったといえる。
+  </div>
+</div>
+
+<!-- 06 -->
+<div class="section">
+  <div class="section-head"><span class="section-num">06</span><span class="section-title">総括</span></div>
+
+  <p>今シーズンのProduce 101 Japanは、全4回の順位発表式を経て上位12名のデビューが確定した。各回の投票人数制限（12名→2名→1名）と投票期間の変化が順位の変動を大きく左右し、特に最終の「1名集中」は固定ファンの厚みをそのまま結果に反映させる形式だった。</p>
+
+  <p>今シーズンを通じた傾向として——<strong>「安定した中位票数」を持つ練習生が最終で浮上しやすく（TOWA、KEITO）、「ベネフィットや勢い」に依存していた練習生は最終で下振れる</strong>ケースが目立った。デビュー12名の中には4回すべてで上位だった選手も、最終だけで一気に上がった選手も、地道に上がり続けた選手も混在しており、多様なファン支持の形がデビューへの道を作った。</p>
+
+  <div class="insight gold">
+    第3回→最終で最も驚きだったのは<strong>DAIKI.Kの復活（10位→1位）</strong>と<strong>RICKEYのデビュー逃し（7位→13位）</strong>。この2つはどちらも「第3回の順位が最終を予測しない」という事実を如実に示している。
+  </div>
+
+  <div class="footnote">
+    データ元: 新世界_順位発表式データ.csv（第1回〜最終）、新世界_順位.csv（週次）<br>
+    最終発表は総合pts（国民70%・SEKAI30%）のみ公表。国民票・SEKAI票の内訳は非公表。<br>
+    13〜22位の最終ptsは非公表のため本レポートでは未記載。<br>
+    © 2026 jidaikenkyuroom
+  </div>
+</div>
+
+</div>
+</body>
+</html>
