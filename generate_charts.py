@@ -36,6 +36,11 @@ def format_val(v, as_float=True):
         return "null"
 
 
+def normalize_name(s):
+    """ノーブレークスペース等を通常スペースに統一してstrip"""
+    return s.replace(' ', ' ').strip()
+
+
 def build_play_js(rows):
     header = rows[0]
     dates = header[2:]
@@ -43,7 +48,7 @@ def build_play_js(rows):
 
     entries = []
     for row in rows[1:]:
-        name, code = row[0], row[1]
+        name, code = normalize_name(row[0]), row[1].strip()
         vals = ",".join(format_val(v, as_float=True) for v in row[2:])
         entries.append(f'["{name}","{code}",{vals}]')
 
@@ -65,7 +70,7 @@ def build_vote_js(rows):
     for row in rows[1:]:
         if len(row) < 2:
             continue
-        name, code = row[0], row[1]
+        name, code = normalize_name(row[0]), row[1].strip()
         vals = ",".join(format_rank(v) for v in row[2:])
         entries.append(f'["{name}","{code}",{vals}]')
 
@@ -84,9 +89,9 @@ def build_level_broadcast_js(rows):
     for row in rows[1:]:
         if len(row) < 4:
             continue
-        name = row[0]
-        level = row[2]
-        group = row[3]
+        name = normalize_name(row[0])
+        level = row[2].strip()
+        group = row[3].strip()
         level_entries.append(f'"{name}":"{level}"')
         broadcast_entries.append(f'"{name}":"{group}"')
 

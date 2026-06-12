@@ -18,6 +18,15 @@
     "yt_nocut": "新世界_ポジションバトルYouTube_NOCUT版再生数.csv",
     "oshi_cam": "新世界_ポジションバトル推しカメラ再生数.csv"
   },
+  "concept_csv": {
+    "team":         "新世界_コンセプトバトルチーム.csv",
+    "yt_highlight": "新世界_コンセプトバトルYouTubeハイライト再生数.csv",
+    "oshi_cam":     "新世界_コンセプトバトル推しカメラ再生数.csv",
+    "yt_onetake":     "新世界_コンセプトバトルYouTubeOneTakeCam再生数.csv",
+    "yt_nocut":       "新世界_コンセプトバトルYouTube_NOCUT版再生数.csv",
+    "yt_relaydance":  "新世界_コンセプトバトルYouTubeRELAYDANCE再生数.csv",
+    "yt_full":        "新世界_コンセプトバトルYouTubeFull版再生数.csv"
+  },
   "battle_csv": {
     "mnetplus": "新世界_グループバトル推しカメラ再生数.csv",
     "yt_oshicam": "新世界_グループバトルYouTube推しカメラ再生数.csv",
